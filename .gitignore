@@ -1,0 +1,7 @@
+*.mp4
+*.tar.zst
+*.zip
+__pycache__/
+.venv/
+build/
+*.log

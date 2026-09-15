@@ -1,0 +1,12 @@
+{"type":"wander","room":"hallway","ts":"2026-09-15T11:02:14Z","confidence":0.71,"discarded_frames":18420}
+{"type":"wander","room":"front_door","ts":"2026-09-15T11:03:01Z","confidence":0.88,"discarded_frames":840}
+{"type":"fall","room":"bathroom","ts":"2026-09-15T11:47:33Z","confidence":0.34,"discarded_frames":47900}
+{"type":"fall","room":"bathroom","ts":"2026-09-15T11:47:36Z","confidence":0.79,"discarded_frames":52}
+{"type":"stove_unattended","room":"kitchen","ts":"2026-09-15T18:20:05Z","confidence":0.93,"discarded_frames":210300}
+{"type":"stove_unattended","room":"kitchen","ts":"2026-09-15T18:50:05Z","confidence":0.95,"discarded_frames":54000}
+{"type":"wander","room":"bedroom","ts":"2026-09-16T04:11:52Z","confidence":0.62,"discarded_frames":331200}
+{"type":"wander","room":"kitchen","ts":"2026-09-16T04:12:40Z","confidence":0.58,"discarded_frames":864}
+{"type":"wander","room":"front_door","ts":"2026-09-16T04:13:19Z","confidence":0.91,"discarded_frames":702}
+{"type":"fall","room":"bedroom","ts":"2026-09-16T04:14:02Z","confidence":0.41,"discarded_frames":774}
+{"type":"fall","room":"living_room","ts":"2026-09-16T09:31:11Z","confidence":0.86,"discarded_frames":163800}
+{"type":"stove_unattended","room":"kitchen","ts":"2026-09-16T12:05:44Z","confidence":0.67,"discarded_frames":88200}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "watch.event",
+  "description": "One incident event emitted by perception. One JSON object per line (JSONL). This is the ONLY interface between the perception lane and everything downstream. Architect-owned: no lane edits this file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "room", "ts", "confidence", "discarded_frames"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["fall", "wander", "stove_unattended"],
+      "description": "The three incident classes the evidence supports. Nothing else is in scope for round 1."
+    },
+    "room": {
+      "type": "string",
+      "description": "Free-form room label from the camera's configured location, e.g. 'bedroom', 'kitchen', 'front_door'."
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC, RFC3339, Z-suffixed. NOTE: the board clock is wrong and has no NTP (reads April 2026). Perception must stamp from a corrected source or record the offset; a lane that cannot must report it as a finding."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Model confidence for this event. Downstream must not assume a threshold; thresholds live in the evidence lane."
+    },
+    "discarded_frames": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Frames processed on-device and destroyed without being stored or transmitted, since the last event. This is the privacy ledger primitive: it is the only number that makes 'nothing left the room' countable rather than asserted."
+    }
+  }
+}
