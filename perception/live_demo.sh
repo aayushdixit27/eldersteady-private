@@ -14,7 +14,7 @@ trap cleanup EXIT INT TERM
 
 # 1. camera -> board (UDP MPEG-TS) and -> local preview (tee)
 ffmpeg -hide_banner -loglevel error -f avfoundation -pixel_format uyvy422 -framerate 30 -video_size 1280x720 -i "$CAM" \
-  -c:v libx264 -preset ultrafast -tune zerolatency -g 30 -b:v 2M -f tee \
+  -map 0:v -c:v libx264 -preset ultrafast -tune zerolatency -g 30 -b:v 2M -f tee \
   "[f=mpegts]udp://$BOARD:$PORT?pkt_size=1316|[f=mpegts]udp://127.0.0.1:5005?pkt_size=1316" &
 sleep 2
 # 2. preview window: what the board sees
