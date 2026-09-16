@@ -40,6 +40,7 @@
     .trend-stat { min-width: 0; overflow-wrap: anywhere; }
     .label { display: block; color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
     .trend-stat strong { display: block; margin-top: 3px; font-size: 20px; line-height: 1.05; }
+    .trend-stat strong.paused { color: var(--muted); font-size: 14px; }
     .trend-stat.on-floor strong { color: var(--urgent-text); font-size: 40px; }
     .time-strip { display: flex; width: 100%; height: 14px; margin: 7px 0 5px; border: 1px solid var(--ink); overflow: hidden; }
     .time-strip span { min-width: 0; }
@@ -162,7 +163,7 @@
         "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", "Text sent. Waiting for Sue to reply 1 or 2."],
         "alert-cleared": ["Up again", safeBanner, "Alert cleared. Watching."]
       }[name];
-      $("posture").textContent = copy[0]; $("trend-posture").textContent = copy[0]; $("next-action").textContent = copy[2];
+      $("posture").textContent = copy[0]; $("trend-posture").textContent = name === "close" ? "Shoulders only" : copy[0]; $("next-action").textContent = copy[2];
       $("banner-check").textContent = copy[1];
       const leanWord = { "no-camera": "off", "waiting-board": "waiting", "empty-room": "no one", close: "paused" }[name];
       if (leanWord) { $("lean").textContent = leanWord; $("lean").classList.add("word"); $("gauge-ring").style.strokeDashoffset = 276.46; }
@@ -213,7 +214,7 @@
     }
     function parseTrend(line) {
       const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]])); const seconds = key => Math.max(0, Number(fields[key]) || 0); const durations = { upright: seconds("upright_s"), sitting: seconds("sitting_s"), floor: seconds("floor_s_total"), absent: seconds("absent_s") }; const total = Object.values(durations).reduce((sum, value) => sum + value, 0);
-      state.trendPosture = fields.posture || state.trendPosture; state.trendView = fields.view || ""; state.cadence = fields.cadence_spm && fields.cadence_spm !== "na" ? Number(fields.cadence_spm) : null; state.sway = fields.sway && fields.sway !== "na" ? Number(fields.sway) : null; state.floorNow = seconds("floor_s"); const close = state.trendView === "close" || state.trendPosture === "close"; $("sts-last").textContent = close ? "Posture paused" : seconds("sts_last_s") > 0 ? formatSeconds(seconds("sts_last_s")) : "Not measured"; $("floor-now").textContent = close ? "Posture paused" : state.floorNow > 0 ? formatSeconds(state.floorNow) : "No"; $("floor-stat").classList.toggle("on-floor", !close && state.floorNow > 0);
+      state.trendPosture = fields.posture || state.trendPosture; state.trendView = fields.view || ""; state.cadence = fields.cadence_spm && fields.cadence_spm !== "na" ? Number(fields.cadence_spm) : null; state.sway = fields.sway && fields.sway !== "na" ? Number(fields.sway) : null; state.floorNow = seconds("floor_s"); const close = state.trendView === "close" || state.trendPosture === "close"; $("sts-last").textContent = close ? "paused" : seconds("sts_last_s") > 0 ? formatSeconds(seconds("sts_last_s")) : "Not measured"; $("floor-now").textContent = close ? "paused" : state.floorNow > 0 ? formatSeconds(state.floorNow) : "No"; $("sts-last").classList.toggle("paused", close); $("floor-now").classList.toggle("paused", close); $("floor-stat").classList.toggle("on-floor", !close && state.floorNow > 0);
       for (const [posture, value] of Object.entries(durations)) { $(`${posture}-seconds`).textContent = formatSeconds(value); $(`strip-${posture}`).style.width = `${total ? value / total * 100 : 0}%`; } $("company-seconds").textContent = seconds("company_s") > 0 ? formatSeconds(seconds("company_s")) : "None yet"; $("time-strip").setAttribute("aria-label", total ? `Posture time: standing ${formatSeconds(durations.upright)}, sitting ${formatSeconds(durations.sitting)}, floor ${formatSeconds(durations.floor)}, away ${formatSeconds(durations.absent)}` : "Posture time not measured");
     }
     function humanMinutes(value) { const minutes = Math.max(0, Number(value) || 0); if (!minutes) return "0"; const hours = Math.floor(minutes / 60), rest = minutes % 60; return hours ? `${hours} h${rest ? ` ${rest}` : ""}` : `${minutes} min`; }
