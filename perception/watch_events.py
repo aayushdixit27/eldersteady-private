@@ -48,6 +48,8 @@ BANDS = {
 }
 FALL_EVENT_COOLDOWN_S = 20.0
 FALL_EVENT_RECOVERY_S = 2.0
+SUBJECT_AMBIGUITY_RATIO = 0.70
+SUBJECT_SWITCH_HOLD_S = 0.5
 
 
 @dataclass(frozen=True)
@@ -85,6 +87,12 @@ class Pose:
 def subject_pose(poses: Sequence[Pose]) -> Pose | None:
     """Choose the nearest detected person, approximated by bounding-box area."""
     return max(poses, key=lambda pose: pose.bbox_area) if poses else None
+
+
+def subject_is_ambiguous(poses: Sequence[Pose]) -> bool:
+    """Return whether the two largest people are too similar to choose safely."""
+    areas = sorted((pose.bbox_area for pose in poses), reverse=True)
+    return len(areas) >= 2 and areas[1] >= SUBJECT_AMBIGUITY_RATIO * areas[0]
 
 
 def posture_measurements(
@@ -222,6 +230,8 @@ class TrendTracker:
     view: str = "none"
     motion_samples: deque | None = None
     frame_w: int = 0
+    subject: str | None = None
+    clear_subject_seconds: float = 0.0
 
     def __post_init__(self) -> None:
         self.totals = {posture: 0.0 for posture in POSTURES}
@@ -299,6 +309,31 @@ class TrendTracker:
     ) -> str:
         self.elapsed += dt
         self.frame_w = frame_w
+        ambiguous = subject_is_ambiguous(poses)
+        if self.subject is None:
+            self.subject = "unclear" if ambiguous else "clear"
+        elif ambiguous:
+            # Ambiguity is safety-critical: suppress interpretation immediately.
+            self.subject = "unclear"
+            self.clear_subject_seconds = 0.0
+        elif self.subject == "unclear":
+            self.clear_subject_seconds += dt
+            if self.clear_subject_seconds >= SUBJECT_SWITCH_HOLD_S:
+                self.subject = "clear"
+                self.clear_subject_seconds = 0.0
+        if self.subject == "unclear":
+            self.posture = "unclear"
+            self.view = "unclear"
+            self.hip_y = None
+            self.shoulder_y = None
+            self.visibility = "none"
+            self.bbox_aspect = None
+            self.subject_area = None
+            self.pending_posture = None
+            self.pending_seconds = 0.0
+            if len(poses) >= 2:
+                self.company_seconds += dt
+            return self.posture
         subject = subject_pose(poses)
         self.bbox_aspect = subject.bbox_aspect if subject else None
         self.subject_area = (
@@ -348,7 +383,7 @@ class TrendTracker:
         candidate = classify_posture(
             poses, frame_w, frame_h, min_visibility, self.floor_seconds, bent_threshold
         )
-        if candidate == "floor":
+        if candidate == "floor" or self.posture == "unclear":
             self.posture = candidate
             self.pending_posture = None
             self.pending_seconds = 0.0
@@ -379,7 +414,8 @@ class TrendTracker:
     def snapshot(self) -> dict[str, str | float | int]:
         tidy = lambda value: round(value, 3)
         return {
-            "posture": self.posture, "floor_s": tidy(self.floor_seconds),
+            "posture": self.posture, "subject": self.subject or "clear",
+            "floor_s": tidy(self.floor_seconds),
             "sts_last_s": "na" if self.sts.last_duration is None
             else tidy(self.sts.last_duration),
             "sts_n": self.sts.count,
@@ -816,7 +852,7 @@ def main(argv: list[str]) -> int:
                     poses, frame.shape[1], frame.shape[0], args.min_keypoint_visibility,
                     frame_seconds, args.fall_lean_threshold,
                 )
-                subject = subject_pose(poses)
+                subject = subject_pose(poses) if trend.subject == "clear" else None
                 subject_lean = (
                     torso_lean_percent(subject, args.min_keypoint_visibility)
                     if subject is not None and trend.view == "full" else None
@@ -831,10 +867,11 @@ def main(argv: list[str]) -> int:
                 posture_changed = previous_posture is not None and posture != previous_posture
                 if should_print(frame_index, posture_changed, bent_streak, args.print_every):
                     log(
-                        "frame={} processed={} posture={} lean={:.0f}% poses={} valid_lean={} best={:.3f} bent_streak={} infer_ms={:.1f}".format(
+                        "frame={} processed={} posture={} view={} lean={:.0f}% poses={} valid_lean={} best={:.3f} bent_streak={} infer_ms={:.1f}".format(
                             frame_index,
                             processed,
                             posture,
+                            trend.view,
                             best_lean,
                             len(poses),
                             len(lean_values),

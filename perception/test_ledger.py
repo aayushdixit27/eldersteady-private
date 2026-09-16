@@ -100,6 +100,21 @@ def main() -> None:
     assert nearest.snapshot()["posture"] == "sitting"
     assert nearest.snapshot()["subject_area"] == 0.48
     assert nearest.snapshot()["company_s"] == 1.0
+    assert nearest.snapshot()["subject"] == "clear"
+
+    # Similar-size people are ambiguous; stable dominance must persist before
+    # posture logic resumes for a newly clear subject.
+    ambiguous = TrendTracker()
+    peer = synthetic_pose(55, 20, bbox_size=(58, 80))
+    assert ambiguous.update([near, peer], 100, 100, 0.3, 0.1) == "unclear"
+    assert ambiguous.snapshot()["view"] == "unclear"
+    assert ambiguous.snapshot()["subject"] == "unclear"
+    assert ambiguous.snapshot()["company_s"] == 0.1
+    for _ in range(4):
+        ambiguous.update([near, far], 100, 100, 0.3, 0.1)
+    assert ambiguous.snapshot()["subject"] == "unclear"
+    ambiguous.update([near, far], 100, 100, 0.3, 0.1)
+    assert ambiguous.snapshot()["subject"] == "clear"
 
     floor_flicker = TrendTracker()
     floor_pose = synthetic_pose(75, 75, bbox_aspect=1.5)
