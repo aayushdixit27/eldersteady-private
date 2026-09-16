@@ -59,7 +59,7 @@
 <body>
   <div class="shell">
     <header><div class="brand">ElderSteady Private</div><div class="local"><span class="dot"></span>Private at home</div></header>
-    <p class="fixture">FIXTURE DATA — a 30-day series we made up to show the product; today's numbers are real and come from live/board.log</p>
+    <p class="fixture">FIXTURE DATA — a 30-day series we made up to show the product; today's numbers come from live board and rhythm measurements</p>
     <main>
       <p class="eyebrow">Family view</p>
       <h1>The last 30 days at home</h1>
@@ -68,11 +68,11 @@
       <section class="today" aria-labelledby="today-title">
         <div class="today-head"><h2 id="today-title">Today</h2><span class="measured">Measured</span></div>
         <div class="today-grid">
-          <div><span>Sit to stand</span><strong id="today-sts">—</strong></div>
-          <div><span>On floor</span><strong id="today-floor">—</strong></div>
-          <div><span>Company</span><strong id="today-company">—</strong></div>
+          <div><span>Sit to stand</span><strong id="today-sts">Not yet measured</strong></div>
+          <div><span>On floor</span><strong id="today-floor">Not yet measured</strong></div>
+          <div><span>Company</span><strong id="today-company">Not yet measured</strong></div>
         </div>
-        <p class="source" id="today-source" role="status">Waiting for the latest measured trend line.</p>
+        <p class="source" id="today-source" role="status">not yet measured</p>
       </section>
 
       <section class="charts" aria-label="Thirty-day charts">
@@ -84,9 +84,9 @@
       <section class="ledger" aria-labelledby="ledger-title">
         <h2 id="ledger-title">30-day privacy ledger</h2>
         <div class="ledger-grid">
-          <div class="ledger-item"><span>Frames processed at home</span><strong id="processed">—</strong></div>
-          <div class="ledger-item"><span>Frames destroyed</span><strong id="destroyed">—</strong></div>
-          <div class="ledger-item"><span>Frames uploaded</span><strong id="uploaded">—</strong></div>
+          <div class="ledger-item"><span>Frames processed at home</span><strong id="processed">Not yet measured</strong></div>
+          <div class="ledger-item"><span>Frames destroyed</span><strong id="destroyed">Not yet measured</strong></div>
+          <div class="ledger-item"><span>Frames uploaded</span><strong id="uploaded">Not yet measured</strong></div>
         </div>
         <p>Fixture totals for this illustrative period. Frames are processed inside the home and destroyed; none are uploaded.</p>
       </section>
@@ -115,6 +115,15 @@
     }
     function render() { renderLine(); renderBars("floor-chart","floor_min",10,"bar-floor","m"); renderBars("company-chart","company_min",240,"bar-company","m"); }
     function parseTrend(line) { const out={}; line.trim().split(/\s+/).slice(1).forEach(part => { const at=part.indexOf("="); if(at>0) out[part.slice(0,at)]=part.slice(at+1); }); return out; }
+    function renderDay(day) {
+      if (!day || !day.totals) { document.getElementById("today-source").textContent="not yet measured"; return false; }
+      const totals=day.totals, floor=Math.max(0,Number(totals.floor_min)||0), company=Math.max(0,Number(totals.company_min)||0), visits=Math.max(0,Number(totals.visits)||0);
+      document.getElementById("today-title").textContent=day.date ? `Today · ${day.date}` : "Today";
+      document.getElementById("today-floor").textContent=`${floor.toLocaleString("en-US")} min`;
+      document.getElementById("today-company").textContent=`${company.toLocaleString("en-US")} min · ${visits} visit${visits===1?"":"s"}`;
+      document.getElementById("today-source").textContent="measured · rhythm.py"; return true;
+    }
+    async function pollDay() { try { const response=await fetch("live/day.json?t="+Date.now(),{cache:"no-store"}); if(!response.ok) throw new Error(); return renderDay(await response.json()); } catch (_) { return renderDay(null); } }
     async function pollTrend() {
       try {
         const response=await fetch("live/board.log?t="+Date.now(),{cache:"no-store"}); if(!response.ok) throw new Error();
@@ -125,9 +134,9 @@
         document.getElementById("today-sts").textContent=sts ? `${sts.toFixed(1)} s` : "No rise yet";
         document.getElementById("today-floor").textContent=`${floor.toFixed(1)} min`;
         document.getElementById("today-company").textContent=`${company.toFixed(1)} min`;
-        document.getElementById("today-source").textContent=`Latest board measurement · posture ${trend.posture} · ${Number(trend.sts_n).toLocaleString("en-US")} sit-to-stand${Number(trend.sts_n)===1?"":"s"} this session.`;
+        if (!await pollDay()) document.getElementById("today-source").textContent="not yet measured";
         const last=series.at(-1); last.sit_to_stand_s=sts; last.floor_min=floor; last.company_min=company; render();
-      } catch (error) { document.getElementById("today-source").textContent="No measured trend line is available yet. Historical charts remain fixture data."; }
+      } catch (error) { await pollDay(); }
     }
     fetch("fixtures/thirty-days.json").then(r => { if(!r.ok) throw new Error(); return r.json(); }).then(data => {
       series=data.days;
