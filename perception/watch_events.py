@@ -245,13 +245,26 @@ def torso_lean_percent(pose: Pose, min_visibility: float) -> float | None:
     )
     if os.environ.get("WATCH_DEBUG_KP"):
         print("KP " + " ".join(f"{n}=({int(k['x'])},{int(k['y'])},v{k['visibility']:.2f})" for n, k in zip(("LS","RS","LH","RH"), required)), file=sys.stderr)
-    if any(point["visibility"] < min_visibility for point in required):
+    ls, rs, lh, rh = required
+    nose = keypoints[0]
+    if ls["visibility"] < min_visibility or rs["visibility"] < min_visibility:
         return None
-
-    shoulder_x, shoulder_y = midpoint(keypoints[COCO_LEFT_SHOULDER], keypoints[COCO_RIGHT_SHOULDER])
-    hip_x, hip_y = midpoint(keypoints[COCO_LEFT_HIP], keypoints[COCO_RIGHT_HIP])
-    dx = shoulder_x - hip_x
-    dy = shoulder_y - hip_y
+    shoulder_x, shoulder_y = midpoint(ls, rs)
+    if lh["visibility"] >= min_visibility and rh["visibility"] >= min_visibility:
+        # full torso in view: shoulders -> hips
+        hip_x, hip_y = midpoint(lh, rh)
+        dx = shoulder_x - hip_x
+        dy = shoulder_y - hip_y
+    elif nose["visibility"] >= min_visibility:
+        # close-up fallback (hips off-frame): head -> shoulders. Upright = nose above shoulders.
+        dx = nose["x"] - shoulder_x
+        dy = nose["y"] - shoulder_y
+        shoulder_w = abs(ls["x"] - rs["x"]) or 1.0
+        # bending forward toward the camera drops the nose to/below shoulder level
+        if dy > -0.15 * shoulder_w:
+            return 100.0
+    else:
+        return None
     if dx == 0.0 and dy == 0.0:
         return None
     angle = degrees(atan2(abs(dx), abs(dy)))
