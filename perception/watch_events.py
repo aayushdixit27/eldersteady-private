@@ -77,7 +77,7 @@ def write_session_ledger(
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)
-    parser.add_argument("--video", type=Path, default=DEFAULT_VIDEO)
+    parser.add_argument("--video", type=str, default=str(DEFAULT_VIDEO))
     parser.add_argument("--room", default="living_room")
     parser.add_argument("--event-type", choices=("fall", "wander", "stove_unattended"), default="wander")
     parser.add_argument("--score-threshold", type=float, default=0.25)
@@ -96,7 +96,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def validate_args(args: argparse.Namespace) -> None:
     if not args.model.is_file():
         raise FileNotFoundError(f"model does not exist: {args.model}")
-    if not args.video.is_file():
+    if "://" not in args.video and not Path(args.video).is_file():
         raise FileNotFoundError(f"video does not exist: {args.video}")
     if not 0.0 <= args.score_threshold <= 1.0:
         raise ValueError("--score-threshold must be in [0, 1]")
