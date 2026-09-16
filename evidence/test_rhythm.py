@@ -1,10 +1,15 @@
 import json
+import os
+import sys
 import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 
-from evidence.rhythm import aggregate, write_atomic
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from evidence.rhythm import aggregate, refresh, write_atomic
 
 
 class RhythmTests(unittest.TestCase):
@@ -52,6 +57,43 @@ class RhythmTests(unittest.TestCase):
         output = Path(self.temp.name) / "live" / "day.json"
         write_atomic(output, result)
         self.assertEqual(json.loads(output.read_text()), result)
+
+    def wander(self, hour, offset=None):
+        self.make_log([(["upright"] * 60, 0)] * 3)
+        output = Path(self.temp.name) / "day.json"
+        environment = {"WATCH_NIGHT": "23:00-06:00"}
+        if offset is not None:
+            environment["WATCH_CLOCK_OFFSET_MIN"] = str(offset)
+        with patch.dict(os.environ, environment, clear=True):
+            result = refresh(self.log, output, datetime.fromisoformat(
+                f"2026-09-16T{hour:02d}:00:00-07:00"))
+        event_lines = [json.loads(line) for line in self.log.read_text().splitlines()
+                       if line.startswith("{")]
+        return result, event_lines
+
+    def test_three_standing_night_minutes_emit_one_wander(self):
+        result, events = self.wander(2)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(result["events"], events)
+        self.assertEqual(events[0]["type"], "wander")
+        self.assertEqual(events[0]["confidence"], 1.0)
+        self.assertEqual(events[0]["discarded_frames"], 180)
+        self.assertNotIn("demo_clock", events[0])
+        with patch.dict(os.environ, {"WATCH_NIGHT": "23:00-06:00"}, clear=True):
+            refresh(self.log, Path(self.temp.name) / "day.json",
+                    datetime.fromisoformat("2026-09-16T02:00:00-07:00"))
+        self.assertEqual(sum(line.startswith("{") for line in self.log.read_text().splitlines()), 1)
+
+    def test_three_standing_day_minutes_emit_no_wander(self):
+        result, events = self.wander(14)
+        self.assertEqual(result["events"], [])
+        self.assertEqual(events, [])
+
+    def test_clock_offset_labels_demo_wander(self):
+        result, events = self.wander(14, -720)
+        self.assertEqual(len(events), 1)
+        self.assertIs(events[0]["demo_clock"], True)
+        self.assertEqual(result["events"], events)
 
 
 if __name__ == "__main__":
