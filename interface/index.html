@@ -196,6 +196,12 @@
         const frames = lines.filter(l => l.startsWith("frame "));
         const last = frames[frames.length - 1];
         if (last) {
+          const pm = last.match(/frame (\d+)\s+posture=(\w+) lean=(\d+%)\s+people-in-view=(\d+)\s+bent-for=(\d+)\s+mla=([\d.]+)ms/);
+          if (pm) {
+            document.getElementById("lv-frames").textContent = Number(pm[1]).toLocaleString("en-US") + " frames";
+            document.getElementById("lv-people").textContent = "people in view: " + pm[4] + " · posture " + pm[2].toLowerCase() + " (" + pm[3] + " lean)";
+            document.getElementById("lv-ms").textContent = pm[6] + " ms per frame";
+          }
           const m = last.match(/frame (\d+)\s+people-in-view=(\d+)\s+confidence=([\d.]+)\s+mla=([\d.]+)ms/);
           if (m) {
             document.getElementById("lv-frames").textContent = Number(m[1]).toLocaleString("en-US") + " frames";
