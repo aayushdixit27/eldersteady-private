@@ -307,13 +307,13 @@ def main(argv: list[str]) -> int:
     opt.top_k = args.top_k
     model = pyneat.Model(str(args.model), opt)
 
-    cap = cv2.VideoCapture(str(args.video))
+    cap = cv2.VideoCapture(str(args.video), cv2.CAP_FFMPEG) if "://" in str(args.video) else cv2.VideoCapture(str(args.video))
     tries = 0
     while not cap.isOpened() and "://" in str(args.video) and tries < 10:
         tries += 1
         print(f"waiting for stream {args.video} ({tries}/10)", file=sys.stderr)
         time.sleep(2)
-        cap = cv2.VideoCapture(str(args.video))
+        cap = cv2.VideoCapture(str(args.video), cv2.CAP_FFMPEG) if "://" in str(args.video) else cv2.VideoCapture(str(args.video))
     if not cap.isOpened():
         raise RuntimeError(f"failed to open video: {args.video}")
 
