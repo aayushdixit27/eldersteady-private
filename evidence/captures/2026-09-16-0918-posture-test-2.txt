@@ -1,0 +1,418 @@
+ledger frames=1410 pixel_bytes=3898368000 rx_bytes=15263690 tx_bytes=135850 nic=end0
+frame 1410   posture=upright   lean=1%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=25.025 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=33.767 hip_y=0.378 sh_y=0.206 bbox_ar=1.261 vis=hips
+frame 1415   posture=upright   lean=3%   poses=3   confidence=0.865   streak=0   mla=8.2ms   uploaded=0
+frame 1420   posture=upright   lean=1%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1425   posture=upright   lean=4%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 1430   posture=upright   lean=4%   poses=3   confidence=0.894   streak=0   mla=8.0ms   uploaded=0
+frame 1435   posture=upright   lean=3%   poses=3   confidence=0.865   streak=0   mla=8.2ms   uploaded=0
+ledger frames=1440 pixel_bytes=3981312000 rx_bytes=15459376 tx_bytes=137570 nic=end0
+frame 1440   posture=upright   lean=4%   poses=2   confidence=0.894   streak=0   mla=8.0ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=26.026 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=34.768 hip_y=0.378 sh_y=0.206 bbox_ar=1.28 vis=hips
+frame 1445   posture=upright   lean=4%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 1450   posture=upright   lean=4%   poses=3   confidence=0.865   streak=0   mla=8.2ms   uploaded=0
+frame 1455   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 1460   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.0ms   uploaded=0
+frame 1465   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+ledger frames=1470 pixel_bytes=4064256000 rx_bytes=15658844 tx_bytes=139290 nic=end0
+frame 1470   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=27.027 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=35.769 hip_y=0.382 sh_y=0.206 bbox_ar=1.271 vis=hips
+frame 1475   posture=upright   lean=4%   poses=2   confidence=0.865   streak=0   mla=8.1ms   uploaded=0
+frame 1480   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1485   posture=upright   lean=4%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1490   posture=upright   lean=4%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 1495   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+ledger frames=1500 pixel_bytes=4147200000 rx_bytes=15888870 tx_bytes=141010 nic=end0
+frame 1500   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=28.028 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=36.77 hip_y=0.378 sh_y=0.198 bbox_ar=1.255 vis=hips
+frame 1505   posture=upright   lean=5%   poses=2   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 1510   posture=upright   lean=8%   poses=2   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 1515   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1520   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 1525   posture=upright   lean=2%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+ledger frames=1530 pixel_bytes=4230144000 rx_bytes=16173596 tx_bytes=142804 nic=end0
+frame 1530   posture=upright   lean=1%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=29.029 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=37.771 hip_y=0.386 sh_y=0.178 bbox_ar=1.303 vis=hips
+frame 1535   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1540   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 1545   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1550   posture=upright   lean=1%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 1555   posture=upright   lean=3%   poses=2   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+ledger frames=1560 pixel_bytes=4313088000 rx_bytes=16450424 tx_bytes=144524 nic=end0
+frame 1560   posture=upright   lean=7%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=30.03 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=38.772 hip_y=0.404 sh_y=0.149 bbox_ar=1.002 vis=hips
+frame 1565   posture=upright   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 1570   posture=upright   lean=6%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 1575   posture=upright   lean=0%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 1580   posture=upright   lean=1%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 1585   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+ledger frames=1590 pixel_bytes=4396032000 rx_bytes=16706506 tx_bytes=146244 nic=end0
+frame 1590   posture=upright   lean=2%   poses=3   confidence=0.916   streak=0   mla=8.0ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=31.031 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=39.773 hip_y=0.533 sh_y=0.356 bbox_ar=0.9 vis=hips
+frame 1595   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.0ms   uploaded=0
+frame 1600   posture=upright   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 1605   posture=upright   lean=2%   poses=3   confidence=0.935   streak=0   mla=8.0ms   uploaded=0
+frame 1610   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 1615   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+ledger frames=1620 pixel_bytes=4478976000 rx_bytes=16943406 tx_bytes=147956 nic=end0
+frame 1620   posture=upright   lean=3%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=32.032 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=40.774 hip_y=0.54 sh_y=0.368 bbox_ar=0.922 vis=hips
+frame 1625   posture=upright   lean=5%   poses=3   confidence=0.894   streak=0   mla=8.4ms   uploaded=0
+frame 1630   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 1635   posture=upright   lean=3%   poses=2   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 1640   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 1645   posture=upright   lean=3%   poses=2   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+ledger frames=1650 pixel_bytes=4561920000 rx_bytes=17160858 tx_bytes=149676 nic=end0
+frame 1650   posture=upright   lean=3%   poses=2   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=33.033 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=41.775 hip_y=0.54 sh_y=0.376 bbox_ar=0.928 vis=hips
+frame 1655   posture=upright   lean=3%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 1660   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.4ms   uploaded=0
+frame 1665   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 1670   posture=upright   lean=2%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 1675   posture=upright   lean=3%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+ledger frames=1680 pixel_bytes=4644864000 rx_bytes=17378832 tx_bytes=151396 nic=end0
+frame 1680   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=34.034 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=42.776 hip_y=0.548 sh_y=0.376 bbox_ar=0.924 vis=hips
+frame 1685   posture=upright   lean=5%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 1690   posture=upright   lean=2%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 1695   posture=upright   lean=2%   poses=2   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 1700   posture=upright   lean=1%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 1705   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+ledger frames=1710 pixel_bytes=4727808000 rx_bytes=17664020 tx_bytes=153116 nic=end0
+frame 1710   posture=upright   lean=8%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=35.035 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=43.777 hip_y=0.521 sh_y=0.364 bbox_ar=0.916 vis=hips
+frame 1715   posture=upright   lean=5%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 1720   posture=upright   lean=6%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 1725   posture=upright   lean=1%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 1730   posture=upright   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 1735   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+ledger frames=1740 pixel_bytes=4810752000 rx_bytes=17967214 tx_bytes=154836 nic=end0
+frame 1740   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.4ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=36.036 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=44.778 hip_y=0.422 sh_y=0.171 bbox_ar=1.121 vis=hips
+frame 1745   posture=upright   lean=1%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1750   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 1755   posture=upright   lean=1%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 1760   posture=upright   lean=0%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1765   posture=upright   lean=1%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+ledger frames=1770 pixel_bytes=4893696000 rx_bytes=18222548 tx_bytes=156556 nic=end0
+frame 1770   posture=upright   lean=0%   poses=3   confidence=0.894   streak=0   mla=8.4ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=37.037 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=45.779 hip_y=0.382 sh_y=0.186 bbox_ar=1.344 vis=hips
+frame 1775   posture=upright   lean=2%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1780   posture=upright   lean=1%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1785   posture=upright   lean=0%   poses=3   confidence=0.916   streak=0   mla=8.4ms   uploaded=0
+frame 1790   posture=upright   lean=3%   poses=2   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1795   posture=upright   lean=0%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+ledger frames=1800 pixel_bytes=4976640000 rx_bytes=18446480 tx_bytes=158350 nic=end0
+frame 1800   posture=upright   lean=0%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=38.038 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=46.78 hip_y=0.382 sh_y=0.19 bbox_ar=1.338 vis=hips
+frame 1805   posture=upright   lean=0%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1810   posture=upright   lean=0%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1815   posture=upright   lean=0%   poses=3   confidence=0.865   streak=0   mla=8.2ms   uploaded=0
+frame 1820   posture=upright   lean=1%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1825   posture=upright   lean=0%   poses=2   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+ledger frames=1830 pixel_bytes=5059584000 rx_bytes=18685242 tx_bytes=160136 nic=end0
+frame 1830   posture=upright   lean=3%   poses=3   confidence=0.865   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=39.039 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=47.781 hip_y=0.378 sh_y=0.182 bbox_ar=1.311 vis=hips
+frame 1835   posture=upright   lean=3%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 1840   posture=upright   lean=3%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 1845   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 1850   posture=upright   lean=6%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 1855   posture=upright   lean=5%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+ledger frames=1860 pixel_bytes=5142528000 rx_bytes=18961318 tx_bytes=161930 nic=end0
+frame 1860   posture=upright   lean=5%   poses=2   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=40.04 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=48.782 hip_y=0.394 sh_y=0.19 bbox_ar=1.283 vis=hips
+frame 1865   posture=upright   lean=11%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 1870   posture=upright   lean=19%   poses=2   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 1875   posture=upright   lean=34%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 1880   posture=upright   lean=54%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 1882   posture=upright   lean=56%   poses=3   confidence=0.935   streak=1   mla=8.3ms   uploaded=0
+frame 1883   posture=upright   lean=60%   poses=3   confidence=0.916   streak=2   mla=8.2ms   uploaded=0
+frame 1884   posture=upright   lean=59%   poses=2   confidence=0.935   streak=3   mla=8.4ms   uploaded=0
+frame 1885   posture=upright   lean=58%   poses=3   confidence=0.935   streak=4   mla=8.4ms   uploaded=0
+frame 1886   posture=upright   lean=58%   poses=3   confidence=0.916   streak=5   mla=8.2ms   uploaded=0
+frame 1887   posture=upright   lean=56%   poses=2   confidence=0.916   streak=6   mla=8.2ms   uploaded=0
+frame 1888   posture=upright   lean=56%   poses=3   confidence=0.916   streak=7   mla=8.2ms   uploaded=0
+ledger frames=1890 pixel_bytes=5225472000 rx_bytes=19225502 tx_bytes=164952 nic=end0
+frame 1890   posture=upright   lean=45%   poses=3   confidence=0.865   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=41.041 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=49.783 hip_y=0.533 sh_y=0.396 bbox_ar=1.319 vis=hips
+frame 1895   posture=upright   lean=41%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 1900   posture=upright   lean=21%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1905   posture=upright   lean=6%   poses=3   confidence=0.916   streak=0   mla=8.4ms   uploaded=0
+frame 1910   posture=upright   lean=8%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 1915   posture=upright   lean=12%   poses=3   confidence=0.894   streak=0   mla=8.0ms   uploaded=0
+ledger frames=1920 pixel_bytes=5308416000 rx_bytes=19476364 tx_bytes=166746 nic=end0
+frame 1920   posture=upright   lean=3%   poses=3   confidence=0.865   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=42.042 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=50.784 hip_y=0.646 sh_y=0.485 bbox_ar=1.397 vis=hips
+frame 1925   posture=upright   lean=9%   poses=3   confidence=0.772   streak=0   mla=8.1ms   uploaded=0
+frame 1930   posture=upright   lean=14%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1935   posture=upright   lean=9%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1940   posture=upright   lean=2%   poses=3   confidence=0.865   streak=0   mla=8.1ms   uploaded=0
+frame 1945   posture=upright   lean=10%   poses=3   confidence=0.894   streak=0   mla=8.5ms   uploaded=0
+ledger frames=1950 pixel_bytes=5391360000 rx_bytes=19708584 tx_bytes=168540 nic=end0
+frame 1950   posture=upright   lean=12%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=43.043 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=51.785 hip_y=0.662 sh_y=0.494 bbox_ar=1.384 vis=hips
+frame 1955   posture=upright   lean=6%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 1960   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1965   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1970   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1975   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+ledger frames=1980 pixel_bytes=5474304000 rx_bytes=19912126 tx_bytes=170260 nic=end0
+frame 1980   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=44.044 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=52.786 hip_y=0.658 sh_y=0.497 bbox_ar=1.389 vis=hips
+frame 1985   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 1990   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 1995   posture=upright   lean=5%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2000   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2005   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2010 pixel_bytes=5557248000 rx_bytes=20115810 tx_bytes=172054 nic=end0
+frame 2010   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=45.045 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=53.787 hip_y=0.654 sh_y=0.497 bbox_ar=1.392 vis=hips
+frame 2015   posture=upright   lean=3%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 2020   posture=upright   lean=3%   poses=2   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2025   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 2030   posture=upright   lean=6%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2035   posture=upright   lean=5%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2040 pixel_bytes=5640192000 rx_bytes=20338948 tx_bytes=173774 nic=end0
+frame 2040   posture=upright   lean=5%   poses=3   confidence=0.865   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=46.046 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=54.788 hip_y=0.662 sh_y=0.497 bbox_ar=1.394 vis=hips
+frame 2045   posture=upright   lean=5%   poses=3   confidence=0.865   streak=0   mla=8.1ms   uploaded=0
+frame 2050   posture=upright   lean=3%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2055   posture=upright   lean=6%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 2060   posture=upright   lean=8%   poses=2   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 2065   posture=upright   lean=5%   poses=2   confidence=0.916   streak=0   mla=8.4ms   uploaded=0
+ledger frames=2070 pixel_bytes=5723136000 rx_bytes=20578696 tx_bytes=175494 nic=end0
+frame 2070   posture=upright   lean=6%   poses=2   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=47.047 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=55.789 hip_y=0.658 sh_y=0.501 bbox_ar=1.371 vis=hips
+frame 2075   posture=upright   lean=6%   poses=2   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 2080   posture=upright   lean=5%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+frame 2085   posture=upright   lean=5%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2090   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2095   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+ledger frames=2100 pixel_bytes=5806080000 rx_bytes=20834068 tx_bytes=177214 nic=end0
+frame 2100   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=48.048 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=56.79 hip_y=0.662 sh_y=0.497 bbox_ar=1.4 vis=hips
+frame 2105   posture=upright   lean=2%   poses=2   confidence=0.831   streak=0   mla=8.3ms   uploaded=0
+frame 2110   posture=upright   lean=0%   poses=3   confidence=0.831   streak=0   mla=8.2ms   uploaded=0
+frame 2115   posture=upright   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2120   posture=upright   lean=0%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2125   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+ledger frames=2130 pixel_bytes=5889024000 rx_bytes=21121384 tx_bytes=178926 nic=end0
+frame 2130   posture=upright   lean=2%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=49.049 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=57.791 hip_y=0.615 sh_y=0.458 bbox_ar=1.416 vis=hips
+frame 2135   posture=upright   lean=7%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 2140   posture=upright   lean=22%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 2145   posture=upright   lean=21%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 2150   posture=upright   lean=2%   poses=3   confidence=0.865   streak=0   mla=8.3ms   uploaded=0
+frame 2155   posture=upright   lean=31%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2160 pixel_bytes=5971968000 rx_bytes=21408742 tx_bytes=180720 nic=end0
+frame 2160   posture=upright   lean=37%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=50.05 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=58.792 hip_y=0.447 sh_y=0.294 bbox_ar=1.241 vis=hips
+frame 2165   posture=upright   lean=27%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 2170   posture=upright   lean=16%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2175   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2180   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2185   posture=upright   lean=0%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2190 pixel_bytes=6054912000 rx_bytes=21697622 tx_bytes=182440 nic=end0
+frame 2190   posture=upright   lean=0%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=51.051 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=59.793 hip_y=0.382 sh_y=0.198 bbox_ar=1.378 vis=hips
+frame 2195   posture=upright   lean=1%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 2200   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2205   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2210   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2215   posture=upright   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+ledger frames=2220 pixel_bytes=6137856000 rx_bytes=21984208 tx_bytes=184160 nic=end0
+frame 2220   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=52.052 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=60.794 hip_y=0.382 sh_y=0.201 bbox_ar=1.373 vis=hips
+frame 2225   posture=upright   lean=3%   poses=2   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2230   posture=upright   lean=1%   poses=3   confidence=0.894   streak=0   mla=8.3ms   uploaded=0
+frame 2235   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.4ms   uploaded=0
+frame 2240   posture=upright   lean=9%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2245   posture=upright   lean=8%   poses=3   confidence=0.916   streak=0   mla=8.6ms   uploaded=0
+ledger frames=2250 pixel_bytes=6220800000 rx_bytes=22308378 tx_bytes=185880 nic=end0
+frame 2250   posture=upright   lean=3%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=53.053 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=61.795 hip_y=0.394 sh_y=0.171 bbox_ar=1.213 vis=hips
+frame 2255   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2260   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2265   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2270   posture=upright   lean=3%   poses=3   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+frame 2275   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2280 pixel_bytes=6303744000 rx_bytes=22688564 tx_bytes=187600 nic=end0
+frame 2280   posture=upright   lean=6%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=54.054 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=62.796 hip_y=0.42 sh_y=0.036 bbox_ar=1.057 vis=hips
+frame 2285   posture=upright   lean=4%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2290   posture=upright   lean=3%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2295   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2300   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2305   posture=upright   lean=0%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2310 pixel_bytes=6386688000 rx_bytes=23109170 tx_bytes=189320 nic=end0
+frame 2310   posture=upright   lean=0%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=55.055 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=63.797 hip_y=na sh_y=na bbox_ar=1.461 vis=none
+frame 2315   posture=upright   lean=5%   poses=1   confidence=0.370   streak=0   mla=8.1ms   uploaded=0
+frame 2320   posture=upright   lean=6%   poses=1   confidence=0.791   streak=0   mla=8.2ms   uploaded=0
+frame 2325   posture=upright   lean=47%   poses=1   confidence=0.831   streak=0   mla=8.2ms   uploaded=0
+frame 2330   posture=upright   lean=0%   poses=1   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2335   posture=upright   lean=0%   poses=1   confidence=0.894   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2340 pixel_bytes=6469632000 rx_bytes=23485866 tx_bytes=191032 nic=end0
+frame 2340   posture=upright   lean=0%   poses=1   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+trend posture=upright floor_s=0.0 sts_last_s=na sts_n=0 upright_s=56.056 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=63.964 hip_y=na sh_y=0.292 bbox_ar=1.814 vis=shoulders
+frame 2345   posture=upright   lean=5%   poses=2   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2350   posture=upright   lean=4%   poses=1   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2355   posture=upright   lean=39%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 2360   posture=upright   lean=7%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2365   posture=upright   lean=7%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+ledger frames=2370 pixel_bytes=6552576000 rx_bytes=23772012 tx_bytes=192752 nic=end0
+frame 2370   posture=upright   lean=7%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.801 sts_last_s=na sts_n=0 upright_s=57.057 sitting_s=0.367 floor_s_total=15.249 absent_s=0.267 company_s=64.765 hip_y=na sh_y=0.746 bbox_ar=1.665 vis=shoulders
+frame 2375   posture=upright   lean=7%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2380   posture=upright   lean=7%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2385   posture=upright   lean=6%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 2390   posture=upright   lean=5%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2391   posture=floor   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 2395   posture=floor   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2400 pixel_bytes=6635520000 rx_bytes=24027596 tx_bytes=194678 nic=end0
+frame 2400   posture=floor   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+trend posture=floor floor_s=1.802 sts_last_s=na sts_n=0 upright_s=57.724 sitting_s=0.367 floor_s_total=15.582 absent_s=0.267 company_s=65.766 hip_y=na sh_y=0.726 bbox_ar=1.658 vis=shoulders
+frame 2405   posture=floor   lean=5%   poses=3   confidence=0.935   streak=0   mla=8.6ms   uploaded=0
+frame 2410   posture=floor   lean=1%   poses=3   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2415   posture=floor   lean=8%   poses=3   confidence=0.935   streak=0   mla=8.5ms   uploaded=0
+frame 2420   posture=floor   lean=7%   poses=3   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2425   posture=floor   lean=9%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+ledger frames=2430 pixel_bytes=6718464000 rx_bytes=24290114 tx_bytes=196514 nic=end0
+frame 2430   posture=floor   lean=5%   poses=3   confidence=0.894   streak=0   mla=8.1ms   uploaded=0
+trend posture=floor floor_s=2.803 sts_last_s=na sts_n=0 upright_s=57.724 sitting_s=0.367 floor_s_total=16.583 absent_s=0.267 company_s=66.767 hip_y=na sh_y=0.746 bbox_ar=1.642 vis=shoulders
+frame 2435   posture=floor   lean=4%   poses=3   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2440   posture=floor   lean=20%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2445   posture=floor   lean=7%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2450   posture=floor   lean=6%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2455   posture=floor   lean=5%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+ledger frames=2460 pixel_bytes=6801408000 rx_bytes=24547346 tx_bytes=198374 nic=end0
+frame 2460   posture=floor   lean=9%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+trend posture=floor floor_s=3.804 sts_last_s=na sts_n=0 upright_s=57.724 sitting_s=0.367 floor_s_total=17.584 absent_s=0.267 company_s=67.768 hip_y=na sh_y=0.777 bbox_ar=1.456 vis=shoulders
+frame 2465   posture=floor   lean=8%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2470   posture=floor   lean=10%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2475   posture=floor   lean=11%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2480   posture=floor   lean=11%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2485   posture=floor   lean=48%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+ledger frames=2490 pixel_bytes=6884352000 rx_bytes=24793884 tx_bytes=200168 nic=end0
+frame 2490   posture=floor   lean=50%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=floor floor_s=4.805 sts_last_s=na sts_n=0 upright_s=57.724 sitting_s=0.367 floor_s_total=18.585 absent_s=0.267 company_s=68.769 hip_y=na sh_y=0.76 bbox_ar=1.528 vis=shoulders
+frame 2495   posture=floor   lean=48%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2500   posture=floor   lean=48%   poses=4   confidence=0.916   streak=0   mla=8.0ms   uploaded=0
+frame 2505   posture=floor   lean=49%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2510   posture=floor   lean=51%   poses=4   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 2515   posture=floor   lean=51%   poses=4   confidence=0.916   streak=0   mla=8.4ms   uploaded=0
+ledger frames=2520 pixel_bytes=6967296000 rx_bytes=25042738 tx_bytes=201962 nic=end0
+frame 2520   posture=floor   lean=46%   poses=4   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+trend posture=floor floor_s=5.806 sts_last_s=na sts_n=0 upright_s=57.724 sitting_s=0.367 floor_s_total=19.586 absent_s=0.267 company_s=69.77 hip_y=na sh_y=0.769 bbox_ar=1.569 vis=shoulders
+frame 2525   posture=floor   lean=46%   poses=4   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 2530   posture=floor   lean=46%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2535   posture=floor   lean=48%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2540   posture=floor   lean=46%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2545   posture=floor   lean=46%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2550 pixel_bytes=7050240000 rx_bytes=25315328 tx_bytes=203756 nic=end0
+frame 2550   posture=floor   lean=60%   poses=4   confidence=0.916   streak=1   mla=8.2ms   uploaded=0
+trend posture=floor floor_s=6.807 sts_last_s=na sts_n=0 upright_s=57.724 sitting_s=0.367 floor_s_total=20.587 absent_s=0.267 company_s=70.771 hip_y=na sh_y=0.762 bbox_ar=1.544 vis=shoulders
+frame 2551   posture=floor   lean=68%   poses=4   confidence=0.935   streak=2   mla=8.2ms   uploaded=0
+frame 2552   posture=floor   lean=66%   poses=4   confidence=0.935   streak=3   mla=8.5ms   uploaded=0
+frame 2553   posture=floor   lean=66%   poses=4   confidence=0.935   streak=4   mla=8.3ms   uploaded=0
+frame 2554   posture=floor   lean=64%   poses=3   confidence=0.935   streak=5   mla=8.3ms   uploaded=0
+frame 2555   posture=floor   lean=43%   poses=3   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2557   posture=floor   lean=61%   poses=2   confidence=0.935   streak=1   mla=8.3ms   uploaded=0
+frame 2560   posture=floor   lean=29%   poses=4   confidence=0.935   streak=0   mla=8.7ms   uploaded=0
+frame 2563   posture=upright   lean=30%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2565   posture=upright   lean=48%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2570   posture=upright   lean=45%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2573   posture=upright   lean=55%   poses=5   confidence=0.916   streak=1   mla=8.2ms   uploaded=0
+frame 2575   posture=upright   lean=53%   poses=5   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2576   posture=upright   lean=57%   poses=5   confidence=0.865   streak=1   mla=8.2ms   uploaded=0
+ledger frames=2580 pixel_bytes=7133184000 rx_bytes=25563248 tx_bytes=207198 nic=end0
+frame 2580   posture=upright   lean=46%   poses=5   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.868 sts_last_s=na sts_n=0 upright_s=58.325 sitting_s=0.367 floor_s_total=20.988 absent_s=0.267 company_s=71.772 hip_y=na sh_y=0.766 bbox_ar=1.542 vis=shoulders
+frame 2585   posture=upright   lean=43%   poses=5   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2590   posture=upright   lean=43%   poses=5   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2595   posture=upright   lean=42%   poses=5   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2600   posture=upright   lean=45%   poses=5   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2605   posture=upright   lean=44%   poses=5   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+ledger frames=2610 pixel_bytes=7216128000 rx_bytes=25801450 tx_bytes=208918 nic=end0
+frame 2610   posture=upright   lean=43%   poses=5   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+trend posture=upright floor_s=0.133 sts_last_s=na sts_n=0 upright_s=59.326 sitting_s=0.367 floor_s_total=20.988 absent_s=0.267 company_s=72.773 hip_y=na sh_y=0.762 bbox_ar=1.541 vis=shoulders
+frame 2615   posture=upright   lean=45%   poses=5   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2620   posture=upright   lean=45%   poses=5   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2625   posture=upright   lean=44%   poses=5   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2630   posture=upright   lean=47%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2635   posture=upright   lean=46%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2640 pixel_bytes=7299072000 rx_bytes=26005388 tx_bytes=210712 nic=end0
+frame 2640   posture=upright   lean=47%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+trend posture=upright floor_s=1.134 sts_last_s=na sts_n=0 upright_s=60.327 sitting_s=0.367 floor_s_total=20.988 absent_s=0.267 company_s=73.774 hip_y=na sh_y=0.774 bbox_ar=1.519 vis=shoulders
+frame 2645   posture=upright   lean=47%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2650   posture=upright   lean=49%   poses=4   confidence=0.831   streak=0   mla=8.1ms   uploaded=0
+frame 2651   posture=floor   lean=49%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2655   posture=floor   lean=47%   poses=4   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2660   posture=floor   lean=49%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2665   posture=floor   lean=47%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2670 pixel_bytes=7382016000 rx_bytes=26218498 tx_bytes=212638 nic=end0
+frame 2670   posture=floor   lean=48%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+trend posture=floor floor_s=2.135 sts_last_s=na sts_n=0 upright_s=60.661 sitting_s=0.367 floor_s_total=21.655 absent_s=0.267 company_s=74.775 hip_y=na sh_y=0.769 bbox_ar=1.517 vis=shoulders
+frame 2675   posture=floor   lean=48%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2680   posture=floor   lean=46%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2685   posture=floor   lean=45%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2690   posture=floor   lean=48%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2695   posture=floor   lean=47%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+ledger frames=2700 pixel_bytes=7464960000 rx_bytes=26445080 tx_bytes=214358 nic=end0
+frame 2700   posture=floor   lean=47%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+trend posture=floor floor_s=3.136 sts_last_s=na sts_n=0 upright_s=60.661 sitting_s=0.367 floor_s_total=22.656 absent_s=0.267 company_s=75.776 hip_y=na sh_y=0.774 bbox_ar=1.523 vis=shoulders
+frame 2705   posture=floor   lean=46%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2710   posture=floor   lean=46%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2715   posture=floor   lean=45%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2720   posture=floor   lean=45%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2725   posture=floor   lean=45%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2730 pixel_bytes=7547904000 rx_bytes=26659068 tx_bytes=216078 nic=end0
+frame 2730   posture=floor   lean=44%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+trend posture=floor floor_s=4.137 sts_last_s=na sts_n=0 upright_s=60.661 sitting_s=0.367 floor_s_total=23.657 absent_s=0.267 company_s=76.777 hip_y=na sh_y=0.769 bbox_ar=1.517 vis=shoulders
+frame 2735   posture=floor   lean=44%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2740   posture=floor   lean=43%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2745   posture=floor   lean=46%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2750   posture=floor   lean=43%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2755   posture=floor   lean=43%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2760 pixel_bytes=7630848000 rx_bytes=26871718 tx_bytes=217872 nic=end0
+frame 2760   posture=floor   lean=43%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+trend posture=floor floor_s=5.138 sts_last_s=na sts_n=0 upright_s=60.661 sitting_s=0.367 floor_s_total=24.658 absent_s=0.267 company_s=77.778 hip_y=na sh_y=0.769 bbox_ar=1.516 vis=shoulders
+frame 2765   posture=floor   lean=43%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2770   posture=floor   lean=44%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2775   posture=floor   lean=45%   poses=4   confidence=0.916   streak=0   mla=8.3ms   uploaded=0
+frame 2780   posture=floor   lean=45%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+frame 2785   posture=floor   lean=49%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+ledger frames=2790 pixel_bytes=7713792000 rx_bytes=27084264 tx_bytes=219592 nic=end0
+frame 2790   posture=floor   lean=47%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+trend posture=floor floor_s=6.139 sts_last_s=na sts_n=0 upright_s=60.661 sitting_s=0.367 floor_s_total=25.659 absent_s=0.267 company_s=78.779 hip_y=na sh_y=0.774 bbox_ar=1.511 vis=shoulders
+frame 2795   posture=floor   lean=42%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2800   posture=floor   lean=38%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2805   posture=floor   lean=37%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2810   posture=floor   lean=36%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2815   posture=floor   lean=36%   poses=4   confidence=0.916   streak=0   mla=8.2ms   uploaded=0
+ledger frames=2820 pixel_bytes=7796736000 rx_bytes=27303854 tx_bytes=221378 nic=end0
+frame 2820   posture=floor   lean=33%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+trend posture=floor floor_s=7.14 sts_last_s=na sts_n=0 upright_s=60.661 sitting_s=0.367 floor_s_total=26.66 absent_s=0.267 company_s=79.78 hip_y=na sh_y=0.781 bbox_ar=1.525 vis=shoulders
+frame 2825   posture=floor   lean=34%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2830   posture=floor   lean=37%   poses=4   confidence=0.916   streak=0   mla=8.1ms   uploaded=0
+frame 2835   posture=floor   lean=41%   poses=4   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+frame 2840   posture=floor   lean=44%   poses=4   confidence=0.935   streak=0   mla=8.2ms   uploaded=0
+frame 2845   posture=floor   lean=48%   poses=4   confidence=0.935   streak=0   mla=8.3ms   uploaded=0
+ledger frames=2850 pixel_bytes=7879680000 rx_bytes=27533528 tx_bytes=223098 nic=end0
+frame 2850   posture=floor   lean=51%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+trend posture=floor floor_s=8.141 sts_last_s=na sts_n=0 upright_s=60.661 sitting_s=0.367 floor_s_total=27.661 absent_s=0.267 company_s=80.781 hip_y=na sh_y=0.773 bbox_ar=1.527 vis=shoulders
+frame 2855   posture=floor   lean=57%   poses=4   confidence=0.935   streak=1   mla=8.1ms   uploaded=0
+frame 2856   posture=floor   lean=56%   poses=4   confidence=0.935   streak=2   mla=8.3ms   uploaded=0
+frame 2857   posture=floor   lean=57%   poses=4   confidence=0.916   streak=3   mla=8.3ms   uploaded=0
+frame 2858   posture=floor   lean=57%   poses=4   confidence=0.935   streak=4   mla=8.2ms   uploaded=0
+frame 2859   posture=floor   lean=60%   poses=4   confidence=0.916   streak=5   mla=8.3ms   uploaded=0
+frame 2860   posture=floor   lean=61%   poses=4   confidence=0.935   streak=6   mla=8.3ms   uploaded=0
+frame 2861   posture=floor   lean=61%   poses=4   confidence=0.865   streak=7   mla=8.2ms   uploaded=0
+frame 2862   posture=floor   lean=62%   poses=4   confidence=0.935   streak=8   mla=8.2ms   uploaded=0
+frame 2863   posture=floor   lean=61%   poses=4   confidence=0.935   streak=9   mla=8.3ms   uploaded=0
+frame 2864   posture=floor   lean=59%   poses=4   confidence=0.916   streak=10   mla=8.4ms   uploaded=0
+frame 2865   posture=floor   lean=58%   poses=4   confidence=0.865   streak=11   mla=8.2ms   uploaded=0
+frame 2866   posture=floor   lean=56%   poses=4   confidence=0.935   streak=12   mla=8.1ms   uploaded=0
+frame 2867   posture=floor   lean=57%   poses=4   confidence=0.935   streak=13   mla=9.5ms   uploaded=0
+frame 2870   posture=floor   lean=54%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
+frame 2875   posture=floor   lean=46%   poses=4   confidence=0.935   streak=0   mla=8.1ms   uploaded=0
