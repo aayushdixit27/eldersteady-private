@@ -10,10 +10,11 @@ PORT=5004
 SDK=ghcr.io-sima-neat-sdk-v2.1.3.0
 LIVE="$(cd "$(dirname "$0")/.." && pwd)/interface/live"; mkdir -p "$LIVE"; : > "$LIVE/board.log"   # the Chrome alert page polls this
 
-cleanup() { pkill -P $$ 2>/dev/null; pkill -f "ffmpeg -f avfoundation" 2>/dev/null; pkill -f "ffplay -fflags" 2>/dev/null; }
+cleanup() { pkill -P $$ 2>/dev/null; pkill -f "ffmpeg -f avfoundation" 2>/dev/null; pkill -f "ffplay -fflags" 2>/dev/null; docker exec -u aayushdixit $SDK ssh -o BatchMode=yes -o ConnectTimeout=3 sima@$BOARD "pkill -f watch_events.py" 2>/dev/null; }
 trap cleanup EXIT INT TERM
 
 pkill -f 'ffmpeg -f avfoundation' 2>/dev/null; pkill -f 'ffplay -fflags' 2>/dev/null; sleep 1
+docker exec -u aayushdixit $SDK ssh -o BatchMode=yes -o ConnectTimeout=3 sima@$BOARD "pkill -f watch_events.py" 2>/dev/null
 # 1. camera -> board (UDP MPEG-TS) and -> local preview (tee)
 ffmpeg -hide_banner -loglevel error -f avfoundation -pixel_format uyvy422 -framerate 30 -video_size 1280x720 -i "$CAM" \
   -map 0:v -c:v libx264 -preset ultrafast -tune zerolatency -g 30 -b:v 2M -f tee \
