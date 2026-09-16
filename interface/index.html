@@ -80,6 +80,15 @@
     .receipt-value { display: block; color: var(--ink); font-size: 16px; font-weight: 800; overflow-wrap: anywhere; }
     .receipt-label, .receipt-source { display: block; color: var(--muted); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
     .receipt-source { margin-top: 3px; }
+    .receipt-reason { margin: 13px 0 0; color: var(--muted); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+    .trend { margin-top: 30px; padding: 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .trend h2 { margin: 0 0 14px; font-size: 18px; }
+    .trend-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; font-variant-numeric: tabular-nums; }
+    .trend-item { min-width: 0; }
+    .trend-label, .trend-source { display: block; color: var(--muted); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+    .trend-value { display: block; margin-top: 4px; color: var(--ink); font-size: 16px; font-weight: 800; overflow-wrap: anywhere; }
+    .trend-value.urgent { color: var(--urgent-text); }
+    .trend-source { margin-top: 14px; }
     .ledger-io { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #254638; font-variant-numeric: tabular-nums; }
     .ledger-io-item { min-width: 0; }
     .ledger-io-label, .ledger-io-source { display: block; color: #b9d2c6; font-size: 13px; font-weight: 700; }
@@ -92,7 +101,7 @@
       .context { grid-column: 1 / -1; }
       .actions { grid-template-columns: 1fr; }
       .ledger { padding: 21px 18px; }
-      .receipt-grid, .ledger-io { grid-template-columns: 1fr; }
+      .receipt-grid, .trend-grid, .ledger-io { grid-template-columns: 1fr; }
     }
     @media (prefers-reduced-motion: reduce) { .action { transition: none; } }
   </style>
@@ -121,6 +130,16 @@
       </section>
 
       <section class="receipts" id="receipts" aria-label="Fall alert receipts" aria-live="polite"></section>
+
+      <section class="trend" aria-labelledby="trend-title">
+        <h2 id="trend-title">Movement right now</h2>
+        <div class="trend-grid">
+          <div class="trend-item"><span class="trend-label">Posture</span><strong class="trend-value" id="trend-posture">—</strong></div>
+          <div class="trend-item"><span class="trend-label">On the floor</span><strong class="trend-value" id="trend-floor">—</strong></div>
+          <div class="trend-item"><span class="trend-label">Last sit-to-stand</span><strong class="trend-value" id="trend-sts">—</strong></div>
+        </div>
+        <small class="trend-source" id="trend-source">not yet measured</small>
+      </section>
 
       <section class="ledger" aria-labelledby="ledger-title">
         <p class="ledger-label">Privacy ledger · this incident</p>
@@ -203,6 +222,28 @@
       const power = Math.min(Math.floor(Math.log(n) / Math.log(1000)), units.length);
       return `${(n / (1000 ** power)).toLocaleString("en-US", { maximumFractionDigits: 1 })} ${units[power - 1]}`;
     };
+    const parseTrend = line => {
+      if (!line.startsWith("trend ")) return null;
+      const values = Object.fromEntries([...line.matchAll(/([a-z_]+)=([^\s]+)/g)].map(match => [match[1], match[2]]));
+      if (!values.posture || values.floor_s === undefined || values.sts_last_s === undefined || values.sts_n === undefined) return null;
+      return values;
+    };
+    const floorDuration = value => {
+      const seconds = Math.max(0, Math.floor(Number(value)));
+      if (seconds < 60) return `${seconds} s`;
+      return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+    };
+    function showTrend(trend) {
+      const postureNames = { upright: "Upright", bent: "Bent over", sitting: "Sitting", floor: "On the floor", absent: "Not in view" };
+      const floor = Number(trend.floor_s);
+      document.getElementById("trend-posture").textContent = postureNames[trend.posture] || "—";
+      const floorElement = document.getElementById("trend-floor");
+      floorElement.textContent = floorDuration(floor);
+      floorElement.classList.toggle("urgent", floor > 0);
+      const last = Number(trend.sts_last_s);
+      document.getElementById("trend-sts").textContent = last > 0 ? `${last.toLocaleString("en-US")} s (${Number(trend.sts_n).toLocaleString("en-US")} today)` : "none yet";
+      document.getElementById("trend-source").textContent = "measured on the board · posture rules v1 (unvalidated)";
+    }
     function addReceipt(rawLine, ev, uploadMeasured) {
       const bytes = new TextEncoder().encode(rawLine).length;
       const source = uploadMeasured ? "measured" : "by design";
@@ -230,6 +271,12 @@
         grid.appendChild(item);
       });
       card.append(heading, time, grid);
+      if (ev.reason === "floor" || ev.reason === "lean") {
+        const reason = document.createElement("p");
+        reason.className = "receipt-reason";
+        reason.textContent = `reason: ${ev.reason === "floor" ? "on floor ≥ 3 s" : "lean"}`;
+        card.appendChild(reason);
+      }
       const receipts = document.getElementById("receipts");
       receipts.prepend(card);
       while (receipts.children.length > 5) receipts.lastElementChild.remove();
@@ -281,6 +328,9 @@
             document.getElementById("ledger-out-source").textContent = "measured";
           }
         }
+        const trends = lines.map(parseTrend).filter(Boolean);
+        const trend = trends[trends.length - 1];
+        if (trend) showTrend(trend);
         const uploadMeasured = /(?:^|\s)uploaded=0(?:\s|$)/m.test(logText);
         lines.forEach((rawLine, lineNumber) => {
           if (!rawLine.startsWith("{")) return;
