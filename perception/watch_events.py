@@ -70,6 +70,7 @@ class Pose:
     bbox_h: float | None = None
     bbox_x: float | None = None
     bbox_y: float | None = None
+    raw_box: tuple[float, float, float, float] | None = None
 
     @property
     def bbox_aspect(self) -> float | None:
@@ -262,6 +263,7 @@ class TrendTracker:
     visibility: str = "none"
     bbox_aspect: float | None = None
     subject_area: float | None = None
+    raw_box: tuple[float, float, float, float] | None = None
     pending_posture: str | None = None
     pending_seconds: float = 0.0
     floor_miss_seconds: float = 0.0
@@ -367,12 +369,14 @@ class TrendTracker:
             self.visibility = "none"
             self.bbox_aspect = None
             self.subject_area = None
+            self.raw_box = None
             self.pending_posture = None
             self.pending_seconds = 0.0
             if len(poses) >= 2:
                 self.company_seconds += dt
             return self.posture
         subject = subject_pose(poses)
+        self.raw_box = subject.raw_box if subject else None
         self.bbox_aspect = subject.bbox_aspect if subject else None
         self.subject_area = (
             subject.bbox_area / (frame_w * frame_h)
@@ -466,6 +470,9 @@ class TrendTracker:
             "sh_y": "na" if self.shoulder_y is None else tidy(self.shoulder_y),
             "bbox_ar": "na" if self.bbox_aspect is None else tidy(self.bbox_aspect),
             "subject_area": "na" if self.subject_area is None else tidy(self.subject_area),
+            "raw_box": "na" if self.raw_box is None else ",".join(
+                str(int(value)) for value in self.raw_box
+            ),
             "vis": self.visibility,
             "view": self.view,
             "cadence_spm": self.cadence_spm(),
@@ -475,6 +482,19 @@ class TrendTracker:
 
 def format_trend_line(trend: dict[str, str | float | int]) -> str:
     return "trend " + " ".join(f"{key}={value}" for key, value in trend.items())
+
+
+def format_pose_frame_line(
+    frame_index: int, processed: int, posture: str, lean: float, poses: int,
+    valid_lean: int, best: float, bent_streak: int, infer_ms: float, view: str,
+) -> str:
+    return (
+        "frame={} processed={} posture={} lean={:.0f}% poses={} valid_lean={} "
+        "best={:.3f} bent_streak={} infer_ms={:.1f} view={}"
+    ).format(
+        frame_index, processed, posture, lean, poses, valid_lean, best,
+        bent_streak, infer_ms, view,
+    )
 
 
 def log(message: str) -> None:
@@ -686,6 +706,13 @@ def output_tensors(outputs) -> list[object]:
     return [outputs]
 
 
+def pose_box_geometry(raw_box: Sequence[float]) -> tuple[float, float, float, float]:
+    x, y, b2, b3 = (float(value) for value in raw_box[:4])
+    if os.environ.get("WATCH_BOX_XYXY") == "1":
+        return x, y, b2 - x, b3 - y
+    return x, y, b2, b3
+
+
 def decode_pose_payload(outputs, frame_w: int, frame_h: int, max_poses: int) -> list[Pose]:
     import pyneat
 
@@ -701,13 +728,16 @@ def decode_pose_payload(outputs, frame_w: int, frame_h: int, max_poses: int) -> 
         for box, points in zip(boxes, keypoints):
             if len(poses) >= max_poses:
                 return poses
+            raw_box = tuple(float(value) for value in box[:4])
+            x, y, w, h = pose_box_geometry(raw_box)
             poses.append(
                 Pose(
                     score=float(box[4]),
-                    bbox_w=float(box[2]),
-                    bbox_h=float(box[3]),
-                    bbox_x=float(box[0]),
-                    bbox_y=float(box[1]),
+                    bbox_w=w,
+                    bbox_h=h,
+                    bbox_x=x,
+                    bbox_y=y,
+                    raw_box=raw_box,
                     keypoints=[
                         {"x": float(x), "y": float(y), "visibility": float(v)}
                         for x, y, v in points
@@ -906,20 +936,10 @@ def main(argv: list[str]) -> int:
                 fall_cooldown.update(posture, trend.elapsed)
                 posture_changed = previous_posture is not None and posture != previous_posture
                 if should_print(frame_index, posture_changed, bent_streak, args.print_every):
-                    log(
-                        "frame={} processed={} posture={} view={} lean={:.0f}% poses={} valid_lean={} best={:.3f} bent_streak={} infer_ms={:.1f}".format(
-                            frame_index,
-                            processed,
-                            posture,
-                            trend.view,
-                            best_lean,
-                            len(poses),
-                            len(lean_values),
-                            best_score,
-                            bent_streak,
-                            elapsed_ms,
-                        )
-                    )
+                    log(format_pose_frame_line(
+                        frame_index, processed, posture, best_lean, len(poses),
+                        len(lean_values), best_score, bent_streak, elapsed_ms, trend.view,
+                    ))
                 previous_posture = posture
                 fall_reason = None if trend.view != "full" else ("floor" if trend.floor_seconds >= 3.0 else (
                     "lean" if bent_streak >= args.fall_consecutive_frames else None

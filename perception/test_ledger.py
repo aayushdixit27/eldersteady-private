@@ -12,7 +12,9 @@ from watch_events import (
     dedupe_pose_boxes,
     event_timestamp,
     format_ledger_line,
+    format_pose_frame_line,
     posture_measurements,
+    pose_box_geometry,
     read_nic,
     should_print,
 )
@@ -62,6 +64,14 @@ def main() -> None:
     assert [should_print(frame, changed, streak, 5) for frame, changed, streak in (
         (1, False, 0), (5, False, 0), (6, True, 0), (7, False, 1)
     )] == [False, True, True, True]
+    assert format_pose_frame_line(7, 4, "upright", 12, 1, 1, 0.875, 0, 8.25, "full") == (
+        "frame=7 processed=4 posture=upright lean=12% poses=1 valid_lean=1 "
+        "best=0.875 bent_streak=0 infer_ms=8.2 view=full"
+    )
+    with patch.dict("watch_events.os.environ", {}, clear=True):
+        assert pose_box_geometry((10, 20, 110, 220)) == (10, 20, 110, 220)
+    with patch.dict("watch_events.os.environ", {"WATCH_BOX_XYXY": "1"}, clear=True):
+        assert pose_box_geometry((10, 20, 110, 220)) == (10, 20, 100, 200)
     # Posture contract: absence means no pose, not merely missing torso keypoints.
     assert classify_posture([], 100, 100, 0.3) == "absent"
     assert classify_posture([
