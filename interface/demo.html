@@ -182,7 +182,7 @@
 
     function parseFrame(line) {
       const frame = line.match(/^frame\s+(\d+)/);
-      const people = line.match(/people-in-view=(\d+)/);
+      const people = line.match(/people-in-view=(\d+)/) || line.match(/poses=(\d+)/);
       const mla = line.match(/mla=([\d.]+)ms/);
       const lean = line.match(/lean=(\d+)%/);
       const posture = line.match(/posture=([^\s]+)(?:\s|$)/);
