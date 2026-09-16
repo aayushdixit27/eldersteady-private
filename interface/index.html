@@ -42,6 +42,13 @@
     .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: var(--urgent-text); text-transform: uppercase; letter-spacing: .12em; font-size: 13px; font-weight: 850; }
     .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--urgent); box-shadow: 0 0 0 5px var(--urgent-soft); }
     h1 { margin: 0; max-width: 650px; font-size: clamp(28px, 6vw, 42px); line-height: 1.08; letter-spacing: -.04em; }
+    .help-line, .voice-label, .demo-clock { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .help-line { margin: 7px 0 0; }
+    .alert-copy { margin: 14px 0 0; padding: 14px; border-left: 3px solid var(--urgent); white-space: pre-line; font-size: 15px; font-weight: 700; line-height: 1.4; }
+    .alert-copy[hidden], .voice-state[hidden], .demo-clock[hidden] { display: none; }
+    .voice-state { margin-top: 10px; }
+    .voice-state strong, .voice-label { display: block; }
+    .wander h1, h1.wander { color: var(--safe-deep); }
     .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0; }
     .fact { padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
     .fact span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 13px; font-weight: 600; }
@@ -117,6 +124,10 @@
         <div class="live" id="live" aria-live="polite"><span class="pulse-live"></span><strong>Board is watching</strong><span class="sep">·</span><span id="lv-people">people in view: —</span><span class="sep">·</span><span id="lv-ms">— ms per frame</span><span class="sep">·</span><span id="lv-frames">0 frames</span><span class="sep">·</span><strong id="lv-up">0 uploaded</strong></div>
         <p class="eyebrow"><span class="pulse"></span>Needs your attention</p>
         <h1 id="incident-title"></h1>
+        <p class="help-line">The box can get this wrong.</p>
+        <span class="demo-clock" id="demo-clock" hidden>demo clock</span>
+        <div id="alert-detail" hidden><p class="voice-label">What Sue would get</p><div class="alert-copy" id="alert-copy"></div></div>
+        <div class="voice-state" id="voice-state" hidden><strong id="voice-copy"></strong><span class="voice-label">heard on the box · nothing recorded</span></div>
         <div class="facts">
           <div class="fact"><span>Where</span><strong id="where"></strong></div>
           <div class="fact"><span>When</span><strong id="when"></strong></div>
@@ -168,15 +179,16 @@
 
     const incident = incidents.find(item => item.incident_id === "inc-0004");
     const $ = selector => document.querySelector(selector);
-    const title = incident.summary.replace(/\.$/, "");
     const room = incident.room.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
     const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(new Date(incident.opened_ts));
 
-    $("#incident-title").textContent = title + ".";
+    $("#incident-title").textContent = "A fall alert is on this page.";
     $("#where").textContent = room;
     $("#when").textContent = time;
     $("#context").textContent = `${incident.event_count} signals over 2 minutes were grouped into this one alert.`;
     $("#frame-count").textContent = incident.frames_never_stored.toLocaleString("en-US");
+    $("#alert-detail").hidden = false;
+    $("#alert-copy").textContent = `Someone may have fallen.\n${room}.\nAt ${time.toLowerCase()}.\nPlease check on them now.`;
 
     function respond(choice) {
       const at = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date());
@@ -187,6 +199,7 @@
         ? `<strong>Marked “We’re good” at ${at}</strong><p>This alert is acknowledged. Your family can see that someone responded.</p><button class="reset">Change response</button>`
         : `<strong>EMS response chosen at ${at}</strong><p>Call emergency services now. This alert is marked for escalation; Watch does not place the call.</p><button class="reset">Change response</button>`;
       $("#actions").hidden = true;
+      if (isGood) window.dispatchEvent(new Event("watch-alert-cleared"));
       box.querySelector(".reset").addEventListener("click", reset);
     }
 
@@ -215,6 +228,9 @@
     const renderedEvents = new Set();
     const roomName = r => r.replaceAll("_", " ").replace(/^\w/, c => c.toUpperCase());
     const localTime = ts => new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(ts));
+    const wanderTime = ts => new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(ts));
+    const timePeriod = ts => { const hour = new Date(ts).getHours(); return hour >= 22 || hour < 6 ? "night" : "day"; };
+    const alertBody = ev => `Someone may have fallen.\n${roomName(ev.room)}.\nAt ${localTime(ev.ts).toLowerCase()}.\nPlease check on them now.`;
     const humanBytes = value => {
       const n = Number(value);
       if (n < 1000) return `${n.toLocaleString("en-US")} B`;
@@ -243,6 +259,13 @@
       const last = Number(trend.sts_last_s);
       document.getElementById("trend-sts").textContent = last > 0 ? `${last.toLocaleString("en-US")} s (${Number(trend.sts_n).toLocaleString("en-US")} today)` : "none yet";
       document.getElementById("trend-source").textContent = "measured on the board · posture rules v1 (unvalidated)";
+      if (!activeAlert && !activeWander && !alertCleared) {
+        const stateName = trend.view === "close" || trend.posture === "close" ? "close" : floor > 0 || trend.posture === "floor" ? "on-floor" : trend.posture === "bent" ? "leaning" : trend.posture === "sitting" ? "sitting" : trend.posture === "upright" ? "standing" : trend.posture === "absent" ? "empty-room" : "waiting-board";
+        const sentence = { "waiting-board": "We are waiting for the box.", "empty-room": "No one is in view.", standing: "Someone seems to be standing.", sitting: "Someone seems to be sitting.", leaning: "Someone seems to be leaning.", "on-floor": "They may be on the floor; we are counting.", close: "Posture is paused until your whole body is in the picture" }[stateName];
+        document.getElementById("incident-title").textContent = sentence;
+        document.getElementById("incident-title").classList.remove("wander");
+        document.getElementById("alert-detail").hidden = true;
+      }
     }
     function addReceipt(rawLine, ev, uploadMeasured) {
       const bytes = new TextEncoder().encode(rawLine).length;
@@ -253,7 +276,7 @@
         [Number(ev.discarded_frames).toLocaleString("en-US"), "frames seen and destroyed", "measured"],
         ["0", "stored", source],
         ["0", "uploaded", source],
-        [`this alert: ${bytes.toLocaleString("en-US")} bytes`, "alert payload", "measured"]
+        [`this ${ev.type}: ${bytes.toLocaleString("en-US")} bytes`, "event payload", "measured"]
       ];
       const heading = document.createElement("h2");
       heading.textContent = roomName(ev.room);
@@ -281,18 +304,38 @@
       receipts.prepend(card);
       while (receipts.children.length > 5) receipts.lastElementChild.remove();
     }
+    let activeAlert = null, activeWander = null, wanderAt = 0, alertCleared = false;
     function showEvent(ev) {
-      const t = ev.type === "fall" ? "A possible fall" : ev.type === "stove_unattended" ? "The stove has been left on" : "Someone is up and moving";
-      document.getElementById("incident-title").textContent = `${t} in the ${roomName(ev.room).toLowerCase()}.`;
-      document.getElementById("where").textContent = roomName(ev.room);
-      document.getElementById("when").textContent = localTime(ev.ts);
+      if (ev.type === "fall") { activeAlert = ev; activeWander = null; alertCleared = false; document.getElementById("voice-state").hidden = true; }
+      if (ev.type === "wander" && !activeAlert) { activeWander = ev; wanderAt = Date.now(); }
+      const shown = activeAlert || activeWander || ev;
+      const isFall = Boolean(activeAlert);
+      document.getElementById("incident-title").textContent = isFall ? "A fall alert is on this page." : `Up and about at ${wanderTime(shown.ts)} — ${timePeriod(shown.ts)}`;
+      document.getElementById("incident-title").classList.toggle("wander", !isFall);
+      document.getElementById("demo-clock").hidden = isFall || !shown.demo_clock;
+      document.getElementById("alert-detail").hidden = !isFall;
+      if (isFall) document.getElementById("alert-copy").textContent = alertBody(shown);
+      document.getElementById("where").textContent = roomName(shown.room);
+      document.getElementById("when").textContent = localTime(shown.ts);
       document.getElementById("context").textContent = "Live from the board just now.";
-      document.getElementById("frame-count").textContent = Number(ev.discarded_frames).toLocaleString("en-US");
+      document.getElementById("frame-count").textContent = Number(shown.discarded_frames).toLocaleString("en-US");
       document.querySelector(".provenance").textContent = "Measured on the Modalix board · live";
       live.classList.add("event");
       live.querySelector("strong").textContent = "Alert sent to family";
       setTimeout(() => { live.classList.remove("event"); live.querySelector("strong").textContent = "Board is watching"; }, 6000);
     }
+    function parseVoice(line) {
+      const match = line.match(/^voice\s+keyword=(okay|help|fallen|none)\s+heard_s=(\d+)\s+recorded_s=0(?:\s+text="[^"]*")?$/);
+      if (!match || !activeAlert) return null;
+      document.getElementById("voice-copy").textContent = match[1] === "okay" ? "She said: I'm okay" : match[1] === "none" ? "No answer in 60 s" : "She said: help";
+      document.getElementById("voice-state").hidden = false; return { keyword: match[1], heard_s: Number(match[2]) };
+    }
+    window.addEventListener("watch-alert-cleared", () => {
+      activeAlert = null; alertCleared = true;
+      document.getElementById("alert-detail").hidden = true;
+      document.getElementById("voice-state").hidden = true;
+      document.getElementById("incident-title").textContent = "This alert was closed; please check on them.";
+    });
     async function poll() {
       try {
         const r = await fetch("live/board.log?t=" + Date.now(), { cache: "no-store" });
@@ -332,15 +375,16 @@
         const trend = trends[trends.length - 1];
         if (trend) showTrend(trend);
         const uploadMeasured = /(?:^|\s)uploaded=0(?:\s|$)/m.test(logText);
+        if (activeWander && Date.now() - wanderAt >= 20000) activeWander = null;
         lines.forEach((rawLine, lineNumber) => {
+          if (rawLine.startsWith("voice ")) { parseVoice(rawLine); return; }
           if (!rawLine.startsWith("{")) return;
           const eventKey = `${lineNumber}:${rawLine}`;
           if (renderedEvents.has(eventKey)) return;
           renderedEvents.add(eventKey);
           try {
             const ev = JSON.parse(rawLine);
-            if (ev.type === "fall") addReceipt(rawLine, ev, uploadMeasured);
-            showEvent(ev);
+            if (ev.type === "fall" || ev.type === "wander") { addReceipt(rawLine, ev, uploadMeasured); showEvent(ev); }
           } catch (e) {}
         });
       } catch (e) {}
