@@ -26,7 +26,7 @@ open http://127.0.0.1:7311/interface/demo.html
 | MLA inference | `8.1–8.3 ms/frame` | measured | [same first-fall capture](evidence/captures/2026-09-16-0803-first-real-fall.txt) |
 | Quiet-mode ledger | `150` frames → `3.25 MB` video in, `10.0 KB` out on `end0`; `1 : 324` | measured | This morning with `--print-every` quiet mode; capture file not yet committed |
 | Pre-quiet-mode ledger | `3450` frames → `34 MB` in, `739 KB` out; `1 : 46` | measured | [`2026-09-16-0815-second-fall-with-ledger.txt`](evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt), commit `6d0d4e6` |
-| Why the pre-quiet ratio was lower | `tx_bytes` counts all protocols on `end0`, including the SSH session carrying per-frame diagnostic lines; quiet mode (`PRINT_EVERY=5`) removed diagnostics from the wire, not events | measured interpretation | [`live_demo.sh`](perception/live_demo.sh) and the pre-quiet capture above |
+| Why the pre-quiet ratio was lower | `tx_bytes` counts all protocols on `end0`, including the SSH session carrying per-frame diagnostic lines; quiet mode (`PRINT_EVERY=5`) removed diagnostics from the wire, not events | explanation interpretation | [`live_demo.sh`](perception/live_demo.sh) and the pre-quiet capture above |
 | Decoded pixel bytes | frames × `1280` × `720` × `3` | computed | [`demo.html`](interface/demo.html) ledger calculation |
 | Fall trigger | `55%` lean for `8` frames | guessed | [`DEMO.md`](perception/DEMO.md) and [`live_demo.sh`](perception/live_demo.sh) |
 | Evidence layer | `6/6` eval | fixture | [`pitch/eval-report.md`](pitch/eval-report.md) |
@@ -50,11 +50,11 @@ cat /sys/class/net/end0/statistics/tx_bytes
 
 The problem is described by caregivers, not a market-size estimate:
 
-> “My mother was found on the floor of her room at the assisted living this morning. Her ankle was broken and dislocated and they don't know how long she was on the floor.” — [r/dementia · +78 score · June 3, 2026](https://www.reddit.com/r/dementia/comments/1tw5u35/) (measured in source)
+> “My mother was found on the floor of her room at the assisted living this morning. Her ankle was broken and dislocated and they don't know how long she was on the floor.” — [r/dementia · +78 score · June 3, 2026](https://www.reddit.com/r/dementia/comments/1tw5u35/)
 
-> “Last week my grandmother couldn’t get off of the ground, but had no way to get anybody’s attention for help.” — [r/eldercare · +10 score · October 19, 2025](https://www.reddit.com/r/eldercare/comments/1oav1eu/) (measured in source)
+> “Last week my grandmother couldn’t get off of the ground, but had no way to get anybody’s attention for help.” — [r/eldercare · +10 score · October 19, 2025](https://www.reddit.com/r/eldercare/comments/1oav1eu/)
 
-> “Fell a few times, lost her cane, and was found hours later.” — [r/Alzheimers · +5 score · April 18, 2025](https://www.reddit.com/r/Alzheimers/comments/1k1u5wm/) (measured in source)
+> “Fell a few times, lost her cane, and was found hours later.” — [r/Alzheimers · +5 score · April 18, 2025](https://www.reddit.com/r/Alzheimers/comments/1k1u5wm/)
 
 **What we refused:** a confidence percentage on the family screen—manufactured certainty is the false-alarm failure; automatic 911—family keeps context; face identification—identity is not the job.
 
