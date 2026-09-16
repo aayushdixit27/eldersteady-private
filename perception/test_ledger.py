@@ -26,6 +26,7 @@ def synthetic_pose(
     *, hips_visible: bool = True, nose_x: float = 50.0, nose_y: float = 10.0,
     bbox_aspect: float | None = None, bbox_x: float = 0.0,
     bbox_y: float = 0.0,
+    knee_y: float | None = None,
     ankle_x: tuple[float, float] | None = None, score: float = 0.9,
     bbox_size: tuple[float, float] | None = None,
 ) -> Pose:
@@ -36,6 +37,9 @@ def synthetic_pose(
     hip_visibility = 1.0 if hips_visible else 0.0
     points[11] = {"x": 45.0, "y": hip_y, "visibility": hip_visibility}
     points[12] = {"x": 55.0, "y": hip_y, "visibility": hip_visibility}
+    if knee_y is not None:
+        points[13] = {"x": 45.0, "y": knee_y, "visibility": 1.0}
+        points[14] = {"x": 55.0, "y": knee_y, "visibility": 1.0}
     if ankle_x is not None:
         points[15] = {"x": ankle_x[0], "y": 90.0, "visibility": 1.0}
         points[16] = {"x": ankle_x[1], "y": 90.0, "visibility": 1.0}
@@ -86,6 +90,16 @@ def main() -> None:
     ], 100, 100, 0.3) == "bent"
     assert classify_posture([synthetic_pose(55, 20, bbox_aspect=0.55)], 100, 100, 0.3) == "upright"
     assert classify_posture([synthetic_pose(66, 20, bbox_aspect=0.95)], 100, 100, 0.3) == "sitting"
+    # Thigh geometry is primary when the full body is clear; aspect is fallback.
+    assert classify_posture([
+        synthetic_pose(60, 20, knee_y=96, bbox_aspect=1.1)
+    ], 100, 100, 0.3) == "upright"
+    assert classify_posture([
+        synthetic_pose(60, 20, knee_y=60, bbox_aspect=0.55)
+    ], 100, 100, 0.3) == "sitting"
+    assert classify_posture([
+        synthetic_pose(60, 20, bbox_aspect=1.1)
+    ], 100, 100, 0.3) == "sitting"
     assert classify_posture(
         [synthetic_pose(75, 75, bbox_aspect=1.5)], 100, 100, 0.3, floor_seconds=1.5
     ) == "floor"
@@ -110,6 +124,7 @@ def main() -> None:
         [wide_pose], 100, 100, 0.3, 2.0, detections=[bed], det_ms=5.0
     ) == "lying"
     assert bed_tracker.snapshot()["floor_s"] == 0.0
+    assert bed_tracker.snapshot()["posture"] == "lying"
     shoulder_floor = TrendTracker()
     shoulder_pose = synthetic_pose(0, 75, hips_visible=False, bbox_aspect=1.5)
     assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) == "close"
@@ -144,13 +159,15 @@ def main() -> None:
     assert far_upright.snapshot()["bbox_ar"] == 0.55
 
     seated_tracker = TrendTracker()
-    seated_pose = synthetic_pose(66, 20, bbox_aspect=0.95)
+    seated_pose = synthetic_pose(66, 20, knee_y=66, bbox_aspect=0.95)
     for _ in range(2):
         seated_tracker.update([seated_pose], 100, 100, 0.3, 1.0)
     assert seated_tracker.snapshot()["posture"] == "sitting"
-    standing_pose = synthetic_pose(55, 20, bbox_aspect=0.55)
+    assert seated_tracker.snapshot()["thigh"] == 0.0
+    standing_pose = synthetic_pose(55, 20, knee_y=86.5, bbox_aspect=0.55)
     seated_tracker.update([standing_pose], 100, 100, 0.3, 0.01)
     assert seated_tracker.snapshot()["sts_n"] == 1
+    assert seated_tracker.snapshot()["thigh"] == 0.9
     assert seated_tracker.snapshot()["sts_last_s"] == 0.01
     close_standing = TrendTracker()
     for _ in range(2):
@@ -196,6 +213,11 @@ def main() -> None:
     floor_flicker.update([standing_pose], 100, 100, 0.3, 0.1)
     assert floor_flicker.snapshot()["floor_s"] == 1.0
     assert floor_flicker.update([floor_pose], 100, 100, 0.3, 0.5) == "floor"
+
+    body_floor = TrendTracker()
+    low_hips_pose = synthetic_pose(90, 50, knee_y=90, bbox_aspect=0.5)
+    assert body_floor.update([low_hips_pose], 100, 100, 0.3, 1.0) == "sitting"
+    assert body_floor.update([low_hips_pose], 100, 100, 0.3, 0.5) == "floor"
 
     walking = TrendTracker()
     # 17 alternating signs in ten seconds gives 100-ish steps/minute.
