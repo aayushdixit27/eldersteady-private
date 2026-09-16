@@ -27,6 +27,7 @@ COCO_RIGHT_SHOULDER = 6
 COCO_LEFT_HIP = 11
 COCO_RIGHT_HIP = 12
 NIC = "end0"
+POSTURES = ("upright", "bent", "sitting", "floor", "absent")
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,110 @@ class Detection:
 class Pose:
     score: float
     keypoints: Sequence[dict[str, float]]
+
+
+def posture_measurements(
+    pose: Pose, frame_w: int, frame_h: int, min_visibility: float
+) -> tuple[float, float, bool] | None:
+    """Return normalised hip/shoulder heights and whether the torso is upright."""
+    points = pose.keypoints
+    ls, rs = points[COCO_LEFT_SHOULDER], points[COCO_RIGHT_SHOULDER]
+    lh, rh = points[COCO_LEFT_HIP], points[COCO_RIGHT_HIP]
+    if any(point["visibility"] < min_visibility for point in (ls, rs, lh, rh)):
+        return None
+    shoulder_x, shoulder_y = midpoint(ls, rs)
+    hip_x, hip_y = midpoint(lh, rh)
+    dx, dy = shoulder_x - hip_x, shoulder_y - hip_y
+    if dx == 0.0 and dy == 0.0:
+        return None
+    lean = degrees(atan2(abs(dx), abs(dy)))
+    return hip_y / frame_h, shoulder_y / frame_h, lean < 45.0
+
+
+def classify_posture(
+    poses: Sequence[Pose], frame_w: int, frame_h: int, min_visibility: float,
+    floor_seconds: float = 0.0,
+) -> str:
+    measured = [(pose.score, values) for pose in poses if (
+        values := posture_measurements(pose, frame_w, frame_h, min_visibility)
+    ) is not None]
+    if not measured:
+        return "absent"
+    _, (hip_y, shoulder_y, torso_upright) = max(measured, key=lambda item: item[0])
+    if hip_y > 0.85 and shoulder_y > 0.85 and floor_seconds >= 2.0:
+        return "floor"
+    if hip_y > 0.65 and torso_upright:
+        return "sitting"
+    return "upright" if torso_upright else "bent"
+
+
+@dataclass
+class SitToStandDetector:
+    sitting_started_at: float | None = None
+    last_duration: float = 0.0
+    count: int = 0
+
+    def update(self, hip_y: float | None, torso_upright: bool, now: float) -> None:
+        if hip_y is None or not torso_upright:
+            if self.sitting_started_at is not None and now - self.sitting_started_at > 10.0:
+                self.sitting_started_at = None
+            return
+        if hip_y > 0.65:
+            if self.sitting_started_at is None:
+                self.sitting_started_at = now
+        elif self.sitting_started_at is not None:
+            duration = now - self.sitting_started_at
+            if duration <= 10.0:
+                self.last_duration = duration
+                self.count += 1
+            self.sitting_started_at = None
+
+
+@dataclass
+class TrendTracker:
+    posture: str = "absent"
+    floor_seconds: float = 0.0
+    totals: dict[str, float] | None = None
+    company_seconds: float = 0.0
+    elapsed: float = 0.0
+    sts: SitToStandDetector | None = None
+
+    def __post_init__(self) -> None:
+        self.totals = {posture: 0.0 for posture in POSTURES}
+        self.sts = SitToStandDetector()
+
+    def update(
+        self, poses: Sequence[Pose], frame_w: int, frame_h: int, min_visibility: float, dt: float
+    ) -> str:
+        self.elapsed += dt
+        measured = [(pose.score, values) for pose in poses if (
+            values := posture_measurements(pose, frame_w, frame_h, min_visibility)
+        ) is not None]
+        best = max(measured, key=lambda item: item[0])[1] if measured else None
+        floor_candidate = best is not None and best[0] > 0.85 and best[1] > 0.85
+        self.floor_seconds = self.floor_seconds + dt if floor_candidate else 0.0
+        self.posture = classify_posture(poses, frame_w, frame_h, min_visibility, self.floor_seconds)
+        self.totals[self.posture] += dt
+        if len(measured) >= 2:
+            self.company_seconds += dt
+        self.sts.update(best[0] if best else None, best[2] if best else False, self.elapsed)
+        return self.posture
+
+    def snapshot(self) -> dict[str, str | float | int]:
+        tidy = lambda value: round(value, 3)
+        return {
+            "posture": self.posture, "floor_s": tidy(self.floor_seconds),
+            "sts_last_s": tidy(self.sts.last_duration), "sts_n": self.sts.count,
+            "upright_s": tidy(self.totals["upright"]),
+            "sitting_s": tidy(self.totals["sitting"]),
+            "floor_s_total": tidy(self.totals["floor"]),
+            "absent_s": tidy(self.totals["absent"]),
+            "company_s": tidy(self.company_seconds),
+        }
+
+
+def format_trend_line(trend: dict[str, str | float | int]) -> str:
+    return "trend " + " ".join(f"{key}={value}" for key, value in trend.items())
 
 
 def log(message: str) -> None:
@@ -106,6 +211,7 @@ def write_session_ledger(
     nic_rx_bytes: int | None = None,
     nic_tx_bytes: int | None = None,
     nic: str = NIC,
+    trend: dict[str, str | float | int] | None = None,
 ) -> dict:
     frames_unattributed = frames_processed - frames_in_events
     ledger = {
@@ -120,6 +226,8 @@ def write_session_ledger(
         "nic_tx_bytes": nic_tx_bytes,
         "nic": nic,
     }
+    if trend is not None:
+        ledger["trend"] = trend
     if frames_processed != frames_in_events + frames_unattributed:
         raise AssertionError("session ledger frame counts do not add up")
     path.write_text(json.dumps(ledger, separators=(",", ":")) + "\n", encoding="utf-8")
@@ -402,6 +510,9 @@ def main(argv: list[str]) -> int:
     bent_streak = 0
     previous_posture = None
     pixel_bytes = 0
+    trend = TrendTracker()
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_seconds = args.stride / fps if fps and fps > 0 else args.stride / 30.0
 
     def nic_deltas() -> tuple[int | None, int | None]:
         rx_now, tx_now = read_nic()
@@ -438,6 +549,7 @@ def main(argv: list[str]) -> int:
 
             if args.pose:
                 poses = decode_pose_payload(outputs, frame.shape[1], frame.shape[0], args.top_k)
+                trend.update(poses, frame.shape[1], frame.shape[0], args.min_keypoint_visibility, frame_seconds)
                 lean_values = [
                     lean
                     for pose in poses
@@ -447,7 +559,7 @@ def main(argv: list[str]) -> int:
                 best_score = max((pose.score for pose in poses), default=0.0)
                 is_bent = best_lean >= args.fall_lean_threshold
                 bent_streak = bent_streak + 1 if is_bent else 0
-                posture = "BENT" if is_bent else "upright"
+                posture = trend.posture
                 posture_changed = previous_posture is not None and posture != previous_posture
                 if should_print(frame_index, posture_changed, bent_streak, args.print_every):
                     log(
@@ -464,13 +576,17 @@ def main(argv: list[str]) -> int:
                         )
                     )
                 previous_posture = posture
-                if not event_emitted and bent_streak >= args.fall_consecutive_frames:
+                fall_reason = "floor" if trend.floor_seconds >= 3.0 else (
+                    "lean" if bent_streak >= args.fall_consecutive_frames else None
+                )
+                if not event_emitted and fall_reason is not None:
                     event = {
                         "type": "fall",
                         "room": args.room,
                         "ts": event_timestamp(args.host_ts),
                         "confidence": round(best_score, 3),
                         "discarded_frames": frames_since_event,
+                        "reason": fall_reason,
                     }
                     emit_event(event)
                     event_emitted = True
@@ -479,6 +595,7 @@ def main(argv: list[str]) -> int:
                     frames_since_event = 0
             else:
                 detections = parse_bbox_payload(bbox_payload(outputs), args.score_threshold)
+                trend.update([], frame.shape[1], frame.shape[0], args.min_keypoint_visibility, frame_seconds)
                 send_insight_metadata(args.insight_host, args.insight_metadata_port, frame_index, detections)
                 if detections:
                     frames_with_detections += 1
@@ -508,12 +625,17 @@ def main(argv: list[str]) -> int:
                     events_emitted += 1
                     frames_since_event = 0
 
+            if processed % ledger_every == 0:
+                emit_ledger_line(format_trend_line(trend.snapshot()))
+
         if event_emitted or (args.pose and processed > 0):
             return 0
         return 3
     finally:
         rx_delta, tx_delta = nic_deltas()
         emit_ledger_line(format_ledger_line(processed, pixel_bytes, rx_delta, tx_delta))
+        trend_snapshot = trend.snapshot()
+        emit_ledger_line(format_trend_line(trend_snapshot))
         ledger = write_session_ledger(
             SESSION_LEDGER,
             frames_processed=processed,
@@ -522,6 +644,7 @@ def main(argv: list[str]) -> int:
             pixel_bytes=pixel_bytes,
             nic_rx_bytes=rx_delta,
             nic_tx_bytes=tx_delta,
+            trend=trend_snapshot,
         )
         log(f"done processed={processed} event_emitted={event_emitted} ledger={SESSION_LEDGER} {ledger}")
         cap.release()
