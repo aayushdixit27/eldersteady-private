@@ -84,10 +84,13 @@ def main() -> None:
     assert classify_posture([
         synthetic_pose(0, 30, hips_visible=False, nose_x=90, nose_y=30)
     ], 100, 100, 0.3) == "bent"
-    assert classify_posture([synthetic_pose(55, 20, bbox_aspect=1.0)], 100, 100, 0.3) == "upright"
-    assert classify_posture([synthetic_pose(66, 52, bbox_aspect=1.2)], 100, 100, 0.3) == "sitting"
+    assert classify_posture([synthetic_pose(55, 20, bbox_aspect=0.55)], 100, 100, 0.3) == "upright"
+    assert classify_posture([synthetic_pose(66, 20, bbox_aspect=0.95)], 100, 100, 0.3) == "sitting"
+    assert classify_posture(
+        [synthetic_pose(75, 75, bbox_aspect=1.5)], 100, 100, 0.3, floor_seconds=1.5
+    ) == "floor"
 
-    # Furniture detections are facts, independent of the calibrated shoulder band.
+    # Furniture detections are facts, independent of the calibrated aspect bands.
     chair_tracker = TrendTracker()
     chair_pose = synthetic_pose(70, 20, bbox_size=(30, 70), bbox_x=35, bbox_y=10)
     chair = Detection(35, 60, 30, 35, 0.9, 56)
@@ -117,11 +120,11 @@ def main() -> None:
     assert shoulder_floor.snapshot()["vis"] == "shoulders"
     assert shoulder_floor.snapshot()["bbox_ar"] == 1.5
     seated_tracker = TrendTracker()
-    seated_pose = synthetic_pose(66, 52, bbox_aspect=1.2)
+    seated_pose = synthetic_pose(66, 20, bbox_aspect=0.95)
     for _ in range(2):
         seated_tracker.update([seated_pose], 100, 100, 0.3, 1.0)
     assert seated_tracker.snapshot()["posture"] == "sitting"
-    standing_pose = synthetic_pose(55, 20, bbox_aspect=1.0)
+    standing_pose = synthetic_pose(55, 20, bbox_aspect=0.55)
     seated_tracker.update([standing_pose], 100, 100, 0.3, 0.01)
     assert seated_tracker.snapshot()["sts_n"] == 1
     assert seated_tracker.snapshot()["sts_last_s"] == 0.01

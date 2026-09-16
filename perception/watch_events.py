@@ -36,17 +36,14 @@ NIC = "end0"
 # Frame-line posture vocabulary: upright, bent, sitting, lying, floor, close, absent.
 POSTURES = ("upright", "bent", "sitting", "lying", "floor", "close", "absent")
 FURNITURE_CLASSES = {56: "chair", 57: "couch", 59: "bed"}
-# Calibrated 16 Sep for this camera at 2 m; other setups need recalibration.
-# Stand sh_y 0.04-0.34; chair sh_y 0.50-0.55; floor knees-to-chest
-# sh_y 0.73-0.78 with bbox_ar 1.46-1.66.
+# Calibrated 16 Sep from true xywh boxes (WATCH_BOX_XYXY=1).
+# Shoulder-height bands were retired at 10:55 because camera angle moved them;
+# box aspect separates standing, chair sitting, and floor poses independently.
 BANDS = {
-    "floor_bbox_ar_min": 1.25,
-    "floor_bbox_ar_only_min": 2.0,
-    "floor_shoulder_y_min": 0.65,
+    "floor_bbox_ar_min": 1.30,
     "floor_hold_s": 1.5,
     "floor_exit_hold_s": 1.0,
-    "sitting_shoulder_y_min": 0.42,
-    "sitting_shoulder_y_max": 0.65,
+    "sitting_bbox_ar_min": 0.75,
 }
 FALL_EVENT_COOLDOWN_S = 20.0
 FALL_EVENT_RECOVERY_S = 2.0
@@ -206,18 +203,17 @@ def classify_posture(
     if not poses:
         return "absent"
     subject = subject_pose(poses)
-    _, shoulder_y, torso_upright, _ = posture_measurements(
+    _, _, torso_upright, _ = posture_measurements(
         subject, frame_w, frame_h, min_visibility, bent_threshold
     )
     if floor_seconds >= BANDS["floor_hold_s"]:
         return "floor"
-    if not torso_upright:
-        return "bent"
-    if shoulder_y is None:
-        return "upright"
-    if BANDS["sitting_shoulder_y_min"] <= shoulder_y <= BANDS["sitting_shoulder_y_max"]:
+    if (
+        subject.bbox_aspect is not None
+        and BANDS["sitting_bbox_ar_min"] <= subject.bbox_aspect < BANDS["floor_bbox_ar_min"]
+    ):
         return "sitting"
-    return "upright"
+    return "upright" if torso_upright else "bent"
 
 
 @dataclass
@@ -456,14 +452,7 @@ class TrendTracker:
         self.hip_y, self.shoulder_y, _, self.visibility = measurement or (None, None, True, "none")
         floor_candidate = (
             self.bbox_aspect is not None
-            and (
-                self.bbox_aspect >= BANDS["floor_bbox_ar_only_min"]
-                or (
-                    self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
-                    and self.shoulder_y is not None
-                    and self.shoulder_y >= BANDS["floor_shoulder_y_min"]
-                )
-            )
+            and self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
         )
         if sitting_fact:
             self.floor_seconds = 0.0
