@@ -16,7 +16,7 @@ the counter proves the board leaked nothing; in the demo the camera is the Mac.
 
 Where are camera-to-alert latency, total compute, power, and proof of what the outgoing bytes contain?
 
-The measured `8.1–8.3 ms` is MLA inference only; the counter measures all `end0` traffic (computed `1 : 303` at measured frame `150`, computed `1 : 98` over `13,350` measured frames) and proves neither end-to-end latency nor payload contents.
+The measured `8.1–8.3 ms` is MLA inference only; the counter measures all `end0` traffic (`1 : 303` at frame `150`, `1 : 98` over `13,350` frames — measured bytes, computed ratios) and proves neither end-to-end latency nor payload contents.
 
 ### Daughter who just bought a Kami camera
 
