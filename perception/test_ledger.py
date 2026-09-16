@@ -4,6 +4,7 @@
 from unittest.mock import patch
 
 from watch_events import (
+    Detection,
     FallEventCooldown,
     Pose,
     SitToStandDetector,
@@ -68,6 +69,9 @@ def main() -> None:
         "frame=7 processed=4 posture=upright lean=12% poses=1 valid_lean=1 "
         "best=0.875 bent_streak=0 infer_ms=8.2 view=full"
     )
+    assert format_pose_frame_line(
+        10, 5, "sitting", 4, 1, 1, 0.9, 0, 8.25, "full", 6.75
+    ).endswith("bent_streak=0 infer_ms=8.2 view=full det_ms=6.8")
     with patch.dict("watch_events.os.environ", {}, clear=True):
         assert pose_box_geometry((10, 20, 110, 220)) == (10, 20, 110, 220)
     with patch.dict("watch_events.os.environ", {"WATCH_BOX_XYXY": "1"}, clear=True):
@@ -80,8 +84,32 @@ def main() -> None:
     assert classify_posture([
         synthetic_pose(0, 30, hips_visible=False, nose_x=90, nose_y=30)
     ], 100, 100, 0.3) == "bent"
-    assert classify_posture([synthetic_pose(55, 20, bbox_aspect=1.0)], 100, 100, 0.3) == "upright"
-    assert classify_posture([synthetic_pose(66, 52, bbox_aspect=1.2)], 100, 100, 0.3) == "sitting"
+    assert classify_posture([synthetic_pose(55, 20, bbox_aspect=0.55)], 100, 100, 0.3) == "upright"
+    assert classify_posture([synthetic_pose(66, 20, bbox_aspect=0.95)], 100, 100, 0.3) == "sitting"
+    assert classify_posture(
+        [synthetic_pose(75, 75, bbox_aspect=1.5)], 100, 100, 0.3, floor_seconds=1.5
+    ) == "floor"
+
+    # Furniture detections are facts, independent of the calibrated aspect bands.
+    chair_tracker = TrendTracker()
+    chair_pose = synthetic_pose(70, 20, bbox_size=(30, 70), bbox_x=35, bbox_y=10)
+    chair = Detection(35, 60, 30, 35, 0.9, 56)
+    assert chair_tracker.update(
+        [chair_pose], 100, 100, 0.3, 0.1, detections=[chair], det_ms=4.2
+    ) == "sitting"
+    assert chair_tracker.snapshot()["objects"] == "chair:1"
+    assert chair_tracker.snapshot()["det_ms"] == 4.2
+    chair_tracker.update([chair_pose], 100, 100, 0.3, 0.1)
+    assert chair_tracker.snapshot()["det_ms"] == 4.2
+    assert chair_tracker.snapshot()["floor_s"] == 0.0
+
+    bed_tracker = TrendTracker()
+    wide_pose = synthetic_pose(75, 75, bbox_size=(90, 45), bbox_x=5, bbox_y=50)
+    bed = Detection(0, 45, 100, 55, 0.95, 59)
+    assert bed_tracker.update(
+        [wide_pose], 100, 100, 0.3, 2.0, detections=[bed], det_ms=5.0
+    ) == "lying"
+    assert bed_tracker.snapshot()["floor_s"] == 0.0
     shoulder_floor = TrendTracker()
     shoulder_pose = synthetic_pose(0, 75, hips_visible=False, bbox_aspect=1.5)
     assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) == "close"
@@ -92,11 +120,11 @@ def main() -> None:
     assert shoulder_floor.snapshot()["vis"] == "shoulders"
     assert shoulder_floor.snapshot()["bbox_ar"] == 1.5
     seated_tracker = TrendTracker()
-    seated_pose = synthetic_pose(66, 52, bbox_aspect=1.2)
+    seated_pose = synthetic_pose(66, 20, bbox_aspect=0.95)
     for _ in range(2):
         seated_tracker.update([seated_pose], 100, 100, 0.3, 1.0)
     assert seated_tracker.snapshot()["posture"] == "sitting"
-    standing_pose = synthetic_pose(55, 20, bbox_aspect=1.0)
+    standing_pose = synthetic_pose(55, 20, bbox_aspect=0.55)
     seated_tracker.update([standing_pose], 100, 100, 0.3, 0.01)
     assert seated_tracker.snapshot()["sts_n"] == 1
     assert seated_tracker.snapshot()["sts_last_s"] == 0.01

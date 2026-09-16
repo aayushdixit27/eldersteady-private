@@ -33,18 +33,17 @@ COCO_LEFT_ANKLE = 15
 COCO_RIGHT_ANKLE = 16
 DEFAULT_BENT_THRESHOLD = 60.0
 NIC = "end0"
-POSTURES = ("upright", "bent", "sitting", "floor", "close", "absent")
-# Calibrated 16 Sep for this camera at 2 m; other setups need recalibration.
-# Stand sh_y 0.04-0.34; chair sh_y 0.50-0.55; floor knees-to-chest
-# sh_y 0.73-0.78 with bbox_ar 1.46-1.66.
+# Frame-line posture vocabulary: upright, bent, sitting, lying, floor, close, absent.
+POSTURES = ("upright", "bent", "sitting", "lying", "floor", "close", "absent")
+FURNITURE_CLASSES = {56: "chair", 57: "couch", 59: "bed"}
+# Calibrated 16 Sep from true xywh boxes (WATCH_BOX_XYXY=1).
+# Shoulder-height bands were retired at 10:55 because camera angle moved them;
+# box aspect separates standing, chair sitting, and floor poses independently.
 BANDS = {
-    "floor_bbox_ar_min": 1.25,
-    "floor_bbox_ar_only_min": 2.0,
-    "floor_shoulder_y_min": 0.65,
+    "floor_bbox_ar_min": 1.30,
     "floor_hold_s": 1.5,
     "floor_exit_hold_s": 1.0,
-    "sitting_shoulder_y_min": 0.42,
-    "sitting_shoulder_y_max": 0.65,
+    "sitting_bbox_ar_min": 0.75,
 }
 FALL_EVENT_COOLDOWN_S = 20.0
 FALL_EVENT_RECOVERY_S = 2.0
@@ -94,6 +93,45 @@ def subject_is_ambiguous(poses: Sequence[Pose]) -> bool:
     """Return whether the two largest people are too similar to choose safely."""
     areas = sorted((pose.bbox_area for pose in poses), reverse=True)
     return len(areas) >= 2 and areas[1] >= SUBJECT_AMBIGUITY_RATIO * areas[0]
+
+
+def box_iou(pose: Pose, detection: Detection) -> float:
+    if (pose.bbox_x is None or pose.bbox_y is None or pose.bbox_w is None
+            or pose.bbox_h is None or pose.bbox_w <= 0 or pose.bbox_h <= 0):
+        return 0.0
+    px2, py2 = pose.bbox_x + pose.bbox_w, pose.bbox_y + pose.bbox_h
+    dx2, dy2 = detection.x + detection.w, detection.y + detection.h
+    intersection = max(0.0, min(px2, dx2) - max(pose.bbox_x, detection.x)) * max(
+        0.0, min(py2, dy2) - max(pose.bbox_y, detection.y)
+    )
+    union = pose.bbox_area + detection.w * detection.h - intersection
+    return intersection / union if union > 0 else 0.0
+
+
+def point_in_detection(point: dict[str, float], detection: Detection) -> bool:
+    return (
+        detection.x <= point["x"] <= detection.x + detection.w
+        and detection.y <= point["y"] <= detection.y + detection.h
+    )
+
+
+def furniture_facts(
+    pose: Pose | None, detections: Sequence[Detection], min_visibility: float,
+) -> tuple[bool, bool]:
+    """Return authoritative sitting and lying-on-bed facts for the subject."""
+    if pose is None:
+        return False, False
+    hips = [pose.keypoints[index] for index in (COCO_LEFT_HIP, COCO_RIGHT_HIP)]
+    sitting = any(
+        (det.class_id in (56, 57) and box_iou(pose, det) >= 0.15)
+        or (
+            det.class_id in FURNITURE_CLASSES
+            and any(hip["visibility"] >= min_visibility and point_in_detection(hip, det) for hip in hips)
+        )
+        for det in detections
+    )
+    on_bed = any(det.class_id == 59 and box_iou(pose, det) >= 0.15 for det in detections)
+    return sitting, on_bed
 
 
 def dedupe_pose_boxes(poses: Sequence[Pose]) -> list[Pose]:
@@ -165,18 +203,17 @@ def classify_posture(
     if not poses:
         return "absent"
     subject = subject_pose(poses)
-    _, shoulder_y, torso_upright, _ = posture_measurements(
+    _, _, torso_upright, _ = posture_measurements(
         subject, frame_w, frame_h, min_visibility, bent_threshold
     )
     if floor_seconds >= BANDS["floor_hold_s"]:
         return "floor"
-    if not torso_upright:
-        return "bent"
-    if shoulder_y is None:
-        return "upright"
-    if BANDS["sitting_shoulder_y_min"] <= shoulder_y <= BANDS["sitting_shoulder_y_max"]:
+    if (
+        subject.bbox_aspect is not None
+        and BANDS["sitting_bbox_ar_min"] <= subject.bbox_aspect < BANDS["floor_bbox_ar_min"]
+    ):
         return "sitting"
-    return "upright"
+    return "upright" if torso_upright else "bent"
 
 
 @dataclass
@@ -272,6 +309,9 @@ class TrendTracker:
     frame_w: int = 0
     subject: str | None = None
     clear_subject_seconds: float = 0.0
+    det_enabled: bool = False
+    detections: Sequence[Detection] = ()
+    det_ms: float | None = None
 
     def __post_init__(self) -> None:
         self.totals = {posture: 0.0 for posture in POSTURES}
@@ -346,9 +386,15 @@ class TrendTracker:
     def update(
         self, poses: Sequence[Pose], frame_w: int, frame_h: int, min_visibility: float, dt: float,
         bent_threshold: float = DEFAULT_BENT_THRESHOLD,
+        detections: Sequence[Detection] | None = None, det_ms: float | None = None,
     ) -> str:
         self.elapsed += dt
         self.frame_w = frame_w
+        if detections is not None:
+            self.det_enabled = True
+            self.detections = detections
+        if det_ms is not None:
+            self.det_ms = det_ms
         ambiguous = subject_is_ambiguous(poses)
         if self.subject is None:
             self.subject = "unclear" if ambiguous else "clear"
@@ -376,6 +422,7 @@ class TrendTracker:
                 self.company_seconds += dt
             return self.posture
         subject = subject_pose(poses)
+        sitting_fact, on_bed = furniture_facts(subject, self.detections, min_visibility)
         self.raw_box = subject.raw_box if subject else None
         self.bbox_aspect = subject.bbox_aspect if subject else None
         self.subject_area = (
@@ -405,16 +452,12 @@ class TrendTracker:
         self.hip_y, self.shoulder_y, _, self.visibility = measurement or (None, None, True, "none")
         floor_candidate = (
             self.bbox_aspect is not None
-            and (
-                self.bbox_aspect >= BANDS["floor_bbox_ar_only_min"]
-                or (
-                    self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
-                    and self.shoulder_y is not None
-                    and self.shoulder_y >= BANDS["floor_shoulder_y_min"]
-                )
-            )
+            and self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
         )
-        if floor_candidate:
+        if sitting_fact:
+            self.floor_seconds = 0.0
+            self.floor_miss_seconds = 0.0
+        elif floor_candidate:
             self.floor_seconds += dt
             self.floor_miss_seconds = 0.0
         elif self.floor_seconds > 0.0:
@@ -425,7 +468,13 @@ class TrendTracker:
         candidate = classify_posture(
             poses, frame_w, frame_h, min_visibility, self.floor_seconds, bent_threshold
         )
-        if candidate == "floor" or self.posture == "unclear":
+        if on_bed and floor_candidate:
+            candidate = "lying"
+            self.floor_seconds = 0.0
+            self.floor_miss_seconds = 0.0
+        elif sitting_fact:
+            candidate = "sitting"
+        if candidate in ("floor", "lying") or sitting_fact or self.posture == "unclear":
             self.posture = candidate
             self.pending_posture = None
             self.pending_seconds = 0.0
@@ -455,7 +504,7 @@ class TrendTracker:
 
     def snapshot(self) -> dict[str, str | float | int]:
         tidy = lambda value: round(value, 3)
-        return {
+        snapshot = {
             "posture": self.posture, "subject": self.subject or "clear",
             "floor_s": tidy(self.floor_seconds),
             "sts_last_s": "na" if self.sts.last_duration is None
@@ -478,6 +527,16 @@ class TrendTracker:
             "cadence_spm": self.cadence_spm(),
             "sway": self.sway(),
         }
+        if self.det_enabled:
+            counts = {
+                name: sum(det.class_id == class_id for det in self.detections)
+                for class_id, name in FURNITURE_CLASSES.items()
+            }
+            snapshot["objects"] = ",".join(
+                f"{name}:{count}" for name, count in counts.items() if count
+            ) or "none"
+            snapshot["det_ms"] = "na" if self.det_ms is None else round(self.det_ms, 1)
+        return snapshot
 
 
 def format_trend_line(trend: dict[str, str | float | int]) -> str:
@@ -487,13 +546,15 @@ def format_trend_line(trend: dict[str, str | float | int]) -> str:
 def format_pose_frame_line(
     frame_index: int, processed: int, posture: str, lean: float, poses: int,
     valid_lean: int, best: float, bent_streak: int, infer_ms: float, view: str,
+    det_ms: float | None = None,
 ) -> str:
+    det_timing = f" det_ms={det_ms:.1f}" if det_ms is not None else ""
     return (
         "frame={} processed={} posture={} lean={:.0f}% poses={} valid_lean={} "
-        "best={:.3f} bent_streak={} infer_ms={:.1f} view={}"
+        "best={:.3f} bent_streak={} infer_ms={:.1f} view={}{}"
     ).format(
         frame_index, processed, posture, lean, poses, valid_lean, best,
-        bent_streak, infer_ms, view,
+        bent_streak, infer_ms, view, det_timing,
     )
 
 
@@ -584,6 +645,11 @@ def write_session_ledger(
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", type=Path, default=None)
+    parser.add_argument(
+        "--det-model", type=Path,
+        default=Path(os.environ["WATCH_DET_MODEL"]) if os.environ.get("WATCH_DET_MODEL") else None,
+    )
+    parser.add_argument("--det-every", type=int, default=5)
     parser.add_argument("--pose", action="store_true", help="run YOLO26 pose and emit fall events from torso lean")
     parser.add_argument("--video", type=str, default=str(DEFAULT_VIDEO))
     parser.add_argument("--room", default="living_room")
@@ -615,6 +681,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def validate_args(args: argparse.Namespace) -> None:
     if not args.model.is_file():
         raise FileNotFoundError(f"model does not exist: {args.model}")
+    if args.det_model is not None and not args.det_model.is_file():
+        raise FileNotFoundError(f"det model does not exist: {args.det_model}")
     if "://" not in args.video and not Path(args.video).is_file():
         raise FileNotFoundError(f"video does not exist: {args.video}")
     if not 0.0 <= args.score_threshold <= 1.0:
@@ -629,6 +697,8 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--stride must be >= 1")
     if args.print_every < 1:
         raise ValueError("--print-every must be >= 1")
+    if args.det_every < 1:
+        raise ValueError("--det-every must be >= 1")
     if args.event_after_detections < 1:
         raise ValueError("--event-after-detections must be >= 1")
     if not 0.0 <= args.fall_lean_threshold <= 100.0:
@@ -839,6 +909,20 @@ def main(argv: list[str]) -> int:
     opt.top_k = args.top_k
     model = pyneat.Model(str(args.model), opt)
 
+    det_model = None
+    if args.pose and args.det_model is not None:
+        log(f"loading det_model={args.det_model}")
+        det_opt = pyneat.ModelOptions()
+        det_opt.preprocess.kind = pyneat.InputKind.Image
+        det_opt.preprocess.enable = pyneat.AutoFlag.On
+        det_opt.preprocess.color_convert.input_format = pyneat.PreprocessColorFormat.BGR
+        det_opt.preprocess.preset = pyneat.NormalizePreset.COCO_YOLO
+        det_opt.decode_type = pyneat.BoxDecodeType.YoloV26
+        det_opt.score_threshold = args.score_threshold
+        det_opt.nms_iou_threshold = args.nms_iou
+        det_opt.top_k = args.top_k
+        det_model = pyneat.Model(str(args.det_model), det_opt)
+
     cap = cv2.VideoCapture(str(args.video), cv2.CAP_FFMPEG) if "://" in str(args.video) else cv2.VideoCapture(str(args.video))
     tries = 0
     while not cap.isOpened() and "://" in str(args.video) and tries < 10:
@@ -865,6 +949,10 @@ def main(argv: list[str]) -> int:
     run_opt.overflow_policy = pyneat.OverflowPolicy.Block
     run_opt.preset = pyneat.RunPreset.Balanced
     runner = model.build([seed], route_options=pyneat.ModelRouteOptions(), run_options=run_opt)
+    det_runner = (
+        det_model.build([seed], route_options=pyneat.ModelRouteOptions(), run_options=run_opt)
+        if det_model is not None else None
+    )
 
     processed = 0
     frames_since_event = 0
@@ -877,6 +965,7 @@ def main(argv: list[str]) -> int:
     previous_posture = None
     pixel_bytes = 0
     trend = TrendTracker()
+    trend.det_enabled = det_runner is not None
     fall_cooldown = FallEventCooldown()
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_seconds = args.stride / fps if fps and fps > 0 else args.stride / 30.0
@@ -915,12 +1004,23 @@ def main(argv: list[str]) -> int:
                 emit_ledger_line(format_ledger_line(processed, pixel_bytes, rx_delta, tx_delta))
 
             if args.pose:
+                det_ms = None
+                frame_detections = None
+                if det_runner is not None and processed % args.det_every == 0:
+                    det_started = time.perf_counter()
+                    det_outputs = det_runner.run([tensor], timeout_ms=args.timeout_ms)
+                    det_ms = (time.perf_counter() - det_started) * 1000.0
+                    frame_detections = [
+                        det for det in parse_bbox_payload(
+                            bbox_payload(det_outputs), args.score_threshold
+                        ) if det.class_id in (0, 56, 57, 59)
+                    ]
                 poses = dedupe_pose_boxes(
                     decode_pose_payload(outputs, frame.shape[1], frame.shape[0], args.top_k)
                 )
                 trend.update(
                     poses, frame.shape[1], frame.shape[0], args.min_keypoint_visibility,
-                    frame_seconds, args.fall_lean_threshold,
+                    frame_seconds, args.fall_lean_threshold, frame_detections, det_ms,
                 )
                 subject = subject_pose(poses) if trend.subject == "clear" else None
                 subject_lean = (
@@ -939,9 +1039,10 @@ def main(argv: list[str]) -> int:
                     log(format_pose_frame_line(
                         frame_index, processed, posture, best_lean, len(poses),
                         len(lean_values), best_score, bent_streak, elapsed_ms, trend.view,
+                        det_ms,
                     ))
                 previous_posture = posture
-                fall_reason = None if trend.view != "full" else ("floor" if trend.floor_seconds >= 3.0 else (
+                fall_reason = None if trend.view != "full" or posture in ("sitting", "lying") else ("floor" if trend.floor_seconds >= 3.0 else (
                     "lean" if bent_streak >= args.fall_consecutive_frames else None
                 ))
                 if fall_reason is not None and fall_cooldown.ready(trend.elapsed):
@@ -1015,6 +1116,8 @@ def main(argv: list[str]) -> int:
         log(f"done processed={processed} event_emitted={event_emitted} ledger={SESSION_LEDGER} {ledger}")
         cap.release()
         runner.close()
+        if det_runner is not None:
+            det_runner.close()
 
 
 if __name__ == "__main__":
