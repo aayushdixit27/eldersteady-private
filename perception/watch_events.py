@@ -49,6 +49,10 @@ def log(message: str) -> None:
     print(message, file=sys.stderr, flush=True)
 
 
+def should_print(frame_idx: int, posture_changed: bool, streak: int, every: int) -> bool:
+    return frame_idx % every == 0 or posture_changed or streak > 0
+
+
 def reserve_event_stdout() -> None:
     global EVENT_STDOUT
     if EVENT_STDOUT is not None:
@@ -135,6 +139,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--max-frames", type=int, default=24)
     parser.add_argument("--stride", type=int, default=8)
     parser.add_argument("--timeout-ms", type=int, default=20000)
+    parser.add_argument("--print-every", type=int, default=int(os.environ.get("WATCH_PRINT_EVERY", "1")))
     parser.add_argument("--event-after-detections", type=int, default=1)
     parser.add_argument("--fall-lean-threshold", type=float, default=60.0)
     parser.add_argument("--fall-consecutive-frames", type=int, default=10)
@@ -167,6 +172,8 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--max-frames must be >= 1")
     if args.stride < 1:
         raise ValueError("--stride must be >= 1")
+    if args.print_every < 1:
+        raise ValueError("--print-every must be >= 1")
     if args.event_after_detections < 1:
         raise ValueError("--event-after-detections must be >= 1")
     if not 0.0 <= args.fall_lean_threshold <= 100.0:
@@ -393,6 +400,7 @@ def main(argv: list[str]) -> int:
     event_emitted = False
     frame_index = 0
     bent_streak = 0
+    previous_posture = None
     pixel_bytes = 0
 
     def nic_deltas() -> tuple[int | None, int | None]:
@@ -440,19 +448,22 @@ def main(argv: list[str]) -> int:
                 is_bent = best_lean >= args.fall_lean_threshold
                 bent_streak = bent_streak + 1 if is_bent else 0
                 posture = "BENT" if is_bent else "upright"
-                log(
-                    "frame={} processed={} posture={} lean={:.0f}% poses={} valid_lean={} best={:.3f} bent_streak={} infer_ms={:.1f}".format(
-                        frame_index,
-                        processed,
-                        posture,
-                        best_lean,
-                        len(poses),
-                        len(lean_values),
-                        best_score,
-                        bent_streak,
-                        elapsed_ms,
+                posture_changed = previous_posture is not None and posture != previous_posture
+                if should_print(frame_index, posture_changed, bent_streak, args.print_every):
+                    log(
+                        "frame={} processed={} posture={} lean={:.0f}% poses={} valid_lean={} best={:.3f} bent_streak={} infer_ms={:.1f}".format(
+                            frame_index,
+                            processed,
+                            posture,
+                            best_lean,
+                            len(poses),
+                            len(lean_values),
+                            best_score,
+                            bent_streak,
+                            elapsed_ms,
+                        )
                     )
-                )
+                previous_posture = posture
                 if not event_emitted and bent_streak >= args.fall_consecutive_frames:
                     event = {
                         "type": "fall",
@@ -472,11 +483,12 @@ def main(argv: list[str]) -> int:
                 if detections:
                     frames_with_detections += 1
                 best = max((det.score for det in detections), default=0.0)
-                log(
-                    "frame={} processed={} detections={} best={:.3f} infer_ms={:.1f}".format(
-                        frame_index, processed, len(detections), best, elapsed_ms
+                if should_print(frame_index, False, 0, args.print_every):
+                    log(
+                        "frame={} processed={} detections={} best={:.3f} infer_ms={:.1f}".format(
+                            frame_index, processed, len(detections), best, elapsed_ms
+                        )
                     )
-                )
 
                 if (
                     detections
