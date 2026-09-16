@@ -2,7 +2,7 @@
 
 California will not let a facility put a camera in her room; at home the same question is yours — this is a fall alert that answers it in bytes.
 
-Family-page red-flip screenshot: pending from lane 1.
+![Family page flipping red](interface/screenshots/red-flip.png)
 
 ### Run it in 3 commands
 
@@ -106,7 +106,7 @@ The board uses YOLO26-m INT8 detection and pose archives from the SiMa model zoo
 
 - The demo camera is the Mac; a board-attached camera is roadmap.
 - A daughter across town needs a relay. Today the [`family page`](interface/index.html) is local: Mac hotspot or the Mac itself.
-- Calibration is an install step—“show it a fall”—parked at idea-loop `8.3` (fixture reference), unvalidated.
+- Calibration is an install step—“show it a fall”—scored `8.3` in the idea loop and parked; unvalidated.
 - A facility sale is waiver-gated. CDSS PIN 15-RM-01 says cameras in resident rooms require a Licensing waiver; it provides no analytics-only exemption.
 - The `55%` threshold is guessed and unvalidated.
 - Trend values are measured on the board from keypoints; the committed capture ([`2026-09-16-0833-quiet-mode-with-trend.txt`](evidence/captures/2026-09-16-0833-quiet-mode-with-trend.txt), commit `effbd3b`) shows the v1 classifier reporting sitting/absent only, zero sit-to-stands and zero floor seconds — the rules, not the pipeline, are the open work. The code is on main in `perception/watch_events.py` (commit `1ccc396`) and [`demo.html`](interface/demo.html) renders it (commit `f15fd04`). Computed on the MLA, only numbers leave; thresholds are guessed, and interface/trend.html is a 30-day fixture landing from another lane.
