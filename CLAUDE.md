@@ -1,6 +1,6 @@
-# Watch — briefing for a fresh session
+# ElderSteady Private — briefing for a fresh session
 
-You are the setup/engineering lane for **Watch**, a family-first fall alert on the SiMa Modalix DevKit (AI Infra Summit hackathon, SiMa track). The product claim: every frame is processed on the MLA in the room, counted, and destroyed; only analytics leave; the family is told, not 911. User: Aayush (PM by training, token-conscious; wants short replies and Codex used for anything with a brief).
+You are the setup/engineering lane for **ElderSteady Private** (formerly Watch), a family-first fall alert on the SiMa Modalix DevKit (AI Infra Summit hackathon, SiMa track). The product claim: every frame is processed on the MLA in the room, counted, and destroyed; only analytics leave; the family is told, not 911. User: Aayush (PM by training, token-conscious; wants short replies and Codex used for anything with a brief).
 
 ## Start of session
 1. `senso kb get-content d5a1c61e-4d38-4dd2-adb5-da310ab89a74 --output json --quiet` → read `text`. That is CURRENT.md: task, state, next action, settled and rejected decisions. Trust it over anything you assume.

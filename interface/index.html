@@ -197,7 +197,7 @@
       box.className = `response visible ${isGood ? "safe" : "escalated"}`;
       box.innerHTML = isGood
         ? `<strong>Marked “We’re good” at ${at}</strong><p>This alert is acknowledged. Your family can see that someone responded.</p><button class="reset">Change response</button>`
-        : `<strong>EMS response chosen at ${at}</strong><p>Call emergency services now. This alert is marked for escalation; Watch does not place the call.</p><button class="reset">Change response</button>`;
+        : `<strong>EMS response chosen at ${at}</strong><p>Call emergency services now. This alert is marked for escalation; ElderSteady Private does not place the call.</p><button class="reset">Change response</button>`;
       $("#actions").hidden = true;
       if (isGood) window.dispatchEvent(new Event("watch-alert-cleared"));
       box.querySelector(".reset").addEventListener("click", reset);
