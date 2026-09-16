@@ -7,8 +7,8 @@ The operator opens `pitch/backup/index.html` before walking on stage. If the rea
 | 0:00–0:12 | Show title. | “Aging parents should not have to choose between being safe and being watched. Watch tells the family when help may be needed, while every image stays in the room.” |
 | 0:12–0:28 | Start fixture replay; show four observations joining one incident. | “At 4:11, movement begins in the bedroom, passes the kitchen, reaches the front door, and ends with a low-confidence fall. Four model observations become one urgent story—not four alarms.” |
 | 0:28–0:42 | Reveal family card. | “The family sees what matters: night wandering, the route, the time, and what to do next. The parent installs no app, wears nothing, and is never streamed to a call centre.” |
-| 0:42–1:05 | Reveal ledger; let counter move. | **“This is the product: 333,540 frames processed and destroyed, zero stored, zero uploaded. Watch does not ask you to trust a privacy promise; it makes the absence countable. And the number goes up while the camera keeps understanding the room.”** |
-| 1:05–1:18 | Disconnect/point to offline status if real board is installed; otherwise keep backup label visible. | “On the real demo path, the application must run from board-local storage with the Mac link down. This fixture backup proves only the story, not that hardware claim; we grade those separately.” |
+| 0:42–1:05 | Reveal ledger; let counter move. | **“This fixture incident totals 333,540 frames processed and destroyed, zero stored, zero uploaded. That is fixture arithmetic, not a hardware measurement. Watch makes privacy countable, incident by incident.”** |
+| 1:05–1:18 | Show the dated board-local evidence; otherwise keep backup label visible. | “The hardware test is separate and measured: the Modalix app ran from board-local storage with `/workspace` unmounted, emitted an event accounting for one discarded frame, and exited zero. The fixture backup proves only the story.” |
 | 1:18–1:30 | Show response plan. | “After yes: install locally, stage three checks, choose family escalation, calibrate for two weeks, and review the ledger at day 30. Care without surveillance.” |
 
 ## The four judge questions
@@ -27,5 +27,4 @@ One camera path, three event types, family first, no accounts, audio, faces, dia
 
 ## Limits
 
-The backup is simulated from the fixed fixture. Do not call it live inference. Do not claim eval passes, field accuracy, buyer validation, alert delivery, or unplugged board execution until each is shown. The counter animation is presentation of exact fixture arithmetic, not proof that a live camera destroyed those frames.
-
+The backup is simulated from the fixed fixture. Do not call it live inference. All six fixed eval items pass, but items 1–5 are fixture tests and item 6 is the separate measured board-local run. Do not claim field accuracy, buyer validation, or alert delivery. The counter animation is exact fixture arithmetic, not proof that hardware destroyed those frames.

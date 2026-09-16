@@ -15,11 +15,10 @@
 </section>
 <section class="panel response"><div class="tag">Family view · urgent</div><h2>Night wandering</h2><p>Bedroom → kitchen → front door · Check in now; if there is no answer, contact the nearby backup.</p></section>
 <section class="panel"><div class="tag">Privacy ledger · exact fixture arithmetic</div><div class="ledger"><div class="metric"><span>Frames never stored</span><strong id="count">333,540</strong></div><div class="metric"><span>Frames stored</span><strong>0</strong></div><div class="metric"><span>Frames uploaded</span><strong>0</strong></div></div><p class="note">331,200 + 864 + 702 + 774 = 333,540. Animation demonstrates the pitch; it does not attest to a live device run.</p></section>
-<section class="panel"><div class="tag">After yes · first 30 days</div><div class="steps"><div class="step">1 · Choose rooms and family</div><div class="step">2 · Install locally</div><div class="step">3 · Stage three checks</div><div class="step">4 · Calibrate two weeks</div><div class="step">5 · Review alerts + ledger</div></div></section>
-<p class="note">LIMITS — This file is a board-independent presentation backup built from the hand-written fixture. It does not prove model accuracy, alert delivery, buyer validation, eval passes, or board-local execution.</p>
+<section class="panel"><div class="tag">Planned onboarding · first 30 days</div><div class="steps"><div class="step">1 · Choose rooms and family</div><div class="step">2 · Install locally</div><div class="step">3 · Stage three checks</div><div class="step">4 · Calibrate two weeks</div><div class="step">5 · Review alerts + ledger</div></div></section>
+<p class="note">LIMITS — This file is a board-independent presentation backup built from the hand-written fixture. It does not prove model accuracy, alert delivery, buyer validation, or board-local execution. Those are graded separately; all six fixed eval items pass, five from fixture replay and one from a measured hardware run.</p>
 </main>
 <script>
 const cards=[...document.querySelectorAll('.event')],count=document.querySelector('#count');
 document.querySelector('#run').onclick=()=>{cards.forEach(x=>x.classList.add('hidden'));count.textContent='0';cards.forEach((x,i)=>setTimeout(()=>x.classList.remove('hidden'),600+i*700));let n=0,t=setInterval(()=>{n=Math.min(333540,n+11118);count.textContent=n.toLocaleString();if(n===333540)clearInterval(t)},100)};
 </script></html>
-

@@ -12,7 +12,9 @@ Remaining work: conduct five observed conversations with adult children who coor
 
 Trust starts with falsifiable boundaries: no frames stored or transmitted, no face recognition, no audio, no diagnosis, no 911 claim. The fixed eval demands exact ledger arithmetic and board-local execution with the Mac link down.
 
-Remaining work: pass all six evals in public, show the unplugged board process, publish retention and failure behaviour, and have an independent reviewer reproduce the ledger sum.
+The six fixed eval items now pass: five against fixture data and one measured board-local execution with `/workspace` unmounted. That is prototype evidence, not an independent audit.
+
+Remaining work: reproduce the unplugged-board process in public, publish retention and failure behaviour, and have an independent reviewer reproduce both the hardware run and ledger sum.
 
 ## 3. They believe *they* can get the result — plausible, not yet validated
 
@@ -56,4 +58,3 @@ Remaining work: identify the buyer’s actual triggering event and decision date
 ## Limits
 
 No buyer interviews, field trial, pricing test, installation test, alert-delivery proof, or independent privacy audit is present in this worktree. Problem testimony may establish that surveillance concerns exist, but it cannot establish frequency. Four-of-five is insufficient; this sell test does not pass today.
-

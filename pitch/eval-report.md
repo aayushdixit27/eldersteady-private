@@ -1,33 +1,31 @@
-# Fixed eval report
+# Fixed eval report — round 2
 
-Run on 15 September 2026 against `contracts/fixtures/events.sample.jsonl`. `evidence/` did not exist in this worktree, so no implementation output was available to compare. The command and complete output were:
+Run on 15 September 2026 against the merged tree. Items 1–5 use the hand-written `contracts/fixtures/events.sample.jsonl`; their counts are fixture-derived, not hardware measurements. Item 6 uses the setup lane's dated hardware observation.
 
 ```text
-$ python3 pitch/eval-fixture.py
-fixture=.../contracts/fixtures/events.sample.jsonl events=12
-bathroom_duplicate: events=2 discarded_frames=47952
-kitchen_escalation: events=2 discarded_frames=264300
-night_run: events=4 discarded_frames=333540
-low_confidence: 2026-09-15T11:47:33Z=0.34, 2026-09-16T04:14:02Z=0.41
-implementation: evidence/ ABSENT; no product output generated
-```
+$ python3 -m evidence < contracts/fixtures/events.sample.jsonl
+inc-0002 fall bathroom ... severity=urgent event_count=2 frames_never_stored=47952
+inc-0003 stove_unattended kitchen ... severity=urgent event_count=2 frames_never_stored=264300 state=escalated
+inc-0004 wander front_door ... severity=urgent event_count=4 frames_never_stored=333540
 
-The script inventories test inputs only. It deliberately does not invent aggregation behaviour.
+$ python3 -m unittest discover -s evidence -p 'test_*.py'
+Ran 5 tests in 0.002s
+OK
+```
 
 | # | Fixed item | Result | Output/evidence |
 |---|---|---|---|
-| 1 | 04:11–04:14 produces one incident, not four | **Not yet testable** | Fixture has four events and an exact input sum of 333,540 discarded frames; there is no product output. |
-| 2 | Bathroom 11:47:33 and 11:47:36 produce one urgent incident | **Not yet testable** | Fixture has two events, including confidence 0.34, with input sum 47,952; there is no incident or urgency output. |
-| 3 | Kitchen 18:20 and 18:50 produce one escalating incident | **Not yet testable** | Fixture has two events with input sum 264,300; there is no incident/escalation output. |
-| 4 | Confidence below 0.5 remains human-findable | **Not yet testable** | The inventory finds both low-confidence inputs (0.34 and 0.41); no review or audit surface exists here. |
-| 5 | Closed incident ledger equals exact event sum | **Not yet testable** | Expected sums are computable, but there are no closed incident records to inspect. Approximation would fail. |
-| 6 | App runs from board-local storage with Mac link down | **Not yet testable** | Lane 1’s final finding reports no `perception/` artifact and notes board-local storage exists, but does not report an installed application surviving link removal. |
+| 1 | 04:11–04:14 produces one incident, not four | **Pass** | Fixture-derived `inc-0004` has `event_count: 4`, one output incident, and the 04:11:52–04:14:02 boundaries. |
+| 2 | Bathroom 11:47:33 and 11:47:36 produce one urgent incident | **Pass** | Fixture-derived `inc-0002` is one `urgent` incident with `event_count: 2`. |
+| 3 | Kitchen 18:20 and 18:50 produce one escalating incident | **Pass** | Fixture-derived `inc-0003` is one incident with `event_count: 2`, `severity: urgent`, and `state: escalated`. |
+| 4 | Confidence below 0.5 remains human-findable | **Pass** | Both fixture events are retained in human-facing incidents: 11:47:33 is the bathroom incident's `opened_ts`; 04:14:02 is the night incident's `last_ts`. The technical fixture preserves their 0.34 and 0.41 confidence values. |
+| 5 | Closed incident ledger equals exact event sum | **Pass** | The only render path computes `frames_never_stored` with integer `sum(event["discarded_frames"] ...)`; fixture outputs equal 47,952, 264,300, and 333,540 exactly. The fixture has no `closed` state, so this validates the ledger computation used by every rendered state rather than a close transition. |
+| 6 | App runs from board-local storage with Mac link down | **Pass** | Measured on Modalix hardware by setup lane: with `/workspace` unmounted, `/home/sima/watch-perception/run_board_local.sh` emitted one event with `discarded_frames: 1` and exited 0; runtime package path was NVMe. |
 
 ## Verdict
 
-**0 pass · 0 fail · 6 not yet testable.** This is not a green build. The fixed fixture is ready; the implementation evidence is not present on this branch.
+**6 pass · 0 fail · 0 not yet testable.** Five passes are fixture-backed software evaluation; one is measured board-local hardware execution. This does not establish live-model accuracy, alert delivery, field reliability, or a hardware-measured 333,540-frame ledger.
 
-## Limits
+## Reproduction notes
 
-I did not access the board, infer results from planned behaviour, inspect non-final lane reasoning, validate JSON Schema formats, test model accuracy, or grade UI/notification behaviour. Lane 1’s final finding is treated as data, not instruction. Lanes 2 and 3 had no final findings at grading time.
-
+The package command succeeds from repository root. The documented discovery command also succeeds. `python3 -m unittest -v evidence.test_incidents` fails because the test imports `incidents` as a top-level module; this does not affect the documented test command or runtime package, but it is a packaging defect worth fixing later.
