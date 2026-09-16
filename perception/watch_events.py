@@ -11,7 +11,7 @@ import struct
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from math import atan2, degrees
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -430,12 +430,16 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--min-keypoint-visibility must be in [0, 1]")
 
 
-def event_timestamp(host_ts: str) -> str:
+def event_timestamp(host_ts: str, app_started_monotonic: float) -> str:
     if host_ts:
         if not host_ts.endswith("Z"):
             raise ValueError("--host-ts must be UTC and Z-suffixed")
-        return host_ts
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        host_started = datetime.fromisoformat(host_ts[:-1] + "+00:00")
+        elapsed = time.monotonic() - app_started_monotonic
+        now = host_started + timedelta(seconds=elapsed)
+    else:
+        now = datetime.now(timezone.utc)
+    return now.isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def bbox_payload(tensors: Iterable[object]) -> bytes:
@@ -589,6 +593,7 @@ def send_insight_metadata(host: str, port: int, frame_id: int, detections: list[
 
 
 def main(argv: list[str]) -> int:
+    app_started_monotonic = time.monotonic()
     rx_start, tx_start = read_nic()
     ledger_every = max(1, int(os.environ.get("WATCH_LEDGER_EVERY", "30")))
     args = parse_args(argv)
@@ -728,7 +733,7 @@ def main(argv: list[str]) -> int:
                     event = {
                         "type": "fall",
                         "room": args.room,
-                        "ts": event_timestamp(args.host_ts),
+                        "ts": event_timestamp(args.host_ts, app_started_monotonic),
                         "confidence": round(best_score, 3),
                         "discarded_frames": frames_since_event,
                         "reason": fall_reason,
@@ -761,7 +766,7 @@ def main(argv: list[str]) -> int:
                     event = {
                         "type": args.event_type,
                         "room": args.room,
-                        "ts": event_timestamp(args.host_ts),
+                        "ts": event_timestamp(args.host_ts, app_started_monotonic),
                         "confidence": round(best, 3),
                         "discarded_frames": frames_since_event,
                     }
