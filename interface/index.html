@@ -9,11 +9,13 @@
     :root {
       color-scheme: light;
       --ink: #17221d;
-      --muted: #647069;
+      --muted: #414c46;
       --paper: #fffdf8;
       --canvas: #f2eee5;
       --line: #dcd6ca;
       --urgent: #c84931;
+      --urgent-text: #8b2e20;
+      --safe-deep: #0d5136;
       --urgent-soft: #fff0eb;
       --safe: #166747;
       --safe-soft: #e8f5ed;
@@ -27,23 +29,23 @@
     .shell { width: min(100%, 760px); margin: auto; min-height: 100svh; background: var(--paper); }
     header { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px 16px; border-bottom: 1px solid var(--line); }
     .brand { font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
-    .local { display: flex; gap: 7px; align-items: center; color: var(--safe); font-size: 13px; font-weight: 700; }
+    .local { display: flex; gap: 7px; align-items: center; color: var(--safe-deep); font-size: 13px; font-weight: 700; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--safe); }
     main { padding: 28px 24px 40px; }
-    .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: var(--urgent); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 850; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: var(--urgent-text); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 850; }
     .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--urgent); box-shadow: 0 0 0 5px var(--urgent-soft); }
     h1 { margin: 0; max-width: 650px; font-size: clamp(28px, 6vw, 42px); line-height: 1.08; letter-spacing: -.04em; }
     .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0; }
     .fact { padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
-    .fact span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 12px; }
+    .fact span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .fact strong { font-size: 15px; }
     .context { display: flex; align-items: center; margin: 0; padding: 14px; border-radius: 13px; background: var(--safe-soft); color: var(--ink); font-size: 15px; font-weight: 700; line-height: 1.4; }
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .action { min-height: 58px; border: 0; border-radius: 13px; cursor: pointer; font-weight: 800; transition: transform .12s, filter .12s; }
     .action:hover { filter: brightness(.96); }
-    .action:active { transform: scale(.98); }
-    .good { color: white; background: var(--safe); }
-    .ems { color: white; background: var(--urgent); }
+    .action:active { filter: brightness(.9); }
+    .good { color: white; background: var(--safe-deep); }
+    .ems { color: white; background: var(--urgent-text); }
     .response { display: none; padding: 18px; border-radius: 14px; margin-top: 14px; }
     .response.visible { display: block; }
     .response.safe { background: var(--safe-soft); color: #0d5136; }
@@ -55,11 +57,13 @@
     .ledger:after { content: ""; position: absolute; width: 180px; height: 180px; border-radius: 50%; right: -75px; top: -95px; background: #254638; opacity: .7; }
     .ledger-label { margin: 0 0 13px; color: #b9d2c6; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .11em; }
     .number { display: block; font-size: clamp(42px, 12vw, 68px); line-height: 1; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
-    .provenance { display: block; margin-top: 7px; color: #9fb9ac; font-size: 11px; }
+    .provenance { display: block; margin-top: 7px; color: #9fb9ac; font-size: 13px; }
+    .session { max-width: 510px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid #254638; color: #c8d8d0; font-size: 14px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+    .session strong { color: #fff; }
     .ledger h2 { margin: 9px 0 8px; font-size: 21px; letter-spacing: -.02em; }
     .ledger p { max-width: 510px; margin: 0; color: #c8d8d0; line-height: 1.5; font-size: 14px; }
     .zero { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; padding: 8px 11px; border: 1px solid #4c6c5d; border-radius: 999px; font-size: 13px; font-weight: 750; }
-    .privacy-note { margin: 12px 2px 0; color: var(--muted); font-size: 12px; text-align: center; }
+    .privacy-note { margin: 14px 2px 0; color: var(--muted); font-size: 15px; font-weight: 600; text-align: center; }
     @media (max-width: 520px) {
       header { padding: 18px; }
       main { padding: 24px 18px 30px; }
@@ -97,6 +101,7 @@
         <p class="ledger-label">Privacy ledger · this incident</p>
         <strong class="number" id="frame-count"></strong>
         <small class="provenance">Fixture replay data · not measured on hardware</small>
+      <p class="session" id="session">Latest measured session on the Modalix board: <strong id="s-processed">500</strong> frames processed · <strong id="s-events">1</strong> event · <strong id="s-uploaded">0</strong> uploaded · <strong id="s-stored">0</strong> stored.</p>
         <h2 id="ledger-title">moments watched, then destroyed</h2>
         <p>These camera frames were processed inside the home and immediately discarded. None were stored or sent away.</p>
         <div class="zero"><span class="dot"></span>0 frames uploaded</div>
@@ -147,5 +152,12 @@
       button.addEventListener("click", () => respond(button.dataset.response));
     });
   </script>
+<script>
+  fetch("../perception/session-ledger.json").then(r => r.ok ? r.json() : null).then(j => {
+    if (!j) return;
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v).toLocaleString(); };
+    set("s-processed", j.frames_processed); set("s-events", j.events_emitted); set("s-uploaded", j.frames_uploaded); set("s-stored", j.frames_stored);
+  }).catch(() => {});
+</script>
 </body>
 </html>
