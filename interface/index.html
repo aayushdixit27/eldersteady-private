@@ -37,7 +37,7 @@
     .fact { padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
     .fact span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 12px; }
     .fact strong { font-size: 15px; }
-    .context { margin: 0 0 22px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+    .context { display: flex; align-items: center; margin: 0; padding: 14px; border-radius: 13px; background: var(--safe-soft); color: var(--ink); font-size: 15px; font-weight: 700; line-height: 1.4; }
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .action { min-height: 58px; border: 0; border-radius: 13px; cursor: pointer; font-weight: 800; transition: transform .12s, filter .12s; }
     .action:hover { filter: brightness(.96); }
@@ -55,6 +55,7 @@
     .ledger:after { content: ""; position: absolute; width: 180px; height: 180px; border-radius: 50%; right: -75px; top: -95px; background: #254638; opacity: .7; }
     .ledger-label { margin: 0 0 13px; color: #b9d2c6; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .11em; }
     .number { display: block; font-size: clamp(42px, 12vw, 68px); line-height: 1; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
+    .provenance { display: block; margin-top: 7px; color: #9fb9ac; font-size: 11px; }
     .ledger h2 { margin: 9px 0 8px; font-size: 21px; letter-spacing: -.02em; }
     .ledger p { max-width: 510px; margin: 0; color: #c8d8d0; line-height: 1.5; font-size: 14px; }
     .zero { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; padding: 8px 11px; border: 1px solid #4c6c5d; border-radius: 999px; font-size: 13px; font-weight: 750; }
@@ -63,7 +64,7 @@
       header { padding: 18px; }
       main { padding: 24px 18px 30px; }
       .facts { grid-template-columns: 1fr 1fr; }
-      .fact:last-child { grid-column: 1 / -1; }
+      .context { grid-column: 1 / -1; }
       .actions { grid-template-columns: 1fr; }
       .ledger { padding: 21px 18px; }
     }
@@ -83,9 +84,8 @@
         <div class="facts">
           <div class="fact"><span>Where</span><strong id="where"></strong></div>
           <div class="fact"><span>When</span><strong id="when"></strong></div>
-          <div class="fact"><span>How sure</span><strong id="certainty">Not provided</strong></div>
+          <p class="context" id="context"></p>
         </div>
-        <p class="context" id="context"></p>
         <div class="actions" id="actions">
           <button class="action good" data-response="good">We’re good</button>
           <button class="action ems" data-response="ems">Call EMS</button>
@@ -96,6 +96,7 @@
       <section class="ledger" aria-labelledby="ledger-title">
         <p class="ledger-label">Privacy ledger · this incident</p>
         <strong class="number" id="frame-count"></strong>
+        <small class="provenance">Fixture replay data · not measured on hardware</small>
         <h2 id="ledger-title">moments watched, then destroyed</h2>
         <p>These camera frames were processed inside the home and immediately discarded. None were stored or sent away.</p>
         <div class="zero"><span class="dot"></span>0 frames uploaded</div>
