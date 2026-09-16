@@ -97,9 +97,9 @@
     .io .metric strong { font-size: 23px; }
     .io small { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .pixels { margin: 6px 0 0; color: var(--muted); font-size: 13px; font-weight: 600; }
-    .banner { display: none; padding: 10px 12px; background: var(--urgent-text); color: white; }
+    .banner { display: none; padding: 5px 12px; background: var(--urgent-text); color: white; }
     .banner.on { display: block; }
-    .banner strong, .banner span { display: block; } .banner strong { font-size: 20px; } .banner span { margin-top: 4px; font-size: 14px; }
+    .banner strong { display: block; font-size: 20px; }
     .flash { position: fixed; z-index: 10; inset: 0; display: none; place-content: center; padding: 40px; background: var(--urgent-text); color: white; text-align: center; }
     .flash.on { display: grid; } .flash strong { font-size: 64px; letter-spacing: -.05em; }
     .flash pre { max-width: 900px; margin: 20px auto 0; white-space: pre-wrap; font: 700 15px/1.5 ui-monospace, monospace; }
@@ -139,14 +139,14 @@
     </section>
     <section class="panel" aria-label="Live board measurements">
       <header><div class="brand">ElderSteady Private</div><div class="local"><span class="dot"></span>Board live</div></header>
-      <div class="banner" id="banner" role="alert"><strong>ALERT SENT TO SUE</strong><span id="banner-event">Text details appear here.</span></div>
+      <div class="banner" id="banner" role="alert"><strong>FALL ALERT READY FOR SUE</strong></div>
       <section class="status" aria-label="Current room state"><div class="status-line"><div class="gauge" aria-label="Lean percentage"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"></circle><circle class="value" id="gauge-ring" cx="50" cy="50" r="44"></circle></svg><div class="gauge-copy"><strong id="lean">Not measured</strong><span>lean</span></div></div><div class="state-copy"><p class="posture" id="posture">Waiting for the board</p><p class="help-line">The box can get this wrong.</p><p class="next-action" id="next-action">We are waiting for the box.</p><span class="wander-clock" id="wander-clock" hidden>demo clock</span><div id="alert-detail" hidden><p class="event-label">What Sue would get</p><p class="alert-copy" id="alert-copy"></p><p class="voice-copy" id="voice-copy" hidden></p><p class="event-label" id="voice-label" hidden>heard on the box · nothing recorded</p></div></div></div></section>
       <div class="metrics"><div class="metric"><span class="label">People in view</span><strong id="people">Not measured</strong></div><div class="metric"><span class="label">Milliseconds per picture</span><strong id="mla">Not measured</strong></div></div>
       <section class="ledger" id="ledger" aria-label="Processing ledger"><h2>Processing ledger</h2><div class="ledger-main"><div><span class="label">Pictures processed</span><strong id="frames">None yet</strong></div><div><span class="label">Pictures destroyed</span><strong id="destroyed">None yet</strong></div></div><p class="ledger-note">Saved: none · video sent: none</p></section>
       <section><div class="io" aria-label="Network and pixel measurements"><div class="metric"><span class="label">Video in</span><strong id="video-in">Not measured</strong><small>measured · end0</small></div><div class="metric"><span class="label">Bytes out</span><strong id="bytes-out">Not measured</strong><small>measured · end0</small></div><div class="metric"><span class="label">In : out ratio</span><strong id="in-out-ratio">Not measured</strong><small>NIC byte ratio</small></div></div><p class="pixels">Pixels decoded: <span id="pixels-decoded">not measured</span></p></section>
     </section>
   </main>
-  <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>ALERT SENT TO SUE</strong><pre id="flash-event">Text details appear here.</pre></div></div>
+  <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>FALL ALERT READY FOR SUE</strong></div></div>
   <script>
     const $ = id => document.getElementById(id);
     const state = { seenEvents: new Set(), eventsPrimed: false, camera: false, hasLog: false, lastLogAt: 0, lastLogLength: null, lastLogLine: null, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", trendView: "", cadence: null, sway: null, people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, voice: null, wander: null, wanderAt: 0, cleared: false };
@@ -167,8 +167,8 @@
         standing: ["Standing", safeBanner, "Someone seems to be standing."], sitting: ["Sitting", safeBanner, "Someone seems to be sitting."],
         leaning: ["Leaning", safeBanner, "Someone seems to be leaning."],
         "on-floor": ["On the floor", safeBanner, "They may be on the floor; we are counting."],
-        "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", "A fall alert is ready for Sue."],
-        wander: ["Up and about", safeBanner, state.wander ? `Up and about at ${wanderTime(state.wander)} — ${new Date(state.wander.ts).getHours() >= 22 || new Date(state.wander.ts).getHours() < 6 ? "night" : "day"}` : "Up and about."],
+        "alert-sent": ["Fell", "Last check: no video sent. A fall alert is ready for Sue. See what was sent.", "A fall alert is ready for Sue."],
+        wander: ["Up and about", "Last check: no video shared. A wander alert is ready for Sue.", state.wander ? `Up and about at ${wanderTime(state.wander)} — ${new Date(state.wander.ts).getHours() >= 22 || new Date(state.wander.ts).getHours() < 6 ? "night" : "day"}` : "Up and about."],
         "alert-cleared": ["Up again", safeBanner, "This alert was closed; please check on them."]
       }[name];
       $("posture").textContent = copy[0]; $("trend-posture").textContent = name === "close" ? "Shoulders only" : copy[0]; $("next-action").textContent = copy[2];
@@ -244,7 +244,7 @@
     }
     async function pollDay() { try { const response = await fetch(`live/day.json?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) throw new Error(); renderDay(await response.json()); } catch (_) { renderDay(null); } }
     function showFall(line, event) {
-      if (state.seenEvents.has(line)) return; const firstLoad = !state.eventsPrimed; state.seenEvents.add(line); state.lastEvent = line; state.wander = null; state.voice = null; state.alert = event; state.cleared = false; state.alertAt = Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("alert-copy").textContent = text; $("banner-event").textContent = text; if (firstLoad) return; $("flash-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
+      if (state.seenEvents.has(line)) return; const firstLoad = !state.eventsPrimed; state.seenEvents.add(line); state.lastEvent = line; state.wander = null; state.voice = null; state.alert = event; state.cleared = false; state.alertAt = Date.now(); state.eventFrame = state.lastFrame; $("alert-copy").textContent = alertMessage(event); if (firstLoad) return; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
     }
     function showWander(line, event) { if (state.seenEvents.has(line)) return; state.seenEvents.add(line); state.wander = event; state.wanderAt = Date.now(); state.cleared = false; }
     function parseVoice(line) {
