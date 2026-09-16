@@ -1,7 +1,24 @@
 #!/usr/bin/env python3
-"""Dependency-free checks for the NIC/pixel ledger helpers."""
+"""Dependency-free checks for ledger and trend helpers."""
 
-from watch_events import format_ledger_line, read_nic, should_print
+from watch_events import (
+    Pose,
+    SitToStandDetector,
+    classify_posture,
+    format_ledger_line,
+    posture_measurements,
+    read_nic,
+    should_print,
+)
+
+
+def synthetic_pose(hip_y: float, shoulder_y: float, shoulder_x: float = 50.0) -> Pose:
+    points = [{"x": 0.0, "y": 0.0, "visibility": 0.0} for _ in range(17)]
+    points[5] = {"x": shoulder_x - 5.0, "y": shoulder_y, "visibility": 1.0}
+    points[6] = {"x": shoulder_x + 5.0, "y": shoulder_y, "visibility": 1.0}
+    points[11] = {"x": 45.0, "y": hip_y, "visibility": 1.0}
+    points[12] = {"x": 55.0, "y": hip_y, "visibility": 1.0}
+    return Pose(score=0.9, keypoints=points)
 
 
 def main() -> None:
@@ -15,7 +32,26 @@ def main() -> None:
     assert [should_print(frame, changed, streak, 5) for frame, changed, streak in (
         (1, False, 0), (5, False, 0), (6, True, 0), (7, False, 1)
     )] == [False, True, True, True]
-    print("test_ledger: 4 checks passed")
+    assert classify_posture([synthetic_pose(55, 30)], 100, 100, 0.3) == "upright"
+    assert classify_posture([synthetic_pose(75, 50)], 100, 100, 0.3) == "sitting"
+    assert classify_posture([synthetic_pose(60, 50, 90)], 100, 100, 0.3) == "bent"
+    assert classify_posture([synthetic_pose(92, 90)], 100, 100, 0.3, 2.0) == "floor"
+    assert classify_posture([], 100, 100, 0.3) == "absent"
+
+    detector = SitToStandDetector()
+    for pose, now in (
+        (synthetic_pose(75, 50), 2.0),
+        (synthetic_pose(72, 47), 3.0),
+        (synthetic_pose(55, 30), 5.5),
+    ):
+        hip_y, _, upright = posture_measurements(pose, 100, 100, 0.3)
+        detector.update(hip_y, upright, now)
+    assert detector.count == 1 and detector.last_duration == 3.5
+    for pose, now in ((synthetic_pose(75, 50), 10.0), (synthetic_pose(55, 30), 21.0)):
+        hip_y, _, upright = posture_measurements(pose, 100, 100, 0.3)
+        detector.update(hip_y, upright, now)
+    assert detector.count == 1
+    print("test_ledger: 10 checks passed")
 
 
 if __name__ == "__main__":

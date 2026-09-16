@@ -30,6 +30,11 @@
       "type": "integer",
       "minimum": 0,
       "description": "Frames processed on-device and destroyed without being stored or transmitted, since the last event. This is the privacy ledger primitive: it is the only number that makes 'nothing left the room' countable rather than asserted."
+    },
+    "reason": {
+      "type": "string",
+      "enum": ["floor", "lean"],
+      "description": "Optional perception reason for the event, currently 'floor' or 'lean' for falls."
     }
   }
 }
