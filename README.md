@@ -2,87 +2,103 @@
 
 California will not let a facility put a camera in her room; at home the same question is yours — this is a fall alert that answers it in bytes.
 
-CDSS PIN 15-RM-01 requires a Licensing waiver for cameras in resident rooms; it gives no analytics-only exemption. Watch is a family-first fall alert that runs inside the home. A live Mac camera feeds a Modalix MLSoC over UDP; YOLO26 runs on the MLA; sustained body lean turns the family alert page red.
+![Family page flipping red](interface/screenshots/red-flip.png)
 
-No clip is saved. No frame is uploaded. No call centre watches. Watch tells family first and does not call 911.
+### Run it in 3 commands
 
-> “Fall detection was one of the first things I thought about in senior centers.”
->
-> “It’s a selling feature.”
-> — Dave, SiMa mentor
+```sh
+POSE=1 bash perception/live_demo.sh
+python3 -m http.server 7311 --bind 127.0.0.1
+open http://127.0.0.1:7311/interface/demo.html
+```
 
-## What is real as of this morning
+## What it does
 
-Until this morning, only simulated logs had driven the red state. At **2026-09-16T15:03:01Z (MEASURED; 08:03 PDT)**, a real person bent in front of the live camera and Watch emitted its first real fall event. Lean peaked at **63% (MEASURED)** against a **55% threshold (GUESS)**; the streak reached **58 frames (MEASURED)**, event confidence was **0.916 (MEASURED)**, **157 frames (MEASURED)** were discarded at the application boundary, and MLA time was **8.1–8.3 ms per frame (MEASURED)**.
+- Detects a fall on the MLA in the room.
+- Tells the family, not 911.
+- Proves in bytes that no frame left: the counter compares video received with every byte transmitted by the board.
 
-The pixels-in / bytes-out counter, B′, is also live. `watch_events.py` prints `ledger frames=… pixel_bytes=… rx_bytes=… tx_bytes=… nic=end0`; [`interface/demo.html`](interface/demo.html) shows video in, bytes out, pixels decoded, and their ratio. At **60 frames (MEASURED)** it reported **165.9 MB of decoded pixels (COMPUTED: 60 × 1280 × 720 × 3)**, **2.55 MB video in (MEASURED on `end0`)**, **15.2 KB out (MEASURED on `end0`, all protocols, including the SSH session carrying per-frame diagnostics)**, and **1 : 168 video-in : bytes-out (COMPUTED from measured NIC counters)**. That run also fired a second real fall at **2026-09-16T15:06:29Z (MEASURED)** with **0.935 confidence (MEASURED)** and **100 discarded frames (MEASURED)**.
+## Proof
 
-Quiet mode landed in commit `62a2b44`: `--print-every`, with `PRINT_EVERY=5` in `live_demo.sh`. The **15.2 KB (MEASURED)** value predates quiet mode. Its purpose is to make bytes-out reflect events rather than per-frame diagnostics; the quiet-mode transmit figure is not measured yet and will be read live.
+| Claim | Value | Provenance | Evidence |
+|---|---|---|---|
+| First real fall | `2026-09-16T15:03:01Z`; lean `63%`; streak `58` frames; confidence `0.916`; `157` frames discarded | measured | [`2026-09-16-0803-first-real-fall.txt`](evidence/captures/2026-09-16-0803-first-real-fall.txt) |
+| MLA inference | `8.1–8.3 ms/frame` | measured | [same first-fall capture](evidence/captures/2026-09-16-0803-first-real-fall.txt) |
+| Quiet-mode ledger | `150` frames → `3.25 MB` video in, `10.0 KB` out on `end0`; `1 : 324` | measured | This morning with `--print-every` quiet mode; capture file not yet committed |
+| Pre-quiet-mode ledger | `3450` frames → `34 MB` in, `739 KB` out; `1 : 46` | measured | [`2026-09-16-0815-second-fall-with-ledger.txt`](evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt), commit `6d0d4e6` |
+| Why the pre-quiet ratio was lower | `tx_bytes` counts all protocols on `end0`, including the SSH session carrying per-frame diagnostic lines; quiet mode (`PRINT_EVERY=5`) removed diagnostics from the wire, not events | measured interpretation | [`live_demo.sh`](perception/live_demo.sh) and the pre-quiet capture above |
+| Decoded pixel bytes | frames × `1280` × `720` × `3` | computed | [`demo.html`](interface/demo.html) ledger calculation |
+| Fall trigger | `55%` lean for `8` frames | guessed | [`DEMO.md`](perception/DEMO.md) and [`live_demo.sh`](perception/live_demo.sh) |
+| Evidence layer | `6/6` eval | fixture | [`pitch/eval-report.md`](pitch/eval-report.md) |
+| Second real fall | `2026-09-16T15:06:29Z`; confidence `0.935`; `100` frames discarded | measured | [`2026-09-16-0815-second-fall-with-ledger.txt`](evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt) |
 
 the counter proves the board leaked nothing; in the demo the camera is the Mac.
 
-## The live path we built
+## Why on-device is the product, not a setting
 
-**Mac camera → UDP → Modalix → YOLO26 pose → measured lean → possible-fall event → family alert**
+The ledger exists because inference runs on the MLA. A cloud camera cannot produce this proof: its bytes out are the video. Watch instead accounts for decoded pixels, board-NIC receive/transmit deltas, emitted events, and frames discarded at the application boundary.
 
-YOLO26 pose runs on the Modalix MLA at **8.1–8.3 ms per frame (MEASURED in the first real-fall capture)**. Keypoints produce the torso-lean gauge. A sustained lean crosses the configured **55% threshold (GUESS)** for an **8-frame window (GUESS)**, emits a possible-fall event, and flips the family page red.
-
-This is a prototype trigger, not a medical claim. Lean is measured from model keypoints; the policy is not validated in homes or senior centers. “Wander” in an earlier build was a heuristic, not a validated behavior classifier. Calibration is roadmap, not something we pretend to have finished.
-
-As Dave advised: **“Don’t try to make the product.”** We built the one decisive path and made its limits visible.
-
-## Privacy you can inspect
-
-Privacy is usually a promise. Watch makes it an accounting invariant. The session ledger accounts for `frames_processed`, `frames_in_events`, `frames_unattributed`, `events_emitted`, `frames_stored`, and `frames_uploaded`; the B′ line adds decoded `pixel_bytes` and the `end0` receive/transmit byte deltas:
-
-```text
-ledger frames=60 pixel_bytes=165888000 rx_bytes=2550794 tx_bytes=15182 nic=end0
-```
-
-For that pre-quiet-mode snapshot: **60 frames (MEASURED)**; **165,888,000 pixel bytes (COMPUTED)**; **2,550,794 receive bytes (MEASURED)**; **15,182 transmit bytes (MEASURED, all protocols including SSH diagnostics)**; and **1 : 168 video-in : bytes-out (COMPUTED)**. The event ledger reports **uploaded 0 (MEASURED at the application boundary)** and **stored 0 (MEASURED at the application boundary)**. The NIC count is the external check; the application ledger says what the app did with frames.
-
-Over serial, the judge can read the board counter directly:
+The judge can read the board counter over serial before and after a run:
 
 ```sh
 cat /sys/class/net/end0/statistics/tx_bytes
 ```
 
-### Claim provenance
+## Product
 
-| Claim | Value | Provenance (measured/computed/guess/fixture) | Evidence file or command |
-|---|---:|---|---|
-| First real fall event time | 2026-09-16T15:03:01Z / 08:03 PDT | measured | `evidence/captures/2026-09-16-0803-first-real-fall.txt` |
-| First real-fall peak lean | 63% | measured | `evidence/captures/2026-09-16-0803-first-real-fall.txt` |
-| Trigger threshold | 55% | guess | `perception/DEMO.md` |
-| Trigger window | 8 frames | guess | `perception/DEMO.md` |
-| First real-fall streak / confidence / discarded | 58 frames / 0.916 / 157 frames | measured | `evidence/captures/2026-09-16-0803-first-real-fall.txt` |
-| First real-fall MLA time | 8.1–8.3 ms per frame | measured | `evidence/captures/2026-09-16-0803-first-real-fall.txt` |
-| B′ sample size | 60 frames | measured | `evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt` |
-| Decoded pixels at sample | 165.9 MB / 165,888,000 bytes | computed | `60 × 1280 × 720 × 3` |
-| Video in / bytes out | 2.55 MB / 15.2 KB | measured | `evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt` |
-| Video-in : bytes-out | 1 : 168 | computed | measured `end0` receive/transmit counters above |
-| Second real fall event / confidence / discarded | 2026-09-16T15:06:29Z / 0.935 / 100 frames | measured | `evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt` |
-| Quiet-mode transmit bytes | not yet measured | measured live during judging | `cat /sys/class/net/end0/statistics/tx_bytes` |
-| Backup UI values | explicitly labelled replay values | fixture | `pitch/backup/index.html` |
+**Who:** the adult child of an aging parent. **Job:** know, without watching.
 
-## Why this wins even against another fall detector
+The problem is described by caregivers, not a market-size estimate:
 
-Another team also does fall detection — differentiate on the ledger. Watch accounts for processed pixels and the bytes crossing the board NIC, keeps the response family-first, has no monitoring centre or automatic 911 call, and creates no video archive to browse later.
+> “My mother was found on the floor of her room at the assisted living this morning. Her ankle was broken and dislocated and they don't know how long she was on the floor.” — [r/dementia · +78 score · June 3, 2026](https://www.reddit.com/r/dementia/comments/1tw5u35/) (measured in source)
 
-The product is a different agreement between a parent and their family: know when help may be needed without acquiring surveillance.
+> “Last week my grandmother couldn’t get off of the ground, but had no way to get anybody’s attention for help.” — [r/eldercare · +10 score · October 19, 2025](https://www.reddit.com/r/eldercare/comments/1oav1eu/) (measured in source)
 
-## Five-beat demo
+> “Fell a few times, lost her cane, and was found hours later.” — [r/Alzheimers · +5 score · April 18, 2025](https://www.reddit.com/r/Alzheimers/comments/1k1u5wm/) (measured in source)
 
-1. **Counter.** Open [`interface/demo.html`](interface/demo.html); show video in, bytes out, pixels decoded, and the ratio climbing with their MEASURED / COMPUTED labels.
-2. **Bend.** Bend on the real Mac camera and let measured lean cross the **55% threshold (GUESS)**.
-3. **Red flip.** Hold through the **8-frame window (GUESS)**; show the fall event and [`interface/index.html`](interface/index.html) turning red.
-4. **Ledger.** Show session frames, `pixel_bytes`, NIC receive/transmit bytes, **uploaded 0 (MEASURED)**, and **stored 0 (MEASURED)**; then run the serial one-liner.
-5. **Phone.** Open the family page on a phone over the Mac hotspot if it is up; otherwise show the same page on the Mac.
+**What we refused:** a confidence percentage on the family screen—manufactured certainty is the false-alarm failure; automatic 911—family keeps context; face identification—identity is not the job.
 
-The demo does not establish accuracy, clinical safety, alert-delivery reliability, or validated thresholds.
+Dave, SiMa mentor: “Fall detection was one of the first things I thought about in senior centers.” “It’s a selling feature.” He also set the scope: “Don’t try to make the product.”
 
-## Run the live demo
+### The 7-gate checklist
 
-The operator runbook is [`perception/DEMO.md`](perception/DEMO.md). The launcher is [`perception/live_demo.sh`](perception/live_demo.sh); the counter view is [`interface/demo.html`](interface/demo.html); and the family view is [`interface/index.html`](interface/index.html). A clearly labelled fixture-only backup remains in [`pitch/backup/index.html`](pitch/backup/index.html), but it is not hardware evidence.
+| Gate | State | Evidence |
+|---|---|---|
+| Gate 0 — declare the bar | passed | “Build to learn” is written here; the prototype is not offered as a deployed service. |
+| Gate 1 — diagnose the mechanism | passed | The previously unknown number is the `1 : 324` measured quiet-mode video-in:bytes-out ratio. |
+| Gate 2 — name the crux | passed | Crux: make “no frame left” checkable at the NIC, not merely make fall detection run. |
+| Gate 3 — generate, then cut | open | Directions were cut, but no candidate graveyard records more killed than kept. |
+| Gate 4 — sell test | open | Trust is met by captures and the counter; love, buyer-can-succeed, game plan, and urgency remain open pending buyer discovery and an install trial. |
+| Gate 5 — attack the assumption | open | The shakiest assumption is the guessed `55%` threshold; the plan does not survive it being false until calibration is tested. |
+| Gate 6 — eval and non-goals first | passed | Contracts and fixture eval preceded the build; a separate lane graded it. Non-goals: automatic 911, face identification, recording, diagnosis, and wandering/stove classification. |
+| Gate 7 — render and look | passed | [`demo.html`](interface/demo.html) was rendered and inspected; the resulting surface is camera, gauge, ledger, and red event state. |
 
-**Watch — care without surveillance.**
+## Architecture
+
+```text
+Mac camera
+  -> ffmpeg / UDP MPEG-TS
+  -> Modalix
+       OpenCV decode
+       -> YOLO26-m INT8 pose via pyneat on MLA
+       -> torso lean
+       -> fall-event JSON
+       -> session ledger + `ledger` stdout line
+            (pixel_bytes, end0 rx/tx)
+  -> interface/index.html  (family)
+  -> interface/demo.html   (demo)
+```
+
+The board uses YOLO26-m INT8 detection and pose archives from the SiMa model zoo, including `yolo26m-pose-int8-b1.tar.gz`. No Model Compiler install is required. The board runs a `pyneat` virtual environment; app and models live on its NVMe at `/home/sima/watch-perception/`. It ran with `/workspace` NFS unmounted at `2026-09-15 17:50` (measured; [`day1-summary.md`](day1-summary.md)). See the operator [`runbook`](perception/DEMO.md) and [`launcher`](perception/live_demo.sh).
+
+## Honest gaps + roadmap
+
+- The demo camera is the Mac; a board-attached camera is roadmap.
+- A daughter across town needs a relay. Today the [`family page`](interface/index.html) is local: Mac hotspot or the Mac itself.
+- Calibration is an install step—“show it a fall”—parked at idea-loop `8.3` (fixture reference), unvalidated.
+- A facility sale is waiver-gated. CDSS PIN 15-RM-01 says cameras in resident rooms require a Licensing waiver; it provides no analytics-only exemption.
+- The `55%` threshold is guessed and unvalidated.
+
+Demo narration and fallbacks: [`demo script`](pitch/demo-script.md), [`video script`](pitch/video-script.md), and [`fixture-only backup`](pitch/backup/index.html).
+
+Built with parallel Claude Code lanes (parallax), with Codex doing code and prose; Senso carried shared memory across sessions. About `$4` of the `$200` Codex budget was spent (guessed).
