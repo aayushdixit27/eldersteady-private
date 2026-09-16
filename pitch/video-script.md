@@ -22,13 +22,13 @@ Export at **5:00 maximum**; target **4:30**. Wherever a number appears, burn in 
 
 - The camera-to-board footage is a real live run, not the fixture backup.
 - Every displayed number carries a MEASURED, COMPUTED, or GUESS burn-in.
-- The counter shows video in, bytes out, pixels decoded, and ratio; **15.2 KB is MEASURED pre-quiet-mode all-protocol traffic**, including SSH diagnostics. Do not show a quiet-mode transmit figure until it is measured live.
+- The counter shows video in, bytes out, pixels decoded, and ratio; **15.2 KB is MEASURED pre-quiet-mode all-protocol traffic**, including SSH diagnostics. Quiet mode MEASURED 1 : 303 at frame 150 and 1 : 98 over 13,350 frames (same capture); say the long-run number, not only the snapshot..
 - Say “YOLO26 pose on the MLA at 8.1–8.3 ms per frame MEASURED in the first real-fall capture,” not “validated fall detection.”
 - Lean is measured from keypoints. The 55% threshold and eight-frame window are GUESS parameters.
 - The first red-state proof is a real body on camera; earlier red-state logs were simulated.
 - Show ledger field names and actual values. Uploaded zero and stored zero are application-boundary measurements; NIC bytes are the external counter.
 - Include verbatim: “the counter proves the board leaked nothing; in the demo the camera is the Mac.”
-- Show the live “Before the fall” panel: values are MEASURED live when running; no `trend` capture is committed. The producer is `perception/watch_events.py` on main at commit `1ccc396`; `demo.html` renders it at commit `f15fd04`.
+- Show the live “Before the fall” panel: values are MEASURED (capture `evidence/captures/2026-09-16-0833-quiet-mode-with-trend.txt`: 445 trend lines, sitting/absent only, 0 sit-to-stands, 0 floor s); thresholds GUESS. The producer is `perception/watch_events.py` on main at commit `1ccc396`; `demo.html` renders it at commit `f15fd04`.
 - Say both halves: computed on the MLA, only numbers leave; thresholds are GUESS, and interface/trend.html is a 30-day FIXTURE landing from another lane.
 - This is a prototype trigger, not a medical claim. No accuracy, safety, clinical, field-validation, automatic-911, monitoring-centre, or guaranteed-alert claim.
 - “Wander” was a heuristic. Do not describe it as validated scene understanding.

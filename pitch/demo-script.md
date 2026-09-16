@@ -44,7 +44,7 @@ cat /sys/class/net/end0/statistics/tx_bytes
 
 “A fall alert is table stakes. Watch's product is the numbers before the fall: last sit-to-stand seconds and session count, floor-lie now and total, upright, sitting, and floor seconds, and company seconds with at least two people. They are computed on the MLA from keypoints; only numbers leave. They ride the same ledger as the `trend` stdout line and the `trend` key in `session-ledger.json`, and the same bytes-out counter.”
 
-“The trend code is on main in `perception/watch_events.py`, commit `1ccc396`; `demo.html` renders this panel, commit `f15fd04`. Values are measured live when running; no capture is committed. Thresholds are guessed, and interface/trend.html is a 30-day fixture landing from another lane. The other fall detector cannot show the week before.”
+“The trend code is on main in `perception/watch_events.py`, commit `1ccc396`; `demo.html` renders this panel, commit `f15fd04`. The committed quiet-mode capture, `evidence/captures/2026-09-16-0833-quiet-mode-with-trend.txt`, holds 445 measured trend lines — sitting and absent only, zero sit-to-stands, zero floor seconds, because the v1 posture rules are guessed. Thresholds are guessed, and interface/trend.html is a 30-day fixture landing from another lane. The other fall detector cannot show the week before.”
 
 “the counter proves the board leaked nothing; in the demo the camera is the Mac.”
 
@@ -60,7 +60,7 @@ cat /sys/class/net/end0/statistics/tx_bytes
 
 - **Is the fall detector validated?** “No. Lean is calculated from live pose keypoints; the 55% threshold and eight-frame window are GUESS demo parameters. Calibration and field validation are roadmap.”
 - **Are the trend numbers validated?** “No. The values are measured live from keypoints on the MLA, and only numbers leave, but there is no committed trend-line capture. The v1 thresholds are GUESSED: sitting means hips below 0.65 with an upright torso; floor means hips and shoulders below 0.85 for at least 2 seconds; company means at least two people. The published 5× sit-to-stand over 15 seconds is an anchor; ours is one rep and unvalidated. The 30-day view is a FIXTURE.”
-- **What is the 15.2 KB?** “It is MEASURED `end0` transmit traffic across all protocols at the 60-frame snapshot, before quiet mode. It includes the SSH session carrying per-frame diagnostics. Quiet mode was separately MEASURED live this morning at 10.0 KB out for 150 frames; the committed captures are pre-quiet-mode.”
+- **What is the 15.2 KB?** “It is MEASURED `end0` transmit traffic across all protocols at the 60-frame snapshot, before quiet mode. Quiet mode measured 11.1 KB out at frame 150 (1 : 303) and 1.26 MB over 13,350 frames (1 : 98) — the long run is worse because posture-change lines print while the classifier flaps; a fix is in flight. It includes the SSH session carrying per-frame diagnostics. Quiet mode was separately MEASURED live this morning at 10.0 KB out for 150 frames; the committed captures are pre-quiet-mode.”
 - **Why is the camera a Mac?** “This prototype uses the Mac as its camera and sends that stream to Modalix. The counter proves the board leaked nothing; in the demo the camera is the Mac.”
 - **Why family first?** “The family knows the person and context. We intentionally do not automate 911.”
 - **What about wandering?** “An earlier demo called movement ‘wander’; that was a heuristic, not validated behavior understanding, so we do not lead with it.”
