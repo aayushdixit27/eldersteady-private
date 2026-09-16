@@ -96,6 +96,13 @@ That run exited 0 and emitted:
 
 ## Validation
 
+The plain `ledger frames=… pixel_bytes=… rx_bytes=… tx_bytes=… nic=end0` line reports decoded pixels and NIC byte deltas since app start.
+It is a stdout measurement line, not a `watch.event` contract event.
+Over serial, the judge's one-liner is:
+`cat /sys/class/net/end0/statistics/tx_bytes`
+Compare that counter before and after the disconnected run.
+The counter proves the board leaked nothing; in the demo the camera is the Mac.
+
 Strip only transport prefixes if the run was launched through `dk`; direct
 board execution and `ssh` execution emit plain JSONL on stdout:
 

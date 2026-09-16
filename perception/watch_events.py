@@ -26,6 +26,7 @@ COCO_LEFT_SHOULDER = 5
 COCO_RIGHT_SHOULDER = 6
 COCO_LEFT_HIP = 11
 COCO_RIGHT_HIP = 12
+NIC = "end0"
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,33 @@ def emit_event(event: dict) -> None:
     print(json.dumps(event, separators=(",", ":")), file=EVENT_STDOUT, flush=True)
 
 
+def read_nic(iface: str = NIC) -> tuple[int | None, int | None]:
+    statistics = Path("/sys/class/net") / iface / "statistics"
+    try:
+        return (
+            int((statistics / "rx_bytes").read_text(encoding="ascii").strip()),
+            int((statistics / "tx_bytes").read_text(encoding="ascii").strip()),
+        )
+    except (FileNotFoundError, OSError, ValueError):
+        return None, None
+
+
+def format_ledger_line(
+    frames: int,
+    pixel_bytes: int,
+    nic_rx_bytes: int | None,
+    nic_tx_bytes: int | None,
+    nic: str = NIC,
+) -> str:
+    rx = "na" if nic_rx_bytes is None else str(nic_rx_bytes)
+    tx = "na" if nic_tx_bytes is None else str(nic_tx_bytes)
+    return f"ledger frames={frames} pixel_bytes={pixel_bytes} rx_bytes={rx} tx_bytes={tx} nic={nic}"
+
+
+def emit_ledger_line(line: str) -> None:
+    print(line, file=EVENT_STDOUT, flush=True)
+
+
 def write_session_ledger(
     path: Path,
     frames_processed: int,
@@ -70,6 +98,10 @@ def write_session_ledger(
     events_emitted: int,
     frames_stored: int = 0,
     frames_uploaded: int = 0,
+    pixel_bytes: int = 0,
+    nic_rx_bytes: int | None = None,
+    nic_tx_bytes: int | None = None,
+    nic: str = NIC,
 ) -> dict:
     frames_unattributed = frames_processed - frames_in_events
     ledger = {
@@ -79,6 +111,10 @@ def write_session_ledger(
         "events_emitted": events_emitted,
         "frames_stored": frames_stored,
         "frames_uploaded": frames_uploaded,
+        "pixel_bytes": pixel_bytes,
+        "nic_rx_bytes": nic_rx_bytes,
+        "nic_tx_bytes": nic_tx_bytes,
+        "nic": nic,
     }
     if frames_processed != frames_in_events + frames_unattributed:
         raise AssertionError("session ledger frame counts do not add up")
@@ -298,6 +334,8 @@ def send_insight_metadata(host: str, port: int, frame_id: int, detections: list[
 
 
 def main(argv: list[str]) -> int:
+    rx_start, tx_start = read_nic()
+    ledger_every = max(1, int(os.environ.get("WATCH_LEDGER_EVERY", "30")))
     args = parse_args(argv)
     validate_args(args)
     reserve_event_stdout()
@@ -355,6 +393,13 @@ def main(argv: list[str]) -> int:
     event_emitted = False
     frame_index = 0
     bent_streak = 0
+    pixel_bytes = 0
+
+    def nic_deltas() -> tuple[int | None, int | None]:
+        rx_now, tx_now = read_nic()
+        rx_delta = None if rx_start is None or rx_now is None else rx_now - rx_start
+        tx_delta = None if tx_start is None or tx_now is None else tx_now - tx_start
+        return rx_delta, tx_delta
 
     try:
         cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
@@ -377,6 +422,11 @@ def main(argv: list[str]) -> int:
             elapsed_ms = (time.perf_counter() - started) * 1000.0
             processed += 1
             frames_since_event += 1
+            pixel_bytes += frame.shape[0] * frame.shape[1] * 3
+
+            if processed % ledger_every == 0:
+                rx_delta, tx_delta = nic_deltas()
+                emit_ledger_line(format_ledger_line(processed, pixel_bytes, rx_delta, tx_delta))
 
             if args.pose:
                 poses = decode_pose_payload(outputs, frame.shape[1], frame.shape[0], args.top_k)
@@ -446,17 +496,22 @@ def main(argv: list[str]) -> int:
                     events_emitted += 1
                     frames_since_event = 0
 
+        if event_emitted or (args.pose and processed > 0):
+            return 0
+        return 3
+    finally:
+        rx_delta, tx_delta = nic_deltas()
+        emit_ledger_line(format_ledger_line(processed, pixel_bytes, rx_delta, tx_delta))
         ledger = write_session_ledger(
             SESSION_LEDGER,
             frames_processed=processed,
             frames_in_events=frames_in_events,
             events_emitted=events_emitted,
+            pixel_bytes=pixel_bytes,
+            nic_rx_bytes=rx_delta,
+            nic_tx_bytes=tx_delta,
         )
         log(f"done processed={processed} event_emitted={event_emitted} ledger={SESSION_LEDGER} {ledger}")
-        if event_emitted or (args.pose and processed > 0):
-            return 0
-        return 3
-    finally:
         cap.release()
         runner.close()
 

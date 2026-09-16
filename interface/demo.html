@@ -56,6 +56,10 @@
     .ledger strong { display: block; font-size: clamp(18px, 2vw, 26px); font-variant-numeric: tabular-nums; }
     .ledger span { display: block; margin-top: 7px; font-size: 14px; font-weight: 750; }
     .ledger strong span { display: inline; margin: 0; font-size: inherit; }
+    .ledger-metrics { margin-top: 14px; }
+    .ledger-metrics .metric { border-color: var(--safe-deep); }
+    .ledger-metrics .metric span { color: var(--safe-deep); }
+    .ledger-metrics .metric small { display: block; margin-top: 5px; color: var(--safe-deep); font-size: 13px; font-weight: 650; line-height: 1.35; }
     .privacy { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
     .banner { display: none; padding: 18px 20px; border-radius: 13px; background: var(--urgent-text); color: white; }
     .banner.on { display: block; }
@@ -102,6 +106,12 @@
         <div class="metric"><span>Milliseconds per frame</span><strong id="mla">—</strong></div>
       </div>
       <div class="ledger"><strong><span id="frames">0</span> frames processed · <span id="destroyed">0</span> destroyed</strong><span>uploaded 0 · stored 0</span></div>
+      <div class="metrics ledger-metrics" aria-label="NIC and pixel ledger">
+        <div class="metric"><span>Video in</span><strong id="video-in">—</strong><small>measured · end0, all protocols</small></div>
+        <div class="metric"><span>Bytes out</span><strong id="bytes-out">—</strong><small>measured · end0, all protocols, incl. this session</small></div>
+        <div class="metric"><span>Pixels decoded</span><strong id="pixels-decoded">—</strong><small>computed · frames × W × H × 3</small></div>
+        <div class="metric"><span>In : out</span><strong id="in-out-ratio">—</strong><small>measured NIC byte ratio</small></div>
+      </div>
       <p class="privacy">Every count comes from analytics in <code>live/board.log</code>. Camera pixels remain on this Mac; the page uploads and stores nothing.</p>
     </section>
   </main>
@@ -152,6 +162,25 @@
       $("destroyed").textContent = state.lastFrame.toLocaleString("en-US");
     }
 
+    function formatBytes(value) {
+      if (value === null) return "—";
+      if (value >= 1e9) return `${(value / 1e9).toLocaleString("en-US", { maximumFractionDigits: 1 })} GB`;
+      if (value >= 1e6) return `${(value / 1e6).toLocaleString("en-US", { maximumFractionDigits: 1 })} MB`;
+      return `${value.toLocaleString("en-US")} B`;
+    }
+
+    function parseLedger(line) {
+      const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]]));
+      const number = key => fields[key] === "na" || fields[key] === undefined ? null : Number(fields[key]);
+      const rx = number("rx_bytes");
+      const tx = number("tx_bytes");
+      const pixels = number("pixel_bytes");
+      $("video-in").textContent = formatBytes(rx);
+      $("bytes-out").textContent = formatBytes(tx);
+      $("pixels-decoded").textContent = pixels === null ? "—" : pixels.toLocaleString("en-US");
+      $("in-out-ratio").textContent = rx === null || tx === null || tx === 0 ? "—" : `1 : ${Math.round(rx / tx).toLocaleString("en-US")}`;
+    }
+
     function showFall(line, event) {
       if (line === state.lastEvent) return;
       state.lastEvent = line;
@@ -173,6 +202,7 @@
         const lines = (await response.text()).split(/\r?\n/).filter(Boolean);
         for (const line of lines) {
           if (line.startsWith("frame ")) parseFrame(line);
+          else if (line.startsWith("ledger ")) parseLedger(line);
           else if (line.startsWith("{")) {
             try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {}
           }
