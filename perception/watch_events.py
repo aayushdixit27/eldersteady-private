@@ -38,13 +38,16 @@ POSTURES = ("upright", "bent", "sitting", "lying", "floor", "close", "absent")
 FURNITURE_CLASSES = {56: "chair", 57: "couch", 59: "bed"}
 # Calibrated 16 Sep from true xywh boxes (WATCH_BOX_XYXY=1).
 # Shoulder-height bands were retired at 10:55 because camera angle moved them;
-# box aspect separates standing, chair sitting, and floor poses independently.
+# Box aspect remains a fallback when the knee geometry is unavailable.
 BANDS = {
     "floor_bbox_ar_min": 1.30,
     "floor_hold_s": 1.5,
     "floor_exit_hold_s": 1.0,
     "sitting_bbox_ar_min": 0.75,
 }
+THIGH_DROP_SITTING_MAX = 0.45
+THIGH_DROP_FLOOR_MAX = 0.20
+FLOOR_HIP_BOTTOM_DISTANCE = 0.15
 FALL_EVENT_COOLDOWN_S = 20.0
 FALL_EVENT_RECOVERY_S = 2.0
 SUBJECT_AMBIGUITY_RATIO = 0.70
@@ -196,6 +199,27 @@ def posture_measurements(
     return hip_y / frame_h, shoulder_y_normalised, torso_upright, "hips"
 
 
+def thigh_drop_measurement(pose: Pose, min_visibility: float) -> float | None:
+    """Return knee drop below the hips in torso lengths, when all joints are clear."""
+    points = pose.keypoints
+    joints = [
+        points[index] for index in (
+            COCO_LEFT_SHOULDER, COCO_RIGHT_SHOULDER,
+            COCO_LEFT_HIP, COCO_RIGHT_HIP,
+            COCO_LEFT_KNEE, COCO_RIGHT_KNEE,
+        )
+    ]
+    if any(point["visibility"] < min_visibility for point in joints):
+        return None
+    shoulder_y = (joints[0]["y"] + joints[1]["y"]) / 2.0
+    hip_y = (joints[2]["y"] + joints[3]["y"]) / 2.0
+    knee_y = (joints[4]["y"] + joints[5]["y"]) / 2.0
+    torso = abs(hip_y - shoulder_y)
+    if torso <= 0.0:
+        return None
+    return (knee_y - hip_y) / torso
+
+
 def classify_posture(
     poses: Sequence[Pose], frame_w: int, frame_h: int, min_visibility: float,
     floor_seconds: float = 0.0, bent_threshold: float = DEFAULT_BENT_THRESHOLD,
@@ -208,6 +232,17 @@ def classify_posture(
     )
     if floor_seconds >= BANDS["floor_hold_s"]:
         return "floor"
+    thigh_drop = thigh_drop_measurement(subject, min_visibility)
+    if thigh_drop is not None:
+        shoulder_y = sum(subject.keypoints[index]["y"] for index in (
+            COCO_LEFT_SHOULDER, COCO_RIGHT_SHOULDER,
+        )) / 2.0
+        hip_y = sum(subject.keypoints[index]["y"] for index in (
+            COCO_LEFT_HIP, COCO_RIGHT_HIP,
+        )) / 2.0
+        if thigh_drop < THIGH_DROP_SITTING_MAX:
+            return "sitting" if torso_upright and shoulder_y < hip_y else "bent"
+        return "upright"
     if (
         subject.bbox_aspect is not None
         and BANDS["sitting_bbox_ar_min"] <= subject.bbox_aspect < BANDS["floor_bbox_ar_min"]
@@ -299,6 +334,7 @@ class TrendTracker:
     shoulder_y: float | None = None
     visibility: str = "none"
     bbox_aspect: float | None = None
+    thigh_drop: float | None = None
     subject_area: float | None = None
     raw_box: tuple[float, float, float, float] | None = None
     pending_posture: str | None = None
@@ -412,6 +448,7 @@ class TrendTracker:
             self.shoulder_y = None
             self.visibility = "none"
             self.bbox_aspect = None
+            self.thigh_drop = None
             self.subject_area = None
             self.raw_box = None
             self.pending_posture = None
@@ -432,6 +469,7 @@ class TrendTracker:
             ls = subject.keypoints[COCO_LEFT_SHOULDER]
             rs = subject.keypoints[COCO_RIGHT_SHOULDER]
             self.hip_y = None
+            self.thigh_drop = None
             self.shoulder_y = midpoint(ls, rs)[1] / frame_h
             self.visibility = "shoulders"
             self.posture = "close"
@@ -448,9 +486,15 @@ class TrendTracker:
             subject, frame_w, frame_h, min_visibility, bent_threshold
         ) if subject else None
         self.hip_y, self.shoulder_y, _, self.visibility = measurement or (None, None, True, "none")
+        self.thigh_drop = thigh_drop_measurement(subject, min_visibility) if subject else None
         floor_candidate = (
             self.bbox_aspect is not None
             and self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
+        ) or (
+            self.hip_y is not None
+            and self.hip_y >= 1.0 - FLOOR_HIP_BOTTOM_DISTANCE
+            and self.thigh_drop is not None
+            and self.thigh_drop < THIGH_DROP_FLOOR_MAX
         )
         if sitting_fact:
             self.floor_seconds = 0.0
@@ -466,7 +510,7 @@ class TrendTracker:
         candidate = classify_posture(
             poses, frame_w, frame_h, min_visibility, self.floor_seconds, bent_threshold
         )
-        if on_bed and floor_candidate:
+        if on_bed:
             candidate = "lying"
             self.floor_seconds = 0.0
             self.floor_miss_seconds = 0.0
@@ -516,6 +560,7 @@ class TrendTracker:
             "hip_y": "na" if self.hip_y is None else tidy(self.hip_y),
             "sh_y": "na" if self.shoulder_y is None else tidy(self.shoulder_y),
             "bbox_ar": "na" if self.bbox_aspect is None else tidy(self.bbox_aspect),
+            "thigh": "na" if self.thigh_drop is None else tidy(self.thigh_drop),
             "subject_area": "na" if self.subject_area is None else tidy(self.subject_area),
             "raw_box": "na" if self.raw_box is None else ",".join(
                 str(int(value)) for value in self.raw_box
