@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>watch — offline fixture demo</title>
+<style>
+:root{color-scheme:dark;--ink:#f4f2ea;--muted:#aaa99f;--green:#78e6b2;--amber:#ffc766;--panel:#181a1a}*{box-sizing:border-box}body{margin:0;background:#0b0d0d;color:var(--ink);font:18px/1.45 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:46px}.tag{color:var(--amber);font-size:14px;letter-spacing:.12em;text-transform:uppercase}h1{font:700 70px/1 serif;margin:.15em 0}h2{font-size:34px;margin:.2em 0}.lede{font-size:27px;max-width:780px}.panel{background:var(--panel);border:1px solid #363a38;border-radius:22px;padding:28px;margin:28px 0}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.event{padding:15px;border-radius:12px;background:#252827}.event b{display:block;color:var(--green)}.ledger{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px}.metric{background:#101212;border-radius:16px;padding:22px}.metric strong{display:block;font-size:42px;color:var(--green)}button{background:var(--green);color:#072016;border:0;border-radius:999px;padding:13px 22px;font-weight:700;font-size:17px}.note{font-size:15px;color:var(--muted)}.response{border-left:5px solid var(--amber);padding-left:20px}.hidden{opacity:.22}.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.step{font-size:15px;padding:14px;background:#252827;border-radius:10px}@media(max-width:800px){main{padding:20px}h1{font-size:52px}.events,.steps,.ledger{grid-template-columns:1fr}}
+</style>
+<main>
+<div class="tag">Offline backup · simulated fixed-fixture replay · not live inference</div>
+<h1>Care without surveillance.</h1>
+<p class="lede">One urgent story for the family. Every raw frame destroyed in the room.</p>
+<button id="run">Replay 90-second demo beat</button>
+<section class="panel">
+<div class="tag">04:11–04:14 · night episode</div><h2>Four observations become one incident</h2>
+<div class="events" id="events"><div class="event"><b>04:11:52</b>Bedroom · wander</div><div class="event"><b>04:12:40</b>Kitchen · wander</div><div class="event"><b>04:13:19</b>Front door · wander</div><div class="event"><b>04:14:02</b>Bedroom · fall · 0.41</div></div>
+</section>
+<section class="panel response"><div class="tag">Family view · urgent</div><h2>Night wandering</h2><p>Bedroom → kitchen → front door · Check in now; if there is no answer, contact the nearby backup.</p></section>
+<section class="panel"><div class="tag">Privacy ledger · exact fixture arithmetic</div><div class="ledger"><div class="metric"><span>Frames never stored</span><strong id="count">333,540</strong></div><div class="metric"><span>Frames stored</span><strong>0</strong></div><div class="metric"><span>Frames uploaded</span><strong>0</strong></div></div><p class="note">331,200 + 864 + 702 + 774 = 333,540. Animation demonstrates the pitch; it does not attest to a live device run.</p></section>
+<section class="panel"><div class="tag">After yes · first 30 days</div><div class="steps"><div class="step">1 · Choose rooms and family</div><div class="step">2 · Install locally</div><div class="step">3 · Stage three checks</div><div class="step">4 · Calibrate two weeks</div><div class="step">5 · Review alerts + ledger</div></div></section>
+<p class="note">LIMITS — This file is a board-independent presentation backup built from the hand-written fixture. It does not prove model accuracy, alert delivery, buyer validation, eval passes, or board-local execution.</p>
+</main>
+<script>
+const cards=[...document.querySelectorAll('.event')],count=document.querySelector('#count');
+document.querySelector('#run').onclick=()=>{cards.forEach(x=>x.classList.add('hidden'));count.textContent='0';cards.forEach((x,i)=>setTimeout(()=>x.classList.remove('hidden'),600+i*700));let n=0,t=setInterval(()=>{n=Math.min(333540,n+11118);count.textContent=n.toLocaleString();if(n===333540)clearInterval(t)},100)};
+</script></html>
+
