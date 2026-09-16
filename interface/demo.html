@@ -78,6 +78,11 @@
     .state-copy { min-width: 0; }
     .posture { margin: 0; color: var(--safe-deep); font-size: 32px; font-weight: 850; line-height: 1; letter-spacing: -.035em; }
     .next-action { margin: 8px 0 0; color: var(--ink); font-size: 14px; font-weight: 650; line-height: 1.35; }
+    .help-line, .event-label { margin: 5px 0 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .alert-copy { margin: 7px 0 0; padding: 8px 10px; border-left: 3px solid var(--urgent); white-space: pre-line; font-size: 14px; font-weight: 650; line-height: 1.25; }
+    .alert-copy[hidden], .voice-copy[hidden], .wander-clock[hidden] { display: none; }
+    .voice-copy { margin: 5px 0 0; font-size: 14px; font-weight: 750; }
+    .wander-clock { margin-left: 6px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
     .metric { min-width: 0; border-top: 1px solid var(--line); padding-top: 7px; }
     .metric strong { display: block; margin-top: 2px; font-size: 27px; line-height: 1; letter-spacing: -.035em; }
@@ -135,7 +140,7 @@
     <section class="panel" aria-label="Live board measurements">
       <header><div class="brand">ElderSteady Private</div><div class="local"><span class="dot"></span>Board live</div></header>
       <div class="banner" id="banner" role="alert"><strong>ALERT SENT TO SUE</strong><span id="banner-event">Text details appear here.</span></div>
-      <section class="status" aria-label="Current room state"><div class="status-line"><div class="gauge" aria-label="Lean percentage"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"></circle><circle class="value" id="gauge-ring" cx="50" cy="50" r="44"></circle></svg><div class="gauge-copy"><strong id="lean">Not measured</strong><span>lean</span></div></div><div class="state-copy"><p class="posture" id="posture">Waiting for the board</p><p class="next-action" id="next-action">Plug in the board and run live_demo.sh.</p></div></div></section>
+      <section class="status" aria-label="Current room state"><div class="status-line"><div class="gauge" aria-label="Lean percentage"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"></circle><circle class="value" id="gauge-ring" cx="50" cy="50" r="44"></circle></svg><div class="gauge-copy"><strong id="lean">Not measured</strong><span>lean</span></div></div><div class="state-copy"><p class="posture" id="posture">Waiting for the board</p><p class="help-line">The box can get this wrong.</p><p class="next-action" id="next-action">We are waiting for the box.</p><span class="wander-clock" id="wander-clock" hidden>demo clock</span><div id="alert-detail" hidden><p class="event-label">What Sue would get</p><p class="alert-copy" id="alert-copy"></p><p class="voice-copy" id="voice-copy" hidden></p><p class="event-label" id="voice-label" hidden>heard on the box · nothing recorded</p></div></div></div></section>
       <div class="metrics"><div class="metric"><span class="label">People in view</span><strong id="people">Not measured</strong></div><div class="metric"><span class="label">Milliseconds per picture</span><strong id="mla">Not measured</strong></div></div>
       <section class="ledger" id="ledger" aria-label="Processing ledger"><h2>Processing ledger</h2><div class="ledger-main"><div><span class="label">Pictures processed</span><strong id="frames">None yet</strong></div><div><span class="label">Pictures destroyed</span><strong id="destroyed">None yet</strong></div></div><p class="ledger-note">Saved: none · video sent: none</p></section>
       <section><div class="io" aria-label="Network and pixel measurements"><div class="metric"><span class="label">Video in</span><strong id="video-in">Not measured</strong><small>measured · end0</small></div><div class="metric"><span class="label">Bytes out</span><strong id="bytes-out">Not measured</strong><small>measured · end0</small></div><div class="metric"><span class="label">In : out ratio</span><strong id="in-out-ratio">Not measured</strong><small>NIC byte ratio</small></div></div><p class="pixels">Pixels decoded: <span id="pixels-decoded">not measured</span></p></section>
@@ -144,24 +149,27 @@
   <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>ALERT SENT TO SUE</strong><pre id="flash-event">Text details appear here.</pre></div></div>
   <script>
     const $ = id => document.getElementById(id);
-    const state = { seenEvents: new Set(), eventsPrimed: false, camera: false, hasLog: false, lastLogAt: 0, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", trendView: "", cadence: null, sway: null, people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, cleared: false };
+    const state = { seenEvents: new Set(), eventsPrimed: false, camera: false, hasLog: false, lastLogAt: 0, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", trendView: "", cadence: null, sway: null, people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, voice: null, wander: null, wanderAt: 0, cleared: false };
     const safeBanner = "Last check: no video sent.";
 
     function formatSeconds(value) { return value > 0 ? `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })} s` : "none yet"; }
-    function eventTime(event) { const date = new Date(event.ts); return Number.isNaN(date.getTime()) ? "an unknown time" : date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
-    function alertMessage(event) { const room = String(event.room || "living_room").replaceAll("_", " "); return `Sue got: 'Possible fall in the ${room} at ${eventTime(event)}. No video. Reply 1 if you have it, 2 to call for help.'`; }
+    function eventTime(event) { const date = new Date(event.ts); return Number.isNaN(date.getTime()) ? "an unknown time" : date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).toLowerCase(); }
+    function wanderTime(event) { const date = new Date(event.ts); return Number.isNaN(date.getTime()) ? "unknown" : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }); }
+    function roomName(event) { const room = String(event.room || "living_room").replaceAll("_", " "); return room.charAt(0).toUpperCase() + room.slice(1); }
+    function alertMessage(event) { return `Someone may have fallen.\n${roomName(event)}.\nAt ${eventTime(event)}.\nPlease check on them now.`; }
 
     function setState(name) {
       const copy = {
-        "no-camera": ["Camera off", "Last check: no video sent. Camera is off on this Mac.", "Allow the camera in Chrome, then press Start camera."],
-        "waiting-board": ["Waiting for the board", "Last check: not started. Waiting for the board.", "Plug in the board and run live_demo.sh."],
-        "empty-room": ["Nobody in the room", safeBanner, "Watching. Step into view to begin."],
+        "no-camera": ["Camera off", "Last check: no video sent. Camera is off on this Mac.", "The camera view is off. The box may still be checking."],
+        "waiting-board": ["Waiting for the board", "Last check: not started. Waiting for the board.", "We are waiting for the box."],
+        "empty-room": ["Nobody in the room", safeBanner, "No one is in view."],
         close: ["Only your shoulders in view", safeBanner, "Posture is paused until your whole body is in the picture"],
-        standing: ["Standing", safeBanner, "Watching."], sitting: ["Sitting", safeBanner, "Watching."],
-        leaning: ["Leaning", safeBanner, `Lean is climbing — ${state.lean}% of the way to an alert.`],
-        "on-floor": ["On the floor", safeBanner, `Counting: ${state.floorNow.toLocaleString("en-US", { maximumFractionDigits: 1 })} of 3 seconds before we text Sue.`],
-        "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", "Text sent. Waiting for Sue to reply 1 or 2."],
-        "alert-cleared": ["Up again", safeBanner, "Alert cleared. Watching."]
+        standing: ["Standing", safeBanner, "Someone seems to be standing."], sitting: ["Sitting", safeBanner, "Someone seems to be sitting."],
+        leaning: ["Leaning", safeBanner, "Someone seems to be leaning."],
+        "on-floor": ["On the floor", safeBanner, "They may be on the floor; we are counting."],
+        "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", "A fall alert is ready for Sue."],
+        wander: ["Up and about", safeBanner, `Up and about at ${wanderTime(state.wander)} — ${new Date(state.wander.ts).getHours() >= 22 || new Date(state.wander.ts).getHours() < 6 ? "night" : "day"}`],
+        "alert-cleared": ["Up again", safeBanner, "This alert was closed; please check on them."]
       }[name];
       $("posture").textContent = copy[0]; $("trend-posture").textContent = name === "close" ? "Shoulders only" : copy[0]; $("next-action").textContent = copy[2];
       $("banner-check").textContent = copy[1];
@@ -171,13 +179,17 @@
       const showLink = ["empty-room", "close", "standing", "sitting", "leaning", "on-floor", "alert-sent", "alert-cleared"].includes(name);
       $("sent-link").hidden = !showLink;
       $("banner").classList.toggle("on", name === "alert-sent");
+      $("alert-detail").hidden = name !== "alert-sent";
+      $("wander-clock").hidden = name !== "wander" || !state.wander?.demo_clock;
       $("gauge-ring").style.stroke = name === "alert-sent" || name === "on-floor" ? "var(--urgent)" : "var(--safe)";
     }
 
     function chooseState() {
       const now = Date.now();
-      if (state.alert && now - state.alertAt >= 20000) { state.alert = null; state.cleared = true; return setState("alert-cleared"); }
+      if (state.alert && now - state.alertAt >= 20000) { state.alert = null; state.voice = null; state.cleared = true; return setState("alert-cleared"); }
       if (state.alert) return setState("alert-sent");
+      if (state.wander && now - state.wanderAt < 20000) return setState("wander");
+      if (state.wander) state.wander = null;
       if (state.trendView === "close" || state.trendPosture === "close") return setState("close");
       if (state.floorNow > 0 && state.floorNow < 3 || state.trendPosture === "floor") return setState("on-floor");
       if (state.framePosture === "bent" || state.lean >= 40 && state.lean > state.priorLean) return setState("leaning");
@@ -203,7 +215,7 @@
     function parseFrame(line) {
       const frame = line.match(/^frame\s+(\d+)/), people = line.match(/people-in-view=(\d+)/), mla = line.match(/mla=([\d.]+)ms/), lean = line.match(/lean=(\d+)%/), posture = line.match(/posture=([^\s]+)(?:\s|$)/);
       const frameNumber = frame ? Number(frame[1]) : state.lastFrame, isNewFrame = frameNumber > state.lastFrame;
-      if (state.alert && frameNumber > state.eventFrame && posture?.[1] === "upright") { state.alert = null; state.cleared = true; setState("alert-cleared"); }
+      if (state.alert && frameNumber > state.eventFrame && posture?.[1] === "upright") { state.alert = null; state.voice = null; state.cleared = true; setState("alert-cleared"); }
       state.lastFrame = Math.max(state.lastFrame, frameNumber); if (people) { state.people = Number(people[1]); $("people").textContent = people[1]; } if (mla) $("mla").textContent = `${mla[1]} ms`; if (lean) setLean(lean[1], isNewFrame); state.framePosture = posture?.[1] === "---" ? "" : posture?.[1] || state.framePosture;
       const count = state.lastFrame.toLocaleString("en-US"); $("frames").textContent = count; $("destroyed").textContent = count; $("privacy-frames").textContent = count; $("privacy-destroyed").textContent = count;
     }
@@ -230,10 +242,17 @@
     }
     async function pollDay() { try { const response = await fetch(`live/day.json?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) throw new Error(); renderDay(await response.json()); } catch (_) { renderDay(null); } }
     function showFall(line, event) {
-      if (state.seenEvents.has(line)) return; const firstLoad = !state.eventsPrimed; state.seenEvents.add(line); state.lastEvent = line; if (firstLoad) { state.alert = event; state.cleared = false; state.alertAt = 0; $("banner-event").textContent = alertMessage(event); return; } state.alert = event; state.cleared = false; state.alertAt = Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("flash-event").textContent = text; $("banner-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
+      if (state.seenEvents.has(line)) return; const firstLoad = !state.eventsPrimed; state.seenEvents.add(line); state.lastEvent = line; state.wander = null; state.voice = null; state.alert = event; state.cleared = false; state.alertAt = firstLoad ? 0 : Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("alert-copy").textContent = text; $("banner-event").textContent = text; if (firstLoad) return; $("flash-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
+    }
+    function showWander(line, event) { if (state.seenEvents.has(line)) return; state.seenEvents.add(line); state.wander = event; state.wanderAt = Date.now(); state.cleared = false; }
+    function parseVoice(line) {
+      const match = line.match(/^voice\s+keyword=(okay|help|fallen|none)\s+heard_s=(\d+)\s+recorded_s=0(?:\s+text="[^"]*")?$/);
+      if (!match || !state.alert) return null;
+      state.voice = match[1]; const words = match[1] === "okay" ? "She said: I'm okay" : match[1] === "none" ? "No answer in 60 s" : "She said: help";
+      $("voice-copy").textContent = words; $("voice-copy").hidden = false; $("voice-label").hidden = false; return { keyword: match[1], heard_s: Number(match[2]) };
     }
     async function poll() {
-      try { const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) { chooseState(); return; } const lines = (await response.text()).split(/\r?\n/).filter(Boolean); if (lines.length) { state.hasLog = true; state.lastLogAt = Date.now(); } for (const line of lines) { if (line.startsWith("frame ")) parseFrame(line); else if (line.startsWith("ledger ")) parseLedger(line); else if (line.startsWith("trend ")) parseTrend(line); else if (line.startsWith("{")) { try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {} } } chooseState(); } catch (_) { state.eventsPrimed = true; chooseState(); }
+      try { const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) { chooseState(); return; } const lines = (await response.text()).split(/\r?\n/).filter(Boolean); if (lines.length) { state.hasLog = true; state.lastLogAt = Date.now(); } for (const line of lines) { if (line.startsWith("frame ")) parseFrame(line); else if (line.startsWith("ledger ")) parseLedger(line); else if (line.startsWith("trend ")) parseTrend(line); else if (line.startsWith("voice ")) parseVoice(line); else if (line.startsWith("{")) { try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); else if (event.type === "wander") showWander(line, event); } catch (_) {} } } state.eventsPrimed = true; chooseState(); } catch (_) { state.eventsPrimed = true; chooseState(); }
     }
     $("camera-start").addEventListener("click", startCamera); $("sent-link").addEventListener("click", () => { const ledger = $("ledger"); ledger.classList.remove("pulse"); void ledger.offsetWidth; ledger.classList.add("pulse"); }); startCamera(); poll(); pollDay(); window.setInterval(poll, 250); window.setInterval(chooseState, 1000); window.setInterval(pollDay, 10000);
   </script>
