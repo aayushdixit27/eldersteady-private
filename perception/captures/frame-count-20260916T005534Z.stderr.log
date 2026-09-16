@@ -1,0 +1,24 @@
+loading model=/home/sima/watch-perception/models/yolo26m-det-int8-b1.tar.gz
+Model loaded: yolo26m-det-int8-b1 (package storage: NVMe, runtime package path: /media/nvme/simaai/coprocessing/models/proc_19518/pkg_0f1dca212da45d51/yolo26m-det-int8-b1)
+[WARN] Model preprocess planner produced 39 advisory messages; set Model::Options.verbose.level=Verbose or Model::Options.verbose.planner=true to inspect details.
+[1/4] Initializing runtime...
+[2/4] Preparing input stream...
+[3/4] Building graph...
+[4/4] Graph ready (220 ms)
+frame=1 processed=1 detections=11 best=0.500 infer_ms=9.7
+frame=17 processed=2 detections=11 best=0.500 infer_ms=9.7
+frame=33 processed=3 detections=9 best=0.500 infer_ms=9.3
+frame=49 processed=4 detections=10 best=0.500 infer_ms=9.2
+frame=65 processed=5 detections=9 best=0.500 infer_ms=8.7
+frame=81 processed=6 detections=9 best=0.500 infer_ms=8.8
+frame=97 processed=7 detections=9 best=0.500 infer_ms=8.7
+frame=113 processed=8 detections=9 best=0.500 infer_ms=8.8
+frame=129 processed=9 detections=8 best=0.500 infer_ms=8.8
+frame=145 processed=10 detections=9 best=0.500 infer_ms=8.7
+frame=161 processed=11 detections=8 best=0.500 infer_ms=8.7
+frame=177 processed=12 detections=9 best=0.500 infer_ms=8.7
+done processed=12 event_emitted=True
+Configuring for the decoding type: 8:yolo26
+Configured for subtensors: 6
+Derived configuration for YOLO : num_anchors: 1 score tensor: 1 xy_tensor 0 extent_tensor 0
+Additional configuration for YOLO : none

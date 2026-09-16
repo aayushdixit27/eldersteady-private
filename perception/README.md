@@ -77,3 +77,15 @@ ssh sima@192.168.1.20 \
 This sends real detection metadata to Insight's UDP metadata ingress. The app
 does not send synchronized video to the viewer, so this is an ingress check, not
 proof of rendered overlays.
+
+## Round-2 Demo Evidence
+
+See `DEMO.md` for the exact board-local command sequence and the measured frame
+count capture. Setup lane proved the unmounted `/workspace` case in
+`/workspace/watch-lanes/board/findings/lane-setup.md` Addendum 2; this lane does
+not repeat the unmount.
+
+Semantics boundary: `wander` is a heuristic label over real object detections,
+not a wandering classifier. The measured claims are MLA inference, exact
+application-boundary frame counting, board-local install, and the offline
+board-local run.
