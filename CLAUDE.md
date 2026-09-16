@@ -23,4 +23,6 @@ You are the setup/engineering lane for **Watch**, a family-first fall alert on t
 
 ## Standing preferences
 - Aggressively token-prudent. Use `codex exec` for code and prose; Claude for board/serial, Chrome, merges, judgment.
-- Clear context at task boundaries (after a submission, after a crucible round), after updating CURRENT.md in Senso with `kb patch-raw`.
+- Clear context at task boundaries (after a submission, after a crucible round), after updating CURRENT.md in Senso with `kb patch-raw`. Compact proactively around 50–60 % context, not at the cliff.
+- Two-failed-corrections rule: if the user has corrected the same thing twice, stop, write CURRENT.md, and suggest a clear.
+- Progressive disclosure: never load setup.md, day1-summary, or the idea-loop versions wholesale; `senso search` the question, then `kb get-content` only the one document you need.
