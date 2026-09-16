@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Dependency-free checks for ledger and trend helpers."""
 
+from unittest.mock import patch
+
 from watch_events import (
     FallEventCooldown,
     Pose,
     SitToStandDetector,
     TrendTracker,
     classify_posture,
+    event_timestamp,
     format_ledger_line,
     posture_measurements,
     read_nic,
@@ -34,6 +37,12 @@ def synthetic_pose(
 
 
 def main() -> None:
+    with patch("watch_events.time.monotonic", side_effect=(100.0, 105.0)):
+        first = event_timestamp("2026-09-16T16:27:48Z", 100.0)
+        second = event_timestamp("2026-09-16T16:27:48Z", 100.0)
+    assert first == "2026-09-16T16:27:48Z"
+    assert second == "2026-09-16T16:27:53Z"
+
     assert read_nic("watch-interface-that-does-not-exist") == (None, None)
     assert format_ledger_line(30, 186624000, 1200, 47) == (
         "ledger frames=30 pixel_bytes=186624000 rx_bytes=1200 tx_bytes=47 nic=end0"
