@@ -25,7 +25,7 @@
     .banner-family { margin: 5px 0 0; font-size: 20px; font-weight: 750; }
     .privacy-counts { margin: 7px 0 0; font-size: 13px; font-weight: 650; }
     .demo { height: 78vh; min-height: 0; display: grid; grid-template-columns: 60% 40%; }
-    .left { min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) 121px; border-right: 1px solid var(--line); }
+    .left { min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) 184px; border-right: 1px solid var(--line); }
     .camera-box { position: relative; min-height: 0; overflow: hidden; background: var(--paper); }
     video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--paper); }
     .camera-shade { position: absolute; left: 20px; bottom: 14px; color: white; background: var(--night); padding: 8px 11px; font-size: 13px; font-weight: 650; }
@@ -34,12 +34,13 @@
     .camera-error strong { font-size: 24px; }
     .camera-error p { margin: 0; color: var(--muted); font-size: 14px; }
     .camera-error button { justify-self: center; min-height: 56px; padding: 0 22px; border: 0; border-radius: 13px; background: var(--safe-deep); color: white; font-weight: 800; cursor: pointer; }
-    .trend { min-width: 0; padding: 10px 20px 9px; border-top: 1px solid var(--line); }
-    .trend h2 { margin: 0 0 7px; font-size: 14px; letter-spacing: .02em; }
+    .trend { min-width: 0; padding: 8px 20px 7px; border-top: 1px solid var(--line); }
+    .trend h2 { margin: 0 0 5px; font-size: 14px; letter-spacing: .02em; }
     .trend-row { display: grid; grid-template-columns: 1.2fr 1fr .8fr 2.1fr .85fr; align-items: end; gap: 14px; }
     .trend-stat { min-width: 0; overflow-wrap: anywhere; }
     .label { display: block; color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
     .trend-stat strong { display: block; margin-top: 3px; font-size: 20px; line-height: 1.05; }
+    .trend-stat strong.paused { color: var(--muted); font-size: 14px; }
     .trend-stat.on-floor strong { color: var(--urgent-text); font-size: 40px; }
     .time-strip { display: flex; width: 100%; height: 14px; margin: 7px 0 5px; border: 1px solid var(--ink); overflow: hidden; }
     .time-strip span { min-width: 0; }
@@ -47,6 +48,18 @@
     .segment-floor { background: var(--urgent); } .segment-absent { background: var(--line); }
     .time-key { display: flex; flex-wrap: wrap; gap: 2px 10px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .time-key b { color: var(--ink); }
+    .rhythm { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line); }
+    .rhythm p { margin: 0; }
+    #rhythm-line { color: var(--ink); font-size: 14px; font-weight: 650; white-space: nowrap; }
+    #rhythm-line.empty { color: var(--muted); font-weight: 500; }
+    #rhythm-gait:empty { display: none; }
+    #rhythm-bar { position: relative; display: grid; grid-template-columns: repeat(1440, 1fr); width: 100%; height: 8px; margin-top: 5px; background: var(--line); }
+    #rhythm-bar[hidden] { display: none; }
+    #rhythm-bar span { min-width: 0; height: 8px; }
+    #rhythm-bar .standing { background: var(--safe-deep); } #rhythm-bar .sitting { background: var(--safe); }
+    #rhythm-bar .floor { background: var(--urgent); } #rhythm-bar .close { background: var(--muted); } #rhythm-bar .absent { background: var(--line); }
+    #rhythm-bar .company { border-top: 2px solid var(--safe-deep); }
+    #rhythm-source { margin-top: 4px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .panel { min-width: 0; padding: 14px 26px 12px; display: grid; grid-template-rows: 30px auto auto auto auto auto; align-content: space-between; gap: 8px; }
     header { display: flex; justify-content: space-between; align-items: center; }
     .brand { font-size: 20px; font-weight: 850; letter-spacing: -.035em; }
@@ -112,6 +125,11 @@
           <div class="trend-stat"><span class="label">Posture time</span><div class="time-strip" id="time-strip" aria-label="Posture time not measured"><span class="segment-upright" id="strip-upright"></span><span class="segment-sitting" id="strip-sitting"></span><span class="segment-floor" id="strip-floor"></span><span class="segment-absent" id="strip-absent"></span></div><div class="time-key"><span><b>Up</b> <span id="upright-seconds">none yet</span></span><span><b>Sit</b> <span id="sitting-seconds">none yet</span></span><span><b>Floor</b> <span id="floor-seconds">none yet</span></span><span><b>Away</b> <span id="absent-seconds">none yet</span></span></div></div>
           <div class="trend-stat"><span class="label">Company</span><strong id="company-seconds">None yet</strong></div>
         </div>
+        <div class="rhythm" aria-label="Today's rhythm">
+          <p id="rhythm-line" class="empty">Today's rhythm starts when the box sees you<span id="rhythm-gait"></span></p>
+          <div id="rhythm-bar" role="img" aria-label="Today's measured states from midnight to midnight" hidden></div>
+          <p id="rhythm-source" hidden>measured today · rhythm.py</p>
+        </div>
       </section>
     </section>
     <section class="panel" aria-label="Live board measurements">
@@ -126,7 +144,7 @@
   <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>ALERT SENT TO SUE</strong><pre id="flash-event">Text details appear here.</pre></div></div>
   <script>
     const $ = id => document.getElementById(id);
-    const state = { seenEvents: new Set(), eventsPrimed: false, camera: false, hasLog: false, lastLogAt: 0, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, cleared: false };
+    const state = { seenEvents: new Set(), eventsPrimed: false, camera: false, hasLog: false, lastLogAt: 0, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", trendView: "", cadence: null, sway: null, people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, cleared: false };
     const safeBanner = "Last check: no video sent.";
 
     function formatSeconds(value) { return value > 0 ? `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })} s` : "none yet"; }
@@ -138,18 +156,19 @@
         "no-camera": ["Camera off", "Last check: no video sent. Camera is off on this Mac.", "Allow the camera in Chrome, then press Start camera."],
         "waiting-board": ["Waiting for the board", "Last check: not started. Waiting for the board.", "Plug in the board and run live_demo.sh."],
         "empty-room": ["Nobody in the room", safeBanner, "Watching. Step into view to begin."],
+        close: ["Only your shoulders in view", safeBanner, "Posture is paused until your whole body is in the picture"],
         standing: ["Standing", safeBanner, "Watching."], sitting: ["Sitting", safeBanner, "Watching."],
         leaning: ["Leaning", safeBanner, `Lean is climbing — ${state.lean}% of the way to an alert.`],
         "on-floor": ["On the floor", safeBanner, `Counting: ${state.floorNow.toLocaleString("en-US", { maximumFractionDigits: 1 })} of 3 seconds before we text Sue.`],
         "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", "Text sent. Waiting for Sue to reply 1 or 2."],
         "alert-cleared": ["Up again", safeBanner, "Alert cleared. Watching."]
       }[name];
-      $("posture").textContent = copy[0]; $("trend-posture").textContent = copy[0]; $("next-action").textContent = copy[2];
+      $("posture").textContent = copy[0]; $("trend-posture").textContent = name === "close" ? "Shoulders only" : copy[0]; $("next-action").textContent = copy[2];
       $("banner-check").textContent = copy[1];
-      const leanWord = { "no-camera": "off", "waiting-board": "waiting", "empty-room": "no one" }[name];
+      const leanWord = { "no-camera": "off", "waiting-board": "waiting", "empty-room": "no one", close: "paused" }[name];
       if (leanWord) { $("lean").textContent = leanWord; $("lean").classList.add("word"); $("gauge-ring").style.strokeDashoffset = 276.46; }
       $("camera-error").hidden = name !== "no-camera";
-      const showLink = ["empty-room", "standing", "sitting", "leaning", "on-floor", "alert-sent", "alert-cleared"].includes(name);
+      const showLink = ["empty-room", "close", "standing", "sitting", "leaning", "on-floor", "alert-sent", "alert-cleared"].includes(name);
       $("sent-link").hidden = !showLink;
       $("banner").classList.toggle("on", name === "alert-sent");
       $("gauge-ring").style.stroke = name === "alert-sent" || name === "on-floor" ? "var(--urgent)" : "var(--safe)";
@@ -159,6 +178,7 @@
       const now = Date.now();
       if (state.alert && now - state.alertAt >= 20000) { state.alert = null; state.cleared = true; return setState("alert-cleared"); }
       if (state.alert) return setState("alert-sent");
+      if (state.trendView === "close" || state.trendPosture === "close") return setState("close");
       if (state.floorNow > 0 && state.floorNow < 3 || state.trendPosture === "floor") return setState("on-floor");
       if (state.framePosture === "bent" || state.lean >= 40 && state.lean > state.priorLean) return setState("leaning");
       if (state.trendPosture === "sitting") return setState("sitting");
@@ -194,16 +214,28 @@
     }
     function parseTrend(line) {
       const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]])); const seconds = key => Math.max(0, Number(fields[key]) || 0); const durations = { upright: seconds("upright_s"), sitting: seconds("sitting_s"), floor: seconds("floor_s_total"), absent: seconds("absent_s") }; const total = Object.values(durations).reduce((sum, value) => sum + value, 0);
-      state.trendPosture = fields.posture || state.trendPosture; state.floorNow = seconds("floor_s"); $("sts-last").textContent = seconds("sts_last_s") > 0 ? formatSeconds(seconds("sts_last_s")) : "Not measured"; $("floor-now").textContent = state.floorNow > 0 ? formatSeconds(state.floorNow) : "No"; $("floor-stat").classList.toggle("on-floor", state.floorNow > 0);
+      state.trendPosture = fields.posture || state.trendPosture; state.trendView = fields.view || ""; state.cadence = fields.cadence_spm && fields.cadence_spm !== "na" ? Number(fields.cadence_spm) : null; state.sway = fields.sway && fields.sway !== "na" ? Number(fields.sway) : null; state.floorNow = seconds("floor_s"); const close = state.trendView === "close" || state.trendPosture === "close"; $("sts-last").textContent = close ? "paused" : seconds("sts_last_s") > 0 ? formatSeconds(seconds("sts_last_s")) : "Not measured"; $("floor-now").textContent = close ? "paused" : state.floorNow > 0 ? formatSeconds(state.floorNow) : "No"; $("sts-last").classList.toggle("paused", close); $("floor-now").classList.toggle("paused", close); $("floor-stat").classList.toggle("on-floor", !close && state.floorNow > 0);
       for (const [posture, value] of Object.entries(durations)) { $(`${posture}-seconds`).textContent = formatSeconds(value); $(`strip-${posture}`).style.width = `${total ? value / total * 100 : 0}%`; } $("company-seconds").textContent = seconds("company_s") > 0 ? formatSeconds(seconds("company_s")) : "None yet"; $("time-strip").setAttribute("aria-label", total ? `Posture time: standing ${formatSeconds(durations.upright)}, sitting ${formatSeconds(durations.sitting)}, floor ${formatSeconds(durations.floor)}, away ${formatSeconds(durations.absent)}` : "Posture time not measured");
     }
+    function humanMinutes(value) { const minutes = Math.max(0, Number(value) || 0); if (!minutes) return "0"; const hours = Math.floor(minutes / 60), rest = minutes % 60; return hours ? `${hours} h${rest ? ` ${rest}` : ""}` : `${minutes} min`; }
+    function renderDay(day) {
+      const line = $("rhythm-line"), bar = $("rhythm-bar"), source = $("rhythm-source"), gait = $("rhythm-gait");
+      if (!day || !day.totals || !Array.isArray(day.minutes)) { line.className = "empty"; line.firstChild.textContent = "Today's rhythm starts when the box sees you"; gait.textContent = ""; bar.replaceChildren(); bar.hidden = true; source.hidden = true; return; }
+      const totals = day.totals, visits = Math.max(0, Number(totals.visits) || 0); line.className = "";
+      line.firstChild.textContent = `Up at ${day.first_seen || "a time not yet measured"} · standing ${humanMinutes(totals.standing_min)} · sitting ${humanMinutes(totals.sitting_min)} · on the floor ${humanMinutes(totals.floor_min)} · company ${humanMinutes(totals.company_min)} · ${visits} visit${visits === 1 ? "" : "s"}`;
+      const gaitParts = []; if (Number.isFinite(state.cadence)) gaitParts.push(`walking: ${state.cadence.toLocaleString("en-US")} steps/min`); if (Number.isFinite(state.sway)) gaitParts.push(`sway ${state.sway.toLocaleString("en-US")}`); gait.textContent = gaitParts.length ? ` · ${gaitParts.join(" · ")}` : "";
+      const byMinute = new Map(day.minutes.map(item => [item.m, item])); const cells = [];
+      for (let minute = 0; minute < 1440; minute++) { const key = `${String(Math.floor(minute / 60)).padStart(2,"0")}:${String(minute % 60).padStart(2,"0")}`, item = byMinute.get(key), cell = document.createElement("span"); if (item && ["standing","sitting","floor","close","absent"].includes(item.state)) cell.className = `${item.state}${item.company ? " company" : ""}`; cells.push(cell); }
+      bar.replaceChildren(...cells); bar.hidden = false; source.hidden = false; source.textContent = gaitParts.length ? "measured today · rhythm.py · measured, thresholds unknown" : "measured today · rhythm.py";
+    }
+    async function pollDay() { try { const response = await fetch(`live/day.json?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) throw new Error(); renderDay(await response.json()); } catch (_) { renderDay(null); } }
     function showFall(line, event) {
       if (state.seenEvents.has(line)) return; const firstLoad = !state.eventsPrimed; state.seenEvents.add(line); state.lastEvent = line; if (firstLoad) { state.alert = event; state.cleared = false; state.alertAt = 0; $("banner-event").textContent = alertMessage(event); return; } state.alert = event; state.cleared = false; state.alertAt = Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("flash-event").textContent = text; $("banner-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
     }
     async function poll() {
       try { const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) { chooseState(); return; } const lines = (await response.text()).split(/\r?\n/).filter(Boolean); if (lines.length) { state.hasLog = true; state.lastLogAt = Date.now(); } for (const line of lines) { if (line.startsWith("frame ")) parseFrame(line); else if (line.startsWith("ledger ")) parseLedger(line); else if (line.startsWith("trend ")) parseTrend(line); else if (line.startsWith("{")) { try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {} } } chooseState(); } catch (_) { state.eventsPrimed = true; chooseState(); }
     }
-    $("camera-start").addEventListener("click", startCamera); $("sent-link").addEventListener("click", () => { const ledger = $("ledger"); ledger.classList.remove("pulse"); void ledger.offsetWidth; ledger.classList.add("pulse"); }); startCamera(); poll(); window.setInterval(poll, 250); window.setInterval(chooseState, 1000);
+    $("camera-start").addEventListener("click", startCamera); $("sent-link").addEventListener("click", () => { const ledger = $("ledger"); ledger.classList.remove("pulse"); void ledger.offsetWidth; ledger.classList.add("pulse"); }); startCamera(); poll(); pollDay(); window.setInterval(poll, 250); window.setInterval(chooseState, 1000); window.setInterval(pollDay, 10000);
   </script>
 </body>
 </html>
