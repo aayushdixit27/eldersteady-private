@@ -2,6 +2,7 @@
 """Dependency-free checks for ledger and trend helpers."""
 
 from watch_events import (
+    FallEventCooldown,
     Pose,
     SitToStandDetector,
     TrendTracker,
@@ -51,20 +52,21 @@ def main() -> None:
     assert classify_posture([
         synthetic_pose(0, 30, hips_visible=False, nose_x=90, nose_y=30)
     ], 100, 100, 0.3) == "bent"
-    assert classify_posture([synthetic_pose(50, 10)], 100, 100, 0.3) == "upright"
-    assert classify_posture([synthetic_pose(80, 50)], 100, 100, 0.3) == "sitting"
+    assert classify_posture([synthetic_pose(55, 20, bbox_aspect=1.0)], 100, 100, 0.3) == "upright"
+    assert classify_posture([synthetic_pose(66, 52, bbox_aspect=1.2)], 100, 100, 0.3) == "sitting"
     shoulder_floor = TrendTracker()
-    shoulder_pose = synthetic_pose(0, 72, hips_visible=False, bbox_aspect=1.5)
-    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 1.0) != "floor"
-    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 1.0) == "floor"
+    shoulder_pose = synthetic_pose(0, 75, hips_visible=False, bbox_aspect=1.5)
+    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) != "floor"
+    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) != "floor"
+    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) == "floor"
     assert shoulder_floor.snapshot()["vis"] == "shoulders"
     assert shoulder_floor.snapshot()["bbox_ar"] == 1.5
     seated_tracker = TrendTracker()
-    seated_pose = synthetic_pose(80, 55, bbox_aspect=1.1)
+    seated_pose = synthetic_pose(66, 52, bbox_aspect=1.2)
     for _ in range(2):
         seated_tracker.update([seated_pose], 100, 100, 0.3, 1.0)
     assert seated_tracker.snapshot()["posture"] == "sitting"
-    standing_pose = synthetic_pose(55, 37, bbox_aspect=1.0)
+    standing_pose = synthetic_pose(55, 20, bbox_aspect=1.0)
     seated_tracker.update([standing_pose], 100, 100, 0.3, 0.01)
     assert seated_tracker.snapshot()["sts_n"] == 1
     assert seated_tracker.snapshot()["sts_last_s"] == 0.01
@@ -72,6 +74,21 @@ def main() -> None:
     for _ in range(2):
         close_standing.update([standing_pose], 100, 100, 0.3, 1.0)
     assert close_standing.snapshot()["posture"] == "upright"
+
+    floor_flicker = TrendTracker()
+    floor_flicker.update([shoulder_pose], 100, 100, 0.3, 1.0)
+    floor_flicker.update([standing_pose], 100, 100, 0.3, 0.1)
+    assert floor_flicker.snapshot()["floor_s"] == 1.0
+    assert floor_flicker.update([shoulder_pose], 100, 100, 0.3, 0.5) == "floor"
+
+    cooldown = FallEventCooldown()
+    assert cooldown.ready(0.0)
+    cooldown.emitted(0.0)
+    cooldown.update("upright", 21.0)
+    cooldown.update("upright", 23.0)
+    assert cooldown.ready(25.0)
+    cooldown.emitted(25.0)
+    assert not cooldown.ready(25.0)
 
     detector = SitToStandDetector()
     for pose, now in ((synthetic_pose(75, 50), 0.0), (synthetic_pose(75, 50), 2.0),

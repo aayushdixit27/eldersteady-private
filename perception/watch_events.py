@@ -29,19 +29,20 @@ COCO_RIGHT_HIP = 12
 DEFAULT_BENT_THRESHOLD = 60.0
 NIC = "end0"
 POSTURES = ("upright", "bent", "sitting", "floor", "absent")
-# Measured 2026-09-16 at 2 m, desk-height camera: stand sh_y 0.05-0.59,
-# bbox_ar ~1.0, hips mostly visible; chair sh_y 0.55, bbox_ar 1.04-1.12,
-# hips visible; floor knees-to-chest sh_y 0.70-0.77, bbox_ar 1.33-1.80,
-# hips not visible.
+# Calibrated 16 Sep for this camera at 2 m; other setups need recalibration.
+# Stand sh_y 0.04-0.34; chair sh_y 0.50-0.55; floor knees-to-chest
+# sh_y 0.73-0.78 with bbox_ar 1.46-1.66.
 BANDS = {
     "floor_bbox_ar_min": 1.25,
     "floor_bbox_ar_only_min": 2.0,
-    "floor_torso_y_min": 0.65,
+    "floor_shoulder_y_min": 0.65,
     "floor_hold_s": 1.5,
-    "sitting_shoulder_y_min": 0.45,
+    "floor_exit_hold_s": 1.0,
+    "sitting_shoulder_y_min": 0.42,
     "sitting_shoulder_y_max": 0.65,
-    "sitting_bbox_ar_max": 1.25,
 }
+FALL_EVENT_COOLDOWN_S = 20.0
+FALL_EVENT_RECOVERY_S = 2.0
 
 
 @dataclass(frozen=True)
@@ -101,26 +102,44 @@ def classify_posture(
     measured = [(pose.score, posture_measurements(
         pose, frame_w, frame_h, min_visibility, bent_threshold
     )) for pose in poses]
-    best_pose = max(poses, key=lambda pose: pose.score)
-    _, (hip_y, shoulder_y, torso_upright, _) = max(measured, key=lambda item: item[0])
+    _, (_, shoulder_y, torso_upright, _) = max(measured, key=lambda item: item[0])
     if floor_seconds >= BANDS["floor_hold_s"]:
         return "floor"
     if not torso_upright:
         return "bent"
     if shoulder_y is None:
         return "upright"
-    if hip_y is None:
-        shoulder_sitting = (
-            BANDS["sitting_shoulder_y_min"] <= shoulder_y <= BANDS["sitting_shoulder_y_max"]
-            and best_pose.bbox_aspect is not None
-            and best_pose.bbox_aspect < BANDS["sitting_bbox_ar_max"]
-        )
-        return "sitting" if shoulder_sitting else "upright"
-    torso_length = max(hip_y - shoulder_y, 0.0)
-    hips_low_for_torso = 1.0 - hip_y <= torso_length
-    if hips_low_for_torso and torso_upright:
+    if BANDS["sitting_shoulder_y_min"] <= shoulder_y <= BANDS["sitting_shoulder_y_max"]:
         return "sitting"
-    return "upright" if torso_upright else "bent"
+    return "upright"
+
+
+@dataclass
+class FallEventCooldown:
+    last_event_at: float | None = None
+    recovery_started_at: float | None = None
+    recovered: bool = False
+
+    def update(self, posture: str, now: float) -> None:
+        if self.last_event_at is None or self.recovered:
+            return
+        if posture in ("upright", "sitting"):
+            if self.recovery_started_at is None:
+                self.recovery_started_at = now
+            if now - self.recovery_started_at >= FALL_EVENT_RECOVERY_S:
+                self.recovered = True
+        else:
+            self.recovery_started_at = None
+
+    def ready(self, now: float) -> bool:
+        return self.last_event_at is None or (
+            self.recovered and now - self.last_event_at >= FALL_EVENT_COOLDOWN_S
+        )
+
+    def emitted(self, now: float) -> None:
+        self.last_event_at = now
+        self.recovery_started_at = None
+        self.recovered = False
 
 
 @dataclass
@@ -180,6 +199,7 @@ class TrendTracker:
     bbox_aspect: float | None = None
     pending_posture: str | None = None
     pending_seconds: float = 0.0
+    floor_miss_seconds: float = 0.0
 
     def __post_init__(self) -> None:
         self.totals = {posture: 0.0 for posture in POSTURES}
@@ -197,20 +217,25 @@ class TrendTracker:
         best = max(measured, key=lambda item: item[0])[1] if measured else None
         self.hip_y, self.shoulder_y, _, self.visibility = best or (None, None, True, "none")
         self.bbox_aspect = best_pose.bbox_aspect if best_pose else None
-        lowest_torso_y = best[0] if best and best[0] is not None else (best[1] if best else None)
         floor_candidate = (
             self.bbox_aspect is not None
             and (
                 self.bbox_aspect >= BANDS["floor_bbox_ar_only_min"]
                 or (
-                    self.hip_y is None
-                    and self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
-                    and lowest_torso_y is not None
-                    and lowest_torso_y >= BANDS["floor_torso_y_min"]
+                    self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
+                    and self.shoulder_y is not None
+                    and self.shoulder_y >= BANDS["floor_shoulder_y_min"]
                 )
             )
         )
-        self.floor_seconds = self.floor_seconds + dt if floor_candidate else 0.0
+        if floor_candidate:
+            self.floor_seconds += dt
+            self.floor_miss_seconds = 0.0
+        elif self.floor_seconds > 0.0:
+            self.floor_miss_seconds += dt
+            if self.floor_miss_seconds >= BANDS["floor_exit_hold_s"]:
+                self.floor_seconds = 0.0
+                self.floor_miss_seconds = 0.0
         candidate = classify_posture(
             poses, frame_w, frame_h, min_visibility, self.floor_seconds, bent_threshold
         )
@@ -626,6 +651,7 @@ def main(argv: list[str]) -> int:
     previous_posture = None
     pixel_bytes = 0
     trend = TrendTracker()
+    fall_cooldown = FallEventCooldown()
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_seconds = args.stride / fps if fps and fps > 0 else args.stride / 30.0
 
@@ -678,6 +704,7 @@ def main(argv: list[str]) -> int:
                 is_bent = best_lean >= args.fall_lean_threshold
                 bent_streak = bent_streak + 1 if is_bent else 0
                 posture = trend.posture
+                fall_cooldown.update(posture, trend.elapsed)
                 posture_changed = previous_posture is not None and posture != previous_posture
                 if should_print(frame_index, posture_changed, bent_streak, args.print_every):
                     log(
@@ -697,7 +724,7 @@ def main(argv: list[str]) -> int:
                 fall_reason = "floor" if trend.floor_seconds >= 3.0 else (
                     "lean" if bent_streak >= args.fall_consecutive_frames else None
                 )
-                if not event_emitted and fall_reason is not None:
+                if fall_reason is not None and fall_cooldown.ready(trend.elapsed):
                     event = {
                         "type": "fall",
                         "room": args.room,
@@ -708,6 +735,7 @@ def main(argv: list[str]) -> int:
                     }
                     emit_event(event)
                     event_emitted = True
+                    fall_cooldown.emitted(trend.elapsed)
                     frames_in_events += frames_since_event
                     events_emitted += 1
                     frames_since_event = 0
