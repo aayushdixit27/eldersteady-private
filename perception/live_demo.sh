@@ -35,7 +35,7 @@ else
   POSE_ARGS=
 fi
 docker exec -u aayushdixit $SDK ssh -t -o BatchMode=yes sima@$BOARD \
-  "cd / && source ~/pyneat/bin/activate && python3 /home/sima/watch-perception/watch_events.py \
+  "cd / && source ~/pyneat/bin/activate && WATCH_BOX_XYXY=${BOX_XYXY:-1} WATCH_PRINT_EVERY=${PRINT_EVERY:-5} python3 /home/sima/watch-perception/watch_events.py \
      --video 'udp://@:$PORT?overrun_nonfatal=1&fifo_size=50000' \
      $POSE_ARGS --model $MODEL \
      --max-frames $FRAMES --stride 1 --print-every ${PRINT_EVERY:-5} --event-after-detections 30 --room living_room --host-ts $TS \
