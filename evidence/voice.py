@@ -20,13 +20,15 @@ assert RECORD_AUDIO is False
 
 
 def phrase_to_keyword(text: str) -> str:
-    """Map a recognizer phrase to the board's small response vocabulary."""
-    phrase = " ".join(text.lower().strip().split())
-    if phrase == "help":
-        return "help"
-    if phrase == "i have fallen":
-        return "fallen"
-    if phrase in {"i am okay", "i'm okay", "okay"}:
+    """Map a recognizer phrase to the board's small response vocabulary.
+
+    Word-based: the grammar-constrained recogniser often returns extra tokens
+    ("okay have am okay"); help/fallen win over okay if both appear.
+    """
+    words = set(text.lower().replace("'", " ").split())
+    if "help" in words or "fallen" in words:
+        return "help" if "help" in words else "fallen"
+    if "okay" in words:
         return "okay"
     return "none"
 
@@ -131,7 +133,7 @@ def watch(log_path: Path, model_dir: Path, window: float) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--log", type=Path, required=True)
+    parser.add_argument("--log", type=Path, default=Path(__file__).resolve().parent.parent / "interface" / "live" / "board.log")
     parser.add_argument("--window", type=float)
     parser.add_argument("--test", action="store_true")
     args = parser.parse_args()
