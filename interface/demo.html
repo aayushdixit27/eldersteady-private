@@ -149,7 +149,7 @@
   <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>ALERT SENT TO SUE</strong><pre id="flash-event">Text details appear here.</pre></div></div>
   <script>
     const $ = id => document.getElementById(id);
-    const state = { seenEvents: new Set(), eventsPrimed: false, camera: false, hasLog: false, lastLogAt: 0, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", trendView: "", cadence: null, sway: null, people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, voice: null, wander: null, wanderAt: 0, cleared: false };
+    const state = { seenEvents: new Set(), eventsPrimed: false, camera: false, hasLog: false, lastLogAt: 0, lastLogLength: null, lastLogLine: null, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", trendView: "", cadence: null, sway: null, people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, voice: null, wander: null, wanderAt: 0, cleared: false };
     const safeBanner = "Last check: no video sent.";
 
     function formatSeconds(value) { return value > 0 ? `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })} s` : "none yet"; }
@@ -168,13 +168,15 @@
         leaning: ["Leaning", safeBanner, "Someone seems to be leaning."],
         "on-floor": ["On the floor", safeBanner, "They may be on the floor; we are counting."],
         "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", "A fall alert is ready for Sue."],
-        wander: ["Up and about", safeBanner, `Up and about at ${wanderTime(state.wander)} — ${new Date(state.wander.ts).getHours() >= 22 || new Date(state.wander.ts).getHours() < 6 ? "night" : "day"}`],
+        wander: ["Up and about", safeBanner, state.wander ? `Up and about at ${wanderTime(state.wander)} — ${new Date(state.wander.ts).getHours() >= 22 || new Date(state.wander.ts).getHours() < 6 ? "night" : "day"}` : "Up and about."],
         "alert-cleared": ["Up again", safeBanner, "This alert was closed; please check on them."]
       }[name];
       $("posture").textContent = copy[0]; $("trend-posture").textContent = name === "close" ? "Shoulders only" : copy[0]; $("next-action").textContent = copy[2];
       $("banner-check").textContent = copy[1];
       const leanWord = { "no-camera": "off", "waiting-board": "waiting", "empty-room": "no one", close: "paused" }[name];
       if (leanWord) { $("lean").textContent = leanWord; $("lean").classList.add("word"); $("gauge-ring").style.strokeDashoffset = 276.46; }
+      const hasNumericLean = /^\d+(?:\.\d+)?%$/.test($("lean").textContent.trim());
+      $("lean").classList.toggle("word", !hasNumericLean); if (!hasNumericLean) $("gauge-ring").style.strokeDashoffset = 276.46;
       $("camera-error").hidden = name !== "no-camera";
       const showLink = ["empty-room", "close", "standing", "sitting", "leaning", "on-floor", "alert-sent", "alert-cleared"].includes(name);
       $("sent-link").hidden = !showLink;
@@ -190,6 +192,7 @@
       if (state.alert) return setState("alert-sent");
       if (state.wander && now - state.wanderAt < 20000) return setState("wander");
       if (state.wander) state.wander = null;
+      if (!state.hasLog || now - state.lastLogAt >= 5000) return setState(state.camera ? "waiting-board" : "no-camera");
       if (state.trendView === "close" || state.trendPosture === "close") return setState("close");
       if (state.floorNow > 0 && state.floorNow < 3 || state.trendPosture === "floor") return setState("on-floor");
       if (state.framePosture === "bent" || state.lean >= 40 && state.lean > state.priorLean) return setState("leaning");
@@ -197,7 +200,6 @@
       if (state.cleared) return setState("alert-cleared");
       if (state.framePosture === "upright" || state.trendPosture === "upright") return setState("standing");
       if (state.people === 0 || state.trendPosture === "absent") return setState("empty-room");
-      if (!state.hasLog || now - state.lastLogAt >= 5000) return setState(state.camera ? "waiting-board" : "no-camera");
       return setState(state.camera ? "waiting-board" : "no-camera");
     }
 
@@ -242,17 +244,17 @@
     }
     async function pollDay() { try { const response = await fetch(`live/day.json?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) throw new Error(); renderDay(await response.json()); } catch (_) { renderDay(null); } }
     function showFall(line, event) {
-      if (state.seenEvents.has(line)) return; const firstLoad = !state.eventsPrimed; state.seenEvents.add(line); state.lastEvent = line; state.wander = null; state.voice = null; state.alert = event; state.cleared = false; state.alertAt = firstLoad ? 0 : Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("alert-copy").textContent = text; $("banner-event").textContent = text; if (firstLoad) return; $("flash-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
+      if (state.seenEvents.has(line)) return; const firstLoad = !state.eventsPrimed; state.seenEvents.add(line); state.lastEvent = line; state.wander = null; state.voice = null; state.alert = event; state.cleared = false; state.alertAt = Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("alert-copy").textContent = text; $("banner-event").textContent = text; if (firstLoad) return; $("flash-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
     }
     function showWander(line, event) { if (state.seenEvents.has(line)) return; state.seenEvents.add(line); state.wander = event; state.wanderAt = Date.now(); state.cleared = false; }
     function parseVoice(line) {
-      const match = line.match(/^voice\s+keyword=(okay|help|fallen|none)\s+heard_s=(\d+)\s+recorded_s=0(?:\s+text="[^"]*")?$/);
+      const match = line.match(/^voice\s+keyword=(okay|help|fallen|none)\s+heard_s=(\d+(?:\.\d+)?)\s+recorded_s=0(?:\s+text="[^"]*")?$/);
       if (!match || !state.alert) return null;
       state.voice = match[1]; const words = match[1] === "okay" ? "She said: I'm okay" : match[1] === "none" ? "No answer in 60 s" : "She said: help";
       $("voice-copy").textContent = words; $("voice-copy").hidden = false; $("voice-label").hidden = false; return { keyword: match[1], heard_s: Number(match[2]) };
     }
     async function poll() {
-      try { const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) { chooseState(); return; } const lines = (await response.text()).split(/\r?\n/).filter(Boolean); if (lines.length) { state.hasLog = true; state.lastLogAt = Date.now(); } for (const line of lines) { if (line.startsWith("frame ")) parseFrame(line); else if (line.startsWith("ledger ")) parseLedger(line); else if (line.startsWith("trend ")) parseTrend(line); else if (line.startsWith("voice ")) parseVoice(line); else if (line.startsWith("{")) { try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); else if (event.type === "wander") showWander(line, event); } catch (_) {} } } state.eventsPrimed = true; chooseState(); } catch (_) { state.eventsPrimed = true; chooseState(); }
+      try { const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) { chooseState(); return; } const content = await response.text(), lines = content.split(/\r?\n/).filter(Boolean), lastLine = lines.at(-1) || ""; if (content.length !== state.lastLogLength || lastLine !== state.lastLogLine) { state.hasLog = true; state.lastLogAt = Date.now(); state.lastLogLength = content.length; state.lastLogLine = lastLine; } for (const line of lines) { if (line.startsWith("frame ")) parseFrame(line); else if (line.startsWith("ledger ")) parseLedger(line); else if (line.startsWith("trend ")) parseTrend(line); else if (line.startsWith("voice ")) parseVoice(line); else if (line.startsWith("{")) { try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); else if (event.type === "wander") showWander(line, event); } catch (_) {} } } state.eventsPrimed = true; chooseState(); } catch (_) { state.eventsPrimed = true; chooseState(); }
     }
     $("camera-start").addEventListener("click", startCamera); $("sent-link").addEventListener("click", () => { const ledger = $("ledger"); ledger.classList.remove("pulse"); void ledger.offsetWidth; ledger.classList.add("pulse"); }); startCamera(); poll(); pollDay(); window.setInterval(poll, 250); window.setInterval(chooseState, 1000); window.setInterval(pollDay, 10000);
   </script>
