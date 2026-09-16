@@ -1,21 +1,26 @@
-# Submission video — 4:20 shot list
+# Submission video — 4:30 maximum
 
-Maximum delivery: five minutes. Use burned-in captions for the ledger numbers and for every limitation.
+Export at **4:30 or shorter**. Burn in the labels “LIVE,” “MEASURED FROM KEYPOINTS,” “UNVALIDATED DEMO PARAMETERS,” and “0 UPLOADED · 0 STORED” where specified.
 
-| Time | Shot | Spoken words |
+| Time | Picture | Voiceover / live words |
 |---|---|---|
-| 0:00–0:20 | Close shot: ordinary home hallway; title “Care without surveillance.” | “Aging parents are offered a bad bargain: accept a camera someone can watch, or leave the family unsure when help is needed. Watch creates a third option.” |
-| 0:20–0:42 | Parent-facing view: no screen or wearable; overlay three simple icons. | “A room camera understands three situations—falls, night wandering, and an unattended stove—and tells family, not a call centre. The parent wears nothing, installs nothing, and operates nothing.” |
-| 0:42–1:02 | Hardware beauty shot; on-screen: “Modalix MLSoC · on-device VLM · under 10 W · 50 TOPS.” | “A vision-language model runs on the Modalix MLSoC, on-device, under ten watts and up to fifty TOPS. Raw frames do not need a cloud trip to become meaningful.” |
-| 1:02–1:30 | Screen capture: labelled fixture replay; four timeline events merge. | “Here is the fixed adversarial fixture, clearly labelled—not live inference. At 4:11 the parent leaves the bedroom, crosses the kitchen, reaches the front door, and a low-confidence fall appears. Four observations must become one urgent incident.” |
-| 1:30–1:52 | Family incident card fills the frame. | “Instead of four alarms, the family gets one story: night wandering, the route and time, plus a response. Even the low-confidence observation remains findable rather than disappearing behind a threshold.” |
-| 1:52–2:25 | Ledger close-up; keep on-screen label “FIXTURE · NOT HARDWARE MEASUREMENT.” | **“In this fixed fixture, 333,540 frames are processed and destroyed, zero stored, zero uploaded. That total is fixture arithmetic, not a device measurement. Watch makes the absence countable, and each incident equals the exact sum of its event counts.”** |
-| 2:25–2:55 | Split screen: measured board-local evidence on left; 6/6 eval table with provenance on right. | “The physical test is measured separately. With `/workspace` unmounted, the app ran from board-local storage on Modalix, emitted one event accounting for one discarded frame, and exited zero. All six fixed eval items pass: five by fixture replay, this one on hardware.” |
-| 2:55–3:26 | Five-step onboarding cards. | “After yes, the family chooses rooms and contacts. An installer stages a fall, a night route and a stove check. The family sets escalation, calibrates for two weeks, and reviews exact ledger and alert burden on day thirty.” |
-| 3:26–3:50 | Two-path 30-day horizon. | “Acting now creates a tested response plan without creating a video archive. Waiting preserves privacy too, but leaves the awareness gap where it is. We do not invent an incident rate or urgency a family does not have.” |
-| 3:50–4:12 | Scope/tradeoff cards. | “To ship, we chose one camera path and three events. No audio, faces, diagnosis, 911, cloud, accounts, training, or multi-home system. Those boundaries protect the promise and keep every claim checkable.” |
-| 4:12–4:20 | Title returns; ledger remains visible. | “Watch. Care without surveillance.” |
+| 0:00–0:25 | Parent at home; no wearable or screen. Title: “Know they may need help. Never gain the ability to watch.” | “Families supporting an aging parent face a bad bargain: learn too late that help was needed, or install a camera someone can watch. Watch creates a third option: a family-first alert with no video leaving the room.” |
+| 0:25–0:45 | Modalix and Mac camera in the same shot. Animate the real path: camera → UDP → Modalix → family alert. | “A live Mac camera sends video over UDP to Modalix. The board interprets it locally and sends an event—not a video—to the family view.” |
+| 0:45–1:25 | Uncut live screen capture: upright person, moving lean gauge, frame lines showing 8–9 ms. Captions: “LIVE” and “MEASURED FROM KEYPOINTS.” | “YOLO26 pose runs on the MLA at eight to nine milliseconds per frame. The model returns body keypoints. Watch calculates per-frame torso lean from them, so the gauge is a measurement, not a staged animation.” |
+| 1:25–1:52 | Person leans and holds; counter reaches eight; possible-fall banner appears and family page flips red. Caption: “55% FOR 8 FRAMES · UNVALIDATED DEMO PARAMETERS.” | “For this prototype, lean above fifty-five percent for eight consecutive frames emits a possible-fall event. The family page turns red. The lean is measured; that threshold and window are not field-validated, and this is not a medical claim.” |
+| 1:52–2:15 | Dave quote cards over senior-center context; attribute “Dave · SiMa mentor.” | “SiMa mentor Dave said, ‘fall detection was one of the first things I thought about in senior centers.’ He called it ‘a selling feature’—and gave us the right scope: ‘don’t try to make the product.’ Calibration is roadmap; today we prove the decisive path.” |
+| 2:15–2:55 | Serial terminal and physical unplug. Show NFS unavailable, then the board-local command running. Caption: “BOARD-LOCAL · NFS UNMOUNTED.” | “Now we remove the development machine. Unplugging the Mac also removes its NFS workspace. Over serial, the application and model still run from board-local storage. The intelligence is in the room, not hiding behind a cloud connection.” |
+| 2:55–3:30 | Ledger fills screen. Highlight the equality and both zeroes. | “Privacy is an absence, so Watch makes it countable. Every session records frames processed, frames in events, and frames unattributed. Those categories reconcile. This measured session shows zero frames uploaded and zero frames stored.” |
+| 3:30–3:55 | Red family page: possible fall and family response. Cross out call centre and 911 auto-dial icons. | “The alert goes to family first. Watch does not send a clip to a monitoring centre and does not automatically call 911. The family gets the signal and keeps the context.” |
+| 3:55–4:18 | Split comparison: “fall detector” vs “Watch”; on Watch side show ledger, family, zero/zero. | “Another team may also detect a fall. Our differentiation is what cannot be seen in a detection box: we prove nothing left the room. The ledger, family-first response, and no video archive change the agreement between parent and family.” |
+| 4:18–4:30 | Product name and red alert resolving to calm screen. End card: “Watch · care without surveillance.” | “Know when help may be needed without gaining the ability to watch. Watch: care without surveillance.” |
 
-## Limits
+## Truth checklist before export
 
-Do not use stock footage that implies tested detection. Caption the replay as simulated fixture data throughout. Caption `discarded_frames: 1` as measured on hardware and the 333,540 total as fixture-derived. Keep the finished export at or below 5:00.
+- The camera-to-board footage is a real live run, not the fixture backup.
+- Say “YOLO26 pose on the MLA at 8–9 ms per frame,” not “validated fall detection at 8–9 ms.”
+- Lean is measured from keypoints. The 55% threshold and eight-frame window are unvalidated.
+- Do not claim the video stream continues after unplugging its Mac source. Show via serial that the board-local app/model remain runnable with NFS unavailable.
+- Show the ledger field names and the actual measured values; do not substitute fixture totals.
+- “Wander” was a heuristic. Do not describe it as validated scene understanding.
+- No accuracy, safety, clinical, field-validation, automatic-911, or guaranteed-alert claim.
