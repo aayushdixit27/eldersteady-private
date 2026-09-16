@@ -45,6 +45,14 @@ class Detection:
 class Pose:
     score: float
     keypoints: Sequence[dict[str, float]]
+    bbox_w: float | None = None
+    bbox_h: float | None = None
+
+    @property
+    def bbox_aspect(self) -> float | None:
+        if self.bbox_w is None or self.bbox_h is None or self.bbox_h <= 0:
+            return None
+        return self.bbox_w / self.bbox_h
 
 
 def posture_measurements(
@@ -81,10 +89,10 @@ def classify_posture(
         pose, frame_w, frame_h, min_visibility, bent_threshold
     )) for pose in poses]
     _, (hip_y, shoulder_y, torso_upright, _) = max(measured, key=lambda item: item[0])
+    if floor_seconds >= 1.5:
+        return "floor"
     if hip_y is None or shoulder_y is None:
         return "upright" if torso_upright else "bent"
-    if hip_y >= 0.85 and shoulder_y >= 0.85 and floor_seconds >= 2.0:
-        return "floor"
     torso_length = max(hip_y - shoulder_y, 0.0)
     hips_low_for_torso = 1.0 - hip_y <= torso_length
     if hips_low_for_torso and torso_upright:
@@ -95,23 +103,57 @@ def classify_posture(
 @dataclass
 class SitToStandDetector:
     sitting_started_at: float | None = None
-    last_duration: float = 0.0
+    last_sitting_at: float | None = None
+    rise_started_at: float | None = None
+    last_duration: float | None = None
     count: int = 0
 
-    def update(self, hip_y: float | None, torso_upright: bool, now: float) -> None:
-        if hip_y is None or not torso_upright:
-            if self.sitting_started_at is not None and now - self.sitting_started_at > 10.0:
-                self.sitting_started_at = None
+    def update(
+        self, hip_y: float | None, torso_upright: bool, now: float,
+        sitting: bool | None = None,
+    ) -> None:
+        if hip_y is None:
+            self.sitting_started_at = None
+            self.last_sitting_at = None
+            self.rise_started_at = None
             return
-        if hip_y > 0.65:
+        is_sitting = hip_y > 0.65 and torso_upright if sitting is None else sitting
+        if is_sitting:
             if self.sitting_started_at is None:
                 self.sitting_started_at = now
-        elif self.sitting_started_at is not None:
-            duration = now - self.sitting_started_at
-            if duration <= 10.0:
-                self.last_duration = duration
+            self.last_sitting_at = now
+            self.rise_started_at = None
+        elif sitting is False and torso_upright and self.sitting_started_at is not None:
+            last_sitting_at = self.last_sitting_at if self.last_sitting_at is not None else now
+            if last_sitting_at - self.sitting_started_at < 1.0:
+                self.sitting_started_at = None
+                self.last_sitting_at = None
+                return
+            if self.rise_started_at is None:
+                self.rise_started_at = last_sitting_at
+            if hip_y > 0.65:
+                return
+            rise_duration = now - self.rise_started_at
+            if 0.3 <= rise_duration <= 10.0:
+                self.last_duration = rise_duration
                 self.count += 1
             self.sitting_started_at = None
+            self.last_sitting_at = None
+            self.rise_started_at = None
+        elif hip_y <= 0.65 and torso_upright and self.sitting_started_at is not None:
+            last_sitting_at = self.last_sitting_at if self.last_sitting_at is not None else now
+            sitting_duration = last_sitting_at - self.sitting_started_at
+            rise_duration = now - last_sitting_at
+            if sitting_duration >= 1.0 and 0.3 <= rise_duration <= 10.0:
+                self.last_duration = rise_duration
+                self.count += 1
+            self.sitting_started_at = None
+            self.last_sitting_at = None
+            self.rise_started_at = None
+        else:
+            self.sitting_started_at = None
+            self.last_sitting_at = None
+            self.rise_started_at = None
 
 
 @dataclass
@@ -125,6 +167,9 @@ class TrendTracker:
     hip_y: float | None = None
     shoulder_y: float | None = None
     visibility: str = "none"
+    bbox_aspect: float | None = None
+    pending_posture: str | None = None
+    pending_seconds: float = 0.0
 
     def __post_init__(self) -> None:
         self.totals = {posture: 0.0 for posture in POSTURES}
@@ -138,24 +183,51 @@ class TrendTracker:
         measured = [(pose.score, posture_measurements(
             pose, frame_w, frame_h, min_visibility, bent_threshold
         )) for pose in poses]
+        best_pose = max(poses, key=lambda pose: pose.score) if poses else None
         best = max(measured, key=lambda item: item[0])[1] if measured else None
         self.hip_y, self.shoulder_y, _, self.visibility = best or (None, None, True, "none")
-        floor_candidate = best is not None and best[0] is not None and best[1] is not None and best[0] >= 0.85 and best[1] >= 0.85
+        self.bbox_aspect = best_pose.bbox_aspect if best_pose else None
+        lowest_torso_y = best[0] if best and best[0] is not None else (best[1] if best else None)
+        floor_candidate = (
+            self.bbox_aspect is not None and self.bbox_aspect > 1.15
+        ) or (lowest_torso_y is not None and lowest_torso_y >= 0.75)
         self.floor_seconds = self.floor_seconds + dt if floor_candidate else 0.0
-        self.posture = classify_posture(
+        candidate = classify_posture(
             poses, frame_w, frame_h, min_visibility, self.floor_seconds, bent_threshold
         )
+        if candidate == "floor":
+            self.posture = candidate
+            self.pending_posture = None
+            self.pending_seconds = 0.0
+        elif candidate == self.posture:
+            self.pending_posture = None
+            self.pending_seconds = 0.0
+        else:
+            if candidate != self.pending_posture:
+                self.pending_posture = candidate
+                self.pending_seconds = dt
+            else:
+                self.pending_seconds += dt
+            if self.pending_seconds >= 0.3:
+                self.posture = candidate
+                self.pending_posture = None
+                self.pending_seconds = 0.0
         self.totals[self.posture] += dt
         if len(poses) >= 2:
             self.company_seconds += dt
-        self.sts.update(best[0] if best else None, best[2] if best else False, self.elapsed)
+        self.sts.update(
+            best[0] if best else None, best[2] if best else False, self.elapsed,
+            candidate == "sitting" and best is not None and best[0] is not None,
+        )
         return self.posture
 
     def snapshot(self) -> dict[str, str | float | int]:
         tidy = lambda value: round(value, 3)
         return {
             "posture": self.posture, "floor_s": tidy(self.floor_seconds),
-            "sts_last_s": tidy(self.sts.last_duration), "sts_n": self.sts.count,
+            "sts_last_s": "na" if self.hip_y is None or self.sts.last_duration is None
+            else tidy(self.sts.last_duration),
+            "sts_n": self.sts.count,
             "upright_s": tidy(self.totals["upright"]),
             "sitting_s": tidy(self.totals["sitting"]),
             "floor_s_total": tidy(self.totals["floor"]),
@@ -163,6 +235,7 @@ class TrendTracker:
             "company_s": tidy(self.company_seconds),
             "hip_y": "na" if self.hip_y is None else tidy(self.hip_y),
             "sh_y": "na" if self.shoulder_y is None else tidy(self.shoulder_y),
+            "bbox_ar": "na" if self.bbox_aspect is None else tidy(self.bbox_aspect),
             "vis": self.visibility,
         }
 
@@ -394,6 +467,8 @@ def decode_pose_payload(outputs, frame_w: int, frame_h: int, max_poses: int) -> 
             poses.append(
                 Pose(
                     score=float(box[4]),
+                    bbox_w=float(box[2]),
+                    bbox_h=float(box[3]),
                     keypoints=[
                         {"x": float(x), "y": float(y), "visibility": float(v)}
                         for x, y, v in points
