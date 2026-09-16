@@ -9,6 +9,7 @@ from watch_events import (
     SitToStandDetector,
     TrendTracker,
     classify_posture,
+    dedupe_pose_boxes,
     event_timestamp,
     format_ledger_line,
     posture_measurements,
@@ -21,6 +22,7 @@ def synthetic_pose(
     hip_y: float, shoulder_y: float, shoulder_x: float = 50.0,
     *, hips_visible: bool = True, nose_x: float = 50.0, nose_y: float = 10.0,
     bbox_aspect: float | None = None, bbox_x: float = 0.0,
+    bbox_y: float = 0.0,
     ankle_x: tuple[float, float] | None = None, score: float = 0.9,
     bbox_size: tuple[float, float] | None = None,
 ) -> Pose:
@@ -39,6 +41,7 @@ def synthetic_pose(
         bbox_w=bbox_size[0] if bbox_size else (None if bbox_aspect is None else bbox_aspect * 100),
         bbox_h=bbox_size[1] if bbox_size else (None if bbox_aspect is None else 100),
         bbox_x=bbox_x,
+        bbox_y=bbox_y,
     )
 
 
@@ -101,6 +104,15 @@ def main() -> None:
     assert nearest.snapshot()["subject_area"] == 0.48
     assert nearest.snapshot()["company_s"] == 1.0
     assert nearest.snapshot()["subject"] == "clear"
+
+    # Overlapping detections of one person count once; a distant person remains.
+    duplicate = synthetic_pose(66, 52, score=0.95, bbox_size=(60, 80), bbox_x=6.67)
+    distant = synthetic_pose(55, 20, bbox_size=(10, 20), bbox_x=85)
+    deduped = dedupe_pose_boxes([near, duplicate, distant])
+    assert len(deduped) == 2
+    deduped_tracker = TrendTracker()
+    deduped_tracker.update(deduped, 100, 100, 0.3, 1.0)
+    assert deduped_tracker.snapshot()["subject"] == "clear"
 
     # Similar-size people are ambiguous; stable dominance must persist before
     # posture logic resumes for a newly clear subject.

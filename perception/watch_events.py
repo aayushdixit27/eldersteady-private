@@ -95,6 +95,44 @@ def subject_is_ambiguous(poses: Sequence[Pose]) -> bool:
     return len(areas) >= 2 and areas[1] >= SUBJECT_AMBIGUITY_RATIO * areas[0]
 
 
+def dedupe_pose_boxes(poses: Sequence[Pose]) -> list[Pose]:
+    """Remove duplicate pose boxes by containment, then score-ordered NMS."""
+    def bounds(pose: Pose) -> tuple[float, float, float, float] | None:
+        if (pose.bbox_x is None or pose.bbox_y is None or pose.bbox_w is None
+                or pose.bbox_h is None or pose.bbox_w <= 0 or pose.bbox_h <= 0):
+            return None
+        return (pose.bbox_x, pose.bbox_y, pose.bbox_x + pose.bbox_w, pose.bbox_y + pose.bbox_h)
+
+    def intersection(a: Pose, b: Pose) -> float:
+        a_bounds, b_bounds = bounds(a), bounds(b)
+        if a_bounds is None or b_bounds is None:
+            return 0.0
+        return max(0.0, min(a_bounds[2], b_bounds[2]) - max(a_bounds[0], b_bounds[0])) * max(
+            0.0, min(a_bounds[3], b_bounds[3]) - max(a_bounds[1], b_bounds[1])
+        )
+
+    contained = {
+        index for index, pose in enumerate(poses)
+        if pose.bbox_area > 0 and any(
+            other.bbox_area > pose.bbox_area
+            and intersection(pose, other) >= 0.80 * pose.bbox_area
+            for other in poses
+        )
+    }
+    kept: list[Pose] = []
+    for index in sorted(range(len(poses)), key=lambda item: poses[item].score, reverse=True):
+        if index in contained:
+            continue
+        pose = poses[index]
+        if any(
+            intersection(pose, other) >= 0.55 * (pose.bbox_area + other.bbox_area - intersection(pose, other))
+            for other in kept
+        ):
+            continue
+        kept.append(pose)
+    return kept
+
+
 def posture_measurements(
     pose: Pose, frame_w: int, frame_h: int, min_visibility: float,
     bent_threshold: float = DEFAULT_BENT_THRESHOLD,
@@ -847,7 +885,9 @@ def main(argv: list[str]) -> int:
                 emit_ledger_line(format_ledger_line(processed, pixel_bytes, rx_delta, tx_delta))
 
             if args.pose:
-                poses = decode_pose_payload(outputs, frame.shape[1], frame.shape[0], args.top_k)
+                poses = dedupe_pose_boxes(
+                    decode_pose_payload(outputs, frame.shape[1], frame.shape[0], args.top_k)
+                )
                 trend.update(
                     poses, frame.shape[1], frame.shape[0], args.min_keypoint_visibility,
                     frame_seconds, args.fall_lean_threshold,
