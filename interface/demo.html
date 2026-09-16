@@ -167,8 +167,8 @@
         standing: ["Standing", safeBanner, "Someone seems to be standing."], sitting: ["Sitting", safeBanner, "Someone seems to be sitting."],
         leaning: ["Leaning", safeBanner, "Someone seems to be leaning."],
         "on-floor": ["On the floor", safeBanner, "They may be on the floor; we are counting."],
-        "alert-sent": ["Fell", "Last check: no video sent. A fall alert is ready for Sue. See what was sent.", "A fall alert is ready for Sue."],
-        wander: ["Up and about", "Last check: no video shared. A wander alert is ready for Sue.", state.wander ? `Up and about at ${wanderTime(state.wander)} — ${new Date(state.wander.ts).getHours() >= 22 || new Date(state.wander.ts).getHours() < 6 ? "night" : "day"}` : "Up and about."],
+        "alert-sent": ["Fell", "Last check: no video sent. A fall alert is ready for Sue.", "A fall alert is ready for Sue."],
+        wander: ["Up and about", "Last check: no video sent. A wander alert is ready for Sue.", state.wander ? `Up and about at ${wanderTime(state.wander)} — ${new Date(state.wander.ts).getHours() >= 22 || new Date(state.wander.ts).getHours() < 6 ? "night" : "day"}` : "Up and about."],
         "alert-cleared": ["Up again", safeBanner, "This alert was closed; please check on them."]
       }[name];
       $("posture").textContent = copy[0]; $("trend-posture").textContent = name === "close" ? "Shoulders only" : copy[0]; $("next-action").textContent = copy[2];
