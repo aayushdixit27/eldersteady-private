@@ -75,6 +75,17 @@ class Pose:
             return None
         return self.bbox_w / self.bbox_h
 
+    @property
+    def bbox_area(self) -> float:
+        if self.bbox_w is None or self.bbox_h is None:
+            return 0.0
+        return max(0.0, self.bbox_w) * max(0.0, self.bbox_h)
+
+
+def subject_pose(poses: Sequence[Pose]) -> Pose | None:
+    """Choose the nearest detected person, approximated by bounding-box area."""
+    return max(poses, key=lambda pose: pose.bbox_area) if poses else None
+
 
 def posture_measurements(
     pose: Pose, frame_w: int, frame_h: int, min_visibility: float,
@@ -106,10 +117,10 @@ def classify_posture(
 ) -> str:
     if not poses:
         return "absent"
-    measured = [(pose.score, posture_measurements(
-        pose, frame_w, frame_h, min_visibility, bent_threshold
-    )) for pose in poses]
-    _, (_, shoulder_y, torso_upright, _) = max(measured, key=lambda item: item[0])
+    subject = subject_pose(poses)
+    _, shoulder_y, torso_upright, _ = posture_measurements(
+        subject, frame_w, frame_h, min_visibility, bent_threshold
+    )
     if floor_seconds >= BANDS["floor_hold_s"]:
         return "floor"
     if not torso_upright:
@@ -204,6 +215,7 @@ class TrendTracker:
     shoulder_y: float | None = None
     visibility: str = "none"
     bbox_aspect: float | None = None
+    subject_area: float | None = None
     pending_posture: str | None = None
     pending_seconds: float = 0.0
     floor_miss_seconds: float = 0.0
@@ -287,12 +299,16 @@ class TrendTracker:
     ) -> str:
         self.elapsed += dt
         self.frame_w = frame_w
-        best_pose = max(poses, key=lambda pose: pose.score) if poses else None
-        self.bbox_aspect = best_pose.bbox_aspect if best_pose else None
-        self.view = self.coverage_view(best_pose, min_visibility)
+        subject = subject_pose(poses)
+        self.bbox_aspect = subject.bbox_aspect if subject else None
+        self.subject_area = (
+            subject.bbox_area / (frame_w * frame_h)
+            if subject is not None and frame_w > 0 and frame_h > 0 else None
+        )
+        self.view = self.coverage_view(subject, min_visibility)
         if self.view == "close":
-            ls = best_pose.keypoints[COCO_LEFT_SHOULDER]
-            rs = best_pose.keypoints[COCO_RIGHT_SHOULDER]
+            ls = subject.keypoints[COCO_LEFT_SHOULDER]
+            rs = subject.keypoints[COCO_RIGHT_SHOULDER]
             self.hip_y = None
             self.shoulder_y = midpoint(ls, rs)[1] / frame_h
             self.visibility = "shoulders"
@@ -304,13 +320,12 @@ class TrendTracker:
             self.totals[self.posture] += dt
             if len(poses) >= 2:
                 self.company_seconds += dt
-            self._record_motion(best_pose, min_visibility)
+            self._record_motion(subject, min_visibility)
             return self.posture
-        measured = [(pose.score, posture_measurements(
-            pose, frame_w, frame_h, min_visibility, bent_threshold
-        )) for pose in poses]
-        best = max(measured, key=lambda item: item[0])[1] if measured else None
-        self.hip_y, self.shoulder_y, _, self.visibility = best or (None, None, True, "none")
+        measurement = posture_measurements(
+            subject, frame_w, frame_h, min_visibility, bent_threshold
+        ) if subject else None
+        self.hip_y, self.shoulder_y, _, self.visibility = measurement or (None, None, True, "none")
         floor_candidate = (
             self.bbox_aspect is not None
             and (
@@ -354,10 +369,11 @@ class TrendTracker:
         if len(poses) >= 2:
             self.company_seconds += dt
         self.sts.update(
-            best[0] if best else None, best[2] if best else False, self.elapsed,
+            measurement[0] if measurement else None, measurement[2] if measurement else False,
+            self.elapsed,
             candidate == "sitting", candidate == "upright",
         )
-        self._record_motion(best_pose, min_visibility)
+        self._record_motion(subject, min_visibility)
         return self.posture
 
     def snapshot(self) -> dict[str, str | float | int]:
@@ -375,6 +391,7 @@ class TrendTracker:
             "hip_y": "na" if self.hip_y is None else tidy(self.hip_y),
             "sh_y": "na" if self.shoulder_y is None else tidy(self.shoulder_y),
             "bbox_ar": "na" if self.bbox_aspect is None else tidy(self.bbox_aspect),
+            "subject_area": "na" if self.subject_area is None else tidy(self.subject_area),
             "vis": self.visibility,
             "view": self.view,
             "cadence_spm": self.cadence_spm(),
@@ -799,11 +816,12 @@ def main(argv: list[str]) -> int:
                     poses, frame.shape[1], frame.shape[0], args.min_keypoint_visibility,
                     frame_seconds, args.fall_lean_threshold,
                 )
-                lean_values = [] if trend.view != "full" else [
-                    lean for pose in poses
-                    if TrendTracker.coverage_view(pose, args.min_keypoint_visibility) == "full"
-                    and (lean := torso_lean_percent(pose, args.min_keypoint_visibility)) is not None
-                ]
+                subject = subject_pose(poses)
+                subject_lean = (
+                    torso_lean_percent(subject, args.min_keypoint_visibility)
+                    if subject is not None and trend.view == "full" else None
+                )
+                lean_values = [] if subject_lean is None else [subject_lean]
                 best_lean = max(lean_values, default=0.0)
                 best_score = max((pose.score for pose in poses), default=0.0)
                 is_bent = best_lean >= args.fall_lean_threshold

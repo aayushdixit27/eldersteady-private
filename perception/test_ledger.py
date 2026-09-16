@@ -21,7 +21,8 @@ def synthetic_pose(
     hip_y: float, shoulder_y: float, shoulder_x: float = 50.0,
     *, hips_visible: bool = True, nose_x: float = 50.0, nose_y: float = 10.0,
     bbox_aspect: float | None = None, bbox_x: float = 0.0,
-    ankle_x: tuple[float, float] | None = None,
+    ankle_x: tuple[float, float] | None = None, score: float = 0.9,
+    bbox_size: tuple[float, float] | None = None,
 ) -> Pose:
     points = [{"x": 0.0, "y": 0.0, "visibility": 0.0} for _ in range(17)]
     points[0] = {"x": nose_x, "y": nose_y, "visibility": 1.0}
@@ -34,9 +35,9 @@ def synthetic_pose(
         points[15] = {"x": ankle_x[0], "y": 90.0, "visibility": 1.0}
         points[16] = {"x": ankle_x[1], "y": 90.0, "visibility": 1.0}
     return Pose(
-        score=0.9, keypoints=points,
-        bbox_w=None if bbox_aspect is None else bbox_aspect * 100,
-        bbox_h=None if bbox_aspect is None else 100,
+        score=score, keypoints=points,
+        bbox_w=bbox_size[0] if bbox_size else (None if bbox_aspect is None else bbox_aspect * 100),
+        bbox_h=bbox_size[1] if bbox_size else (None if bbox_aspect is None else 100),
         bbox_x=bbox_x,
     )
 
@@ -90,6 +91,15 @@ def main() -> None:
     for _ in range(2):
         close_standing.update([standing_pose], 100, 100, 0.3, 1.0)
     assert close_standing.snapshot()["posture"] == "upright"
+
+    # The nearest (largest) person is the subject, regardless of pose score.
+    far = synthetic_pose(55, 20, score=0.99, bbox_size=(20, 40))
+    near = synthetic_pose(66, 52, score=0.51, bbox_size=(60, 80))
+    nearest = TrendTracker()
+    nearest.update([far, near], 100, 100, 0.3, 1.0)
+    assert nearest.snapshot()["posture"] == "sitting"
+    assert nearest.snapshot()["subject_area"] == 0.48
+    assert nearest.snapshot()["company_s"] == 1.0
 
     floor_flicker = TrendTracker()
     floor_pose = synthetic_pose(75, 75, bbox_aspect=1.5)
