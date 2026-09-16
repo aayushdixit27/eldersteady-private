@@ -37,9 +37,9 @@
     .trend { min-width: 0; padding: 10px 20px 9px; border-top: 1px solid var(--line); }
     .trend h2 { margin: 0 0 7px; font-size: 14px; letter-spacing: .02em; }
     .trend-row { display: grid; grid-template-columns: 1.2fr 1fr .8fr 2.1fr .85fr; align-items: end; gap: 14px; }
-    .trend-stat { min-width: 0; }
+    .trend-stat { min-width: 0; overflow-wrap: anywhere; }
     .label { display: block; color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
-    .trend-stat strong { display: block; margin-top: 3px; font-size: 20px; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trend-stat strong { display: block; margin-top: 3px; font-size: 20px; line-height: 1.05; }
     .trend-stat.on-floor strong { color: var(--urgent-text); font-size: 40px; }
     .time-strip { display: flex; width: 100%; height: 14px; margin: 7px 0 5px; border: 1px solid var(--ink); overflow: hidden; }
     .time-strip span { min-width: 0; }
@@ -60,6 +60,7 @@
     .value { stroke: var(--safe); stroke-linecap: round; stroke-dasharray: 276.46; stroke-dashoffset: 276.46; transition: stroke-dashoffset .25s ease; }
     .gauge-copy { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
     .gauge-copy strong { font-size: 42px; line-height: .9; letter-spacing: -.06em; }
+    .gauge-copy strong.word { max-width: 76px; font-size: 18px; line-height: 1; letter-spacing: 0; }
     .gauge-copy span { margin-top: 5px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .state-copy { min-width: 0; }
     .posture { margin: 0; color: var(--safe-deep); font-size: 32px; font-weight: 850; line-height: 1; letter-spacing: -.035em; }
@@ -140,11 +141,14 @@
         standing: ["Standing", safeBanner, "Watching."], sitting: ["Sitting", safeBanner, "Watching."],
         leaning: ["Leaning", safeBanner, `Lean is climbing — ${state.lean}% of the way to an alert.`],
         "on-floor": ["On the floor", safeBanner, `Counting: ${state.floorNow.toLocaleString("en-US", { maximumFractionDigits: 1 })} of 3 seconds before we text Sue.`],
-        "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", state.alert ? alertMessage(state.alert) : "Sue has been told."],
+        "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", "Text sent. Waiting for Sue to reply 1 or 2."],
         "alert-cleared": ["Up again", safeBanner, "Alert cleared. Watching."]
       }[name];
       $("posture").textContent = copy[0]; $("trend-posture").textContent = copy[0]; $("next-action").textContent = copy[2];
       $("banner-check").textContent = copy[1];
+      const leanWord = { "no-camera": "off", "waiting-board": "waiting", "empty-room": "no one" }[name];
+      if (leanWord) { $("lean").textContent = leanWord; $("lean").classList.add("word"); $("gauge-ring").style.strokeDashoffset = 276.46; }
+      $("camera-error").hidden = name !== "no-camera";
       const showLink = ["empty-room", "standing", "sitting", "leaning", "on-floor", "alert-sent", "alert-cleared"].includes(name);
       $("sent-link").hidden = !showLink;
       $("banner").classList.toggle("on", name === "alert-sent");
@@ -175,7 +179,7 @@
       }
     }
 
-    function setLean(value, isNewFrame = true) { if (isNewFrame) state.priorLean = state.lean; state.lean = Math.max(0, Math.min(100, Number(value) || 0)); $("lean").textContent = `${state.lean}%`; $("gauge-ring").style.strokeDashoffset = 276.46 * (1 - state.lean / 100); }
+    function setLean(value, isNewFrame = true) { if (isNewFrame) state.priorLean = state.lean; state.lean = Math.max(0, Math.min(100, Number(value) || 0)); $("lean").textContent = `${state.lean}%`; $("lean").classList.remove("word"); $("gauge-ring").style.strokeDashoffset = 276.46 * (1 - state.lean / 100); }
     function parseFrame(line) {
       const frame = line.match(/^frame\s+(\d+)/), people = line.match(/people-in-view=(\d+)/), mla = line.match(/mla=([\d.]+)ms/), lean = line.match(/lean=(\d+)%/), posture = line.match(/posture=([^\s]+)(?:\s|$)/);
       const frameNumber = frame ? Number(frame[1]) : state.lastFrame, isNewFrame = frameNumber > state.lastFrame;
@@ -190,7 +194,7 @@
     }
     function parseTrend(line) {
       const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]])); const seconds = key => Math.max(0, Number(fields[key]) || 0); const durations = { upright: seconds("upright_s"), sitting: seconds("sitting_s"), floor: seconds("floor_s_total"), absent: seconds("absent_s") }; const total = Object.values(durations).reduce((sum, value) => sum + value, 0);
-      state.trendPosture = fields.posture || state.trendPosture; state.floorNow = seconds("floor_s"); $("sts-last").textContent = seconds("sts_last_s") > 0 ? formatSeconds(seconds("sts_last_s")) : "Not measured"; $("floor-now").textContent = state.floorNow > 0 ? formatSeconds(state.floorNow) : "Not on floor"; $("floor-stat").classList.toggle("on-floor", state.floorNow > 0);
+      state.trendPosture = fields.posture || state.trendPosture; state.floorNow = seconds("floor_s"); $("sts-last").textContent = seconds("sts_last_s") > 0 ? formatSeconds(seconds("sts_last_s")) : "Not measured"; $("floor-now").textContent = state.floorNow > 0 ? formatSeconds(state.floorNow) : "No"; $("floor-stat").classList.toggle("on-floor", state.floorNow > 0);
       for (const [posture, value] of Object.entries(durations)) { $(`${posture}-seconds`).textContent = formatSeconds(value); $(`strip-${posture}`).style.width = `${total ? value / total * 100 : 0}%`; } $("company-seconds").textContent = seconds("company_s") > 0 ? formatSeconds(seconds("company_s")) : "None yet"; $("time-strip").setAttribute("aria-label", total ? `Posture time: standing ${formatSeconds(durations.upright)}, sitting ${formatSeconds(durations.sitting)}, floor ${formatSeconds(durations.floor)}, away ${formatSeconds(durations.absent)}` : "Posture time not measured");
     }
     function showFall(line, event) {
