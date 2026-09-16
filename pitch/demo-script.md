@@ -1,42 +1,66 @@
-# Live demo — three beats, about 2 minutes
+# Live demo — five beats, about 2 minutes
 
-Before presenting: open the family alert page and a large terminal running `perception/live_demo.sh`. Confirm pose mode, the camera preview, the lean gauge, and serial access. Keep the fixture backup closed unless the live path fails.
+California will not let a facility put a camera in her room; at home the same question is yours — this is a fall alert that answers it in bytes.
 
-## Beat 1 — camera, gauge, fall flip (0:00–0:55)
+Before presenting: open `interface/demo.html`, `interface/index.html`, and a large terminal running `perception/live_demo.sh`. Confirm pose mode, camera preview, lean gauge, live counter, and serial access. Keep the fixture backup closed unless the live path fails.
 
-**Show:** Stand upright in the live Mac camera. Point to the terminal: frame count, pose/lean, and 8–9 ms MLA time. Lean far enough to cross the gauge; hold for eight frames. Show the fall banner and family page turning red.
+## Beat 1 — counter running (0:00–0:25)
 
-**Say:**
-
-“This is live video from this Mac, sent over UDP to the Modalix beside us. YOLO26 pose is running on the MLA at eight to nine milliseconds per frame. These keypoints produce the lean gauge you see moving now.”
-
-“Lean is measured. The policy around it is not yet validated: for this demo, fifty-five percent for eight consecutive frames emits a possible-fall event. There it is—and the family screen turns red. This is a prototype trigger, not a diagnosis.”
-
-## Beat 2 — pull the Mac, keep the board (0:55–1:25)
-
-**Show:** Put the serial console full-screen. Disconnect the Mac link. Show NFS unavailable and the board-local application/model continuing or launching from board-local storage. Do not imply that the Mac camera stream continues after its source is unplugged.
+**Show:** `demo.html`, with the labels visible while video in, bytes out, pixels decoded, and the ratio climb.
 
 **Say:**
 
-“Now the proof that separates Watch from another fall-detection demo. I’m unplugging the Mac—the development workspace and its NFS mount disappear with it. Over serial, the application still runs from board-local storage. In production the camera is local to the unit; this test proves the intelligence does not depend on a cloud or development mount.”
+“This is the live accounting surface. Video in and bytes out are MEASURED on the board’s `end0` NIC, all protocols. Pixels decoded are COMPUTED as frames times width times height times three. The ratio is COMPUTED from the measured NIC counters.”
 
-## Beat 3 — alert and privacy ledger (1:25–2:00)
+“At 60 frames, this morning’s pre-quiet-mode run showed 165.9 MB COMPUTED pixels, 2.55 MB MEASURED video in, and 15.2 KB MEASURED out: 1 to 168, COMPUTED. The 15.2 KB included SSH per-frame diagnostics; quiet mode has landed, and we’ll read its transmit figure live rather than claim an unmeasured number.”
 
-**Show:** Reconnect if needed and return to the red family alert. Point to the family action, then the session ledger: `frames_processed`, `frames_in_events`, `frames_unattributed`, `frames_uploaded: 0`, `frames_stored: 0`.
+## Beat 2 — bend on camera (0:25–0:48)
+
+**Show:** Stand upright in the live Mac camera, then bend. Point to real lean and the gauge crossing **55% (GUESS)**.
 
 **Say:**
 
-“The family gets a possible-fall alert first. Watch does not call a monitoring centre or 911. And this ledger makes the privacy claim inspectable: every processed frame is either in an event or unattributed; zero were uploaded and zero were stored.”
+“The camera is this Mac. It sends video over UDP to Modalix; YOLO26 pose runs on the MLA. Keypoints drive this measured lean gauge. Fifty-five percent is a GUESS for this prototype, not a validated threshold.”
 
-“Another team may detect a fall. We prove nothing left the room. That is care without surveillance.”
+## Beat 3 — red flip (0:48–1:08)
+
+**Show:** Hold the bend through the **8-frame window (GUESS)**. Show the fall event and `index.html` going red.
+
+**Say:**
+
+“After an eight-frame GUESS window, Watch emits a possible-fall event and the family page turns red. This morning a real body drove this state for the first time: 63% peak lean MEASURED, 58-frame streak MEASURED, 0.916 confidence MEASURED, and 8.1 to 8.3 milliseconds per frame MEASURED. This is a prototype trigger, not a medical claim.”
+
+## Beat 4 — ledger (1:08–1:43)
+
+**Show:** Session ledger: frames processed, `pixel_bytes`, NIC receive/transmit bytes, `uploaded 0`, and `stored 0`. On serial run:
+
+```sh
+cat /sys/class/net/end0/statistics/tx_bytes
+```
+
+**Say:**
+
+“The application ledger accounts for every processed frame and reports zero uploaded and zero stored. B′ adds computed decoded pixel bytes and measured NIC receive and transmit bytes. The serial counter is the judge’s independent one-line check.”
+
+“the counter proves the board leaked nothing; in the demo the camera is the Mac. Another team also does fall detection — differentiate on the ledger.”
+
+## Beat 5 — phone page (1:43–2:00)
+
+**Show:** **If the hotspot is up; otherwise the same page on the Mac:** open the family alert page on a phone over the Mac’s hotspot, or show `index.html` on the Mac.
+
+**Say:**
+
+“The alert goes to family first. There is no monitoring centre and no automatic 911 call. The family keeps the context without receiving a clip or gaining a video archive.”
 
 ## If asked
 
-- **Is the fall detector validated?** “No. Lean is calculated from live pose keypoints; the 55% threshold and eight-frame window are unvalidated demo parameters. Calibration and field validation are roadmap.”
-- **What about wandering?** “An earlier demo called movement ‘wander’; that was a heuristic, not validated behavior understanding, so we do not lead with it.”
+- **Is the fall detector validated?** “No. Lean is calculated from live pose keypoints; the 55% threshold and eight-frame window are GUESS demo parameters. Calibration and field validation are roadmap.”
+- **What is the 15.2 KB?** “It is MEASURED `end0` transmit traffic across all protocols at the 60-frame snapshot, before quiet mode. It includes the SSH session carrying per-frame diagnostics. The quiet-mode transmit figure is not measured yet; we read it live.”
+- **Why is the camera a Mac?** “This prototype uses the Mac as its camera and sends that stream to Modalix. The counter proves the board leaked nothing; in the demo the camera is the Mac.”
 - **Why family first?** “The family knows the person and context. We intentionally do not automate 911.”
-- **What did the mentor say?** “Dave from SiMa said fall detection was one of the first things he thought about in senior centers, called it a selling feature, and warned us: ‘don’t try to make the product.’ We followed that advice by proving one honest path.”
+- **What about wandering?** “An earlier demo called movement ‘wander’; that was a heuristic, not validated behavior understanding, so we do not lead with it.”
+- **What did Dave say?** “Dave from SiMa said fall detection was one of the first things he thought about in senior centers, called it a selling feature, and warned us: ‘don’t try to make the product.’ We proved one honest path.”
 
 ## Failure rule
 
-If live inference fails, say so once. Open `pitch/backup/index.html`, call it a fixture replay, and use it only to explain the family interaction. Never present it as hardware evidence. The board-local/NFS proof and measured session ledger remain separate evidence.
+If live inference fails, say so once. Open `pitch/backup/index.html`, call it a FIXTURE replay, and use it only to explain the family interaction. Never present it as hardware evidence. Do not substitute an old quiet-mode transmit claim: show the available measured capture and state its pre-quiet-mode boundary.

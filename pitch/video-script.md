@@ -1,26 +1,30 @@
-# Submission video — 4:30 maximum
+# Submission video — 5:00 maximum, 4:30 target
 
-Export at **4:30 or shorter**. Burn in the labels “LIVE,” “MEASURED FROM KEYPOINTS,” “UNVALIDATED DEMO PARAMETERS,” and “0 UPLOADED · 0 STORED” where specified.
+California will not let a facility put a camera in her room; at home the same question is yours — this is a fall alert that answers it in bytes.
+
+Export at **5:00 maximum**; target **4:30**. Wherever a number appears, burn in its provenance: **MEASURED**, **COMPUTED**, or **GUESS**.
 
 | Time | Picture | Voiceover / live words |
 |---|---|---|
-| 0:00–0:25 | Parent at home; no wearable or screen. Title: “Know they may need help. Never gain the ability to watch.” | “Families supporting an aging parent face a bad bargain: learn too late that help was needed, or install a camera someone can watch. Watch creates a third option: a family-first alert with no video leaving the room.” |
-| 0:25–0:45 | Modalix and Mac camera in the same shot. Animate the real path: camera → UDP → Modalix → family alert. | “A live Mac camera sends video over UDP to Modalix. The board interprets it locally and sends an event—not a video—to the family view.” |
-| 0:45–1:25 | Uncut live screen capture: upright person, moving lean gauge, frame lines showing 8–9 ms. Captions: “LIVE” and “MEASURED FROM KEYPOINTS.” | “YOLO26 pose runs on the MLA at eight to nine milliseconds per frame. The model returns body keypoints. Watch calculates per-frame torso lean from them, so the gauge is a measurement, not a staged animation.” |
-| 1:25–1:52 | Person leans and holds; counter reaches eight; possible-fall banner appears and family page flips red. Caption: “55% FOR 8 FRAMES · UNVALIDATED DEMO PARAMETERS.” | “For this prototype, lean above fifty-five percent for eight consecutive frames emits a possible-fall event. The family page turns red. The lean is measured; that threshold and window are not field-validated, and this is not a medical claim.” |
-| 1:52–2:15 | Dave quote cards over senior-center context; attribute “Dave · SiMa mentor.” | “SiMa mentor Dave said, ‘fall detection was one of the first things I thought about in senior centers.’ He called it ‘a selling feature’—and gave us the right scope: ‘don’t try to make the product.’ Calibration is roadmap; today we prove the decisive path.” |
-| 2:15–2:55 | Serial terminal and physical unplug. Show NFS unavailable, then the board-local command running. Caption: “BOARD-LOCAL · NFS UNMOUNTED.” | “Now we remove the development machine. Unplugging the Mac also removes its NFS workspace. Over serial, the application and model still run from board-local storage. The intelligence is in the room, not hiding behind a cloud connection.” |
-| 2:55–3:30 | Ledger fills screen. Highlight the equality and both zeroes. | “Privacy is an absence, so Watch makes it countable. Every session records frames processed, frames in events, and frames unattributed. Those categories reconcile. This measured session shows zero frames uploaded and zero frames stored.” |
-| 3:30–3:55 | Red family page: possible fall and family response. Cross out call centre and 911 auto-dial icons. | “The alert goes to family first. Watch does not send a clip to a monitoring centre and does not automatically call 911. The family gets the signal and keeps the context.” |
-| 3:55–4:18 | Split comparison: “fall detector” vs “Watch”; on Watch side show ledger, family, zero/zero. | “Another team may also detect a fall. Our differentiation is what cannot be seen in a detection box: we prove nothing left the room. The ledger, family-first response, and no video archive change the agreement between parent and family.” |
-| 4:18–4:30 | Product name and red alert resolving to calm screen. End card: “Watch · care without surveillance.” | “Know when help may be needed without gaining the ability to watch. Watch: care without surveillance.” |
+| 0:00–0:25 | Parent-at-home context; the opening sentence fills the screen. Small source line: “CDSS PIN 15-RM-01 · resident-room cameras require Licensing waiver · no analytics-only exemption.” | “California will not let a facility put a camera in her room; at home the same question is yours — this is a fall alert that answers it in bytes.” |
+| 0:25–0:58 | `demo.html` counter running. Keep field labels and burn-ins visible: “60 FRAMES · MEASURED,” “165.9 MB PIXELS · COMPUTED,” “2.55 MB VIDEO IN · MEASURED,” “15.2 KB OUT · MEASURED, PRE-QUIET-MODE,” “1 : 168 · COMPUTED.” | “Start with the accounting. At 60 frames MEASURED, the board decoded 165.9 megabytes COMPUTED, received 2.55 megabytes MEASURED, and sent 15.2 kilobytes MEASURED: a 1-to-168 ratio COMPUTED. That transmit count is all protocols and predates quiet mode, so it includes SSH per-frame diagnostics. We do not claim the unmeasured quiet-mode figure.” |
+| 0:58–1:28 | Modalix and Mac together; uncut live camera and moving gauge. Person bends. Burn in: “LIVE,” “LEAN · MEASURED FROM KEYPOINTS,” “55% THRESHOLD · GUESS.” | “The Mac camera streams over UDP to Modalix. YOLO26 pose runs on the MLA, and keypoints drive measured torso lean. The 55% trigger threshold is a GUESS, not a validated clinical boundary.” |
+| 1:28–1:55 | Hold the bend through the counter; possible-fall event appears and `index.html` flips red. Burn in: “8-FRAME WINDOW · GUESS,” “PROTOTYPE TRIGGER · NOT A MEDICAL CLAIM.” | “Hold through an eight-frame GUESS window and a possible-fall event flips the family page red. Until this morning only simulated logs had driven red. Now a real body has.” |
+| 1:55–2:28 | Evidence excerpt beside the live shot. Burn in each: “2026-09-16 08:03 PDT · MEASURED,” “63% PEAK · MEASURED,” “58 FRAMES · MEASURED,” “0.916 · MEASURED,” “157 DISCARDED · MEASURED,” “8.1–8.3 MS/FRAME · MEASURED.” | “At 08:03 PDT MEASURED, the first real fall peaked at 63% lean MEASURED, held a 58-frame streak MEASURED, emitted 0.916 confidence MEASURED after 157 discarded frames MEASURED, and ran at 8.1 to 8.3 milliseconds per frame MEASURED.” |
+| 2:28–3:13 | Ledger fills the screen: frames processed, `pixel_bytes`, NIC receive/transmit, uploaded zero, stored zero. Then serial shows `cat /sys/class/net/end0/statistics/tx_bytes`. Burn in provenance beside every value. | “The session ledger accounts for processed frames and reports zero uploaded MEASURED and zero stored MEASURED at the application boundary. B′ adds decoded pixel bytes COMPUTED and NIC receive and transmit bytes MEASURED. Over serial, one line lets the judge read transmit bytes directly. the counter proves the board leaked nothing; in the demo the camera is the Mac.” |
+| 3:13–3:42 | Phone opens the red family page over the Mac hotspot. Overlay: “IF HOTSPOT IS UP · OTHERWISE SAME PAGE ON MAC.” Cross out monitoring-centre and 911 auto-dial icons. | “The alert goes to family first. There is no monitoring centre and no automatic 911 call. The family gets the signal without a clip or archive.” |
+| 3:42–4:08 | Dave quote cards, attributed “Dave · SiMa mentor.” | “SiMa mentor Dave said fall detection was one of the first things he thought about in senior centers. He called it a selling feature, then gave us the scope: ‘don’t try to make the product.’” |
+| 4:08–4:30 | Split: generic fall detector versus Watch ledger and family page. End card: “Watch · care without surveillance.” | “Another team also does fall detection — differentiate on the ledger. Watch changes the agreement: know they may need help without gaining the ability to watch. Care without surveillance.” |
 
 ## Truth checklist before export
 
 - The camera-to-board footage is a real live run, not the fixture backup.
-- Say “YOLO26 pose on the MLA at 8–9 ms per frame,” not “validated fall detection at 8–9 ms.”
-- Lean is measured from keypoints. The 55% threshold and eight-frame window are unvalidated.
-- Do not claim the video stream continues after unplugging its Mac source. Show via serial that the board-local app/model remain runnable with NFS unavailable.
-- Show the ledger field names and the actual measured values; do not substitute fixture totals.
+- Every displayed number carries a MEASURED, COMPUTED, or GUESS burn-in.
+- The counter shows video in, bytes out, pixels decoded, and ratio; **15.2 KB is MEASURED pre-quiet-mode all-protocol traffic**, including SSH diagnostics. Do not show a quiet-mode transmit figure until it is measured live.
+- Say “YOLO26 pose on the MLA at 8.1–8.3 ms per frame MEASURED in the first real-fall capture,” not “validated fall detection.”
+- Lean is measured from keypoints. The 55% threshold and eight-frame window are GUESS parameters.
+- The first red-state proof is a real body on camera; earlier red-state logs were simulated.
+- Show ledger field names and actual values. Uploaded zero and stored zero are application-boundary measurements; NIC bytes are the external counter.
+- Include verbatim: “the counter proves the board leaked nothing; in the demo the camera is the Mac.”
+- This is a prototype trigger, not a medical claim. No accuracy, safety, clinical, field-validation, automatic-911, monitoring-centre, or guaranteed-alert claim.
 - “Wander” was a heuristic. Do not describe it as validated scene understanding.
-- No accuracy, safety, clinical, field-validation, automatic-911, or guaranteed-alert claim.
