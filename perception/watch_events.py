@@ -26,6 +26,7 @@ COCO_LEFT_SHOULDER = 5
 COCO_RIGHT_SHOULDER = 6
 COCO_LEFT_HIP = 11
 COCO_RIGHT_HIP = 12
+DEFAULT_BENT_THRESHOLD = 60.0
 NIC = "end0"
 POSTURES = ("upright", "bent", "sitting", "floor", "absent")
 
@@ -47,36 +48,46 @@ class Pose:
 
 
 def posture_measurements(
-    pose: Pose, frame_w: int, frame_h: int, min_visibility: float
-) -> tuple[float, float, bool] | None:
-    """Return normalised hip/shoulder heights and whether the torso is upright."""
+    pose: Pose, frame_w: int, frame_h: int, min_visibility: float,
+    bent_threshold: float = DEFAULT_BENT_THRESHOLD,
+) -> tuple[float | None, float | None, bool, str]:
+    """Return heights, upright state, and the keypoints used for a detected pose."""
     points = pose.keypoints
     ls, rs = points[COCO_LEFT_SHOULDER], points[COCO_RIGHT_SHOULDER]
     lh, rh = points[COCO_LEFT_HIP], points[COCO_RIGHT_HIP]
-    if any(point["visibility"] < min_visibility for point in (ls, rs, lh, rh)):
-        return None
+    if ls["visibility"] < min_visibility or rs["visibility"] < min_visibility:
+        return None, None, True, "none"
     shoulder_x, shoulder_y = midpoint(ls, rs)
+    shoulder_y_normalised = shoulder_y / frame_h
+    hips_visible = lh["visibility"] >= min_visibility and rh["visibility"] >= min_visibility
+    lean = torso_lean_percent(pose, min_visibility)
+    torso_upright = lean is None or lean < bent_threshold
+    if not hips_visible:
+        return None, shoulder_y_normalised, torso_upright, "shoulders"
     hip_x, hip_y = midpoint(lh, rh)
     dx, dy = shoulder_x - hip_x, shoulder_y - hip_y
     if dx == 0.0 and dy == 0.0:
-        return None
-    lean = degrees(atan2(abs(dx), abs(dy)))
-    return hip_y / frame_h, shoulder_y / frame_h, lean < 45.0
+        torso_upright = True
+    return hip_y / frame_h, shoulder_y_normalised, torso_upright, "hips"
 
 
 def classify_posture(
     poses: Sequence[Pose], frame_w: int, frame_h: int, min_visibility: float,
-    floor_seconds: float = 0.0,
+    floor_seconds: float = 0.0, bent_threshold: float = DEFAULT_BENT_THRESHOLD,
 ) -> str:
-    measured = [(pose.score, values) for pose in poses if (
-        values := posture_measurements(pose, frame_w, frame_h, min_visibility)
-    ) is not None]
-    if not measured:
+    if not poses:
         return "absent"
-    _, (hip_y, shoulder_y, torso_upright) = max(measured, key=lambda item: item[0])
-    if hip_y > 0.85 and shoulder_y > 0.85 and floor_seconds >= 2.0:
+    measured = [(pose.score, posture_measurements(
+        pose, frame_w, frame_h, min_visibility, bent_threshold
+    )) for pose in poses]
+    _, (hip_y, shoulder_y, torso_upright, _) = max(measured, key=lambda item: item[0])
+    if hip_y is None or shoulder_y is None:
+        return "upright" if torso_upright else "bent"
+    if hip_y >= 0.85 and shoulder_y >= 0.85 and floor_seconds >= 2.0:
         return "floor"
-    if hip_y > 0.65 and torso_upright:
+    torso_length = max(hip_y - shoulder_y, 0.0)
+    hips_low_for_torso = 1.0 - hip_y <= torso_length
+    if hips_low_for_torso and torso_upright:
         return "sitting"
     return "upright" if torso_upright else "bent"
 
@@ -111,24 +122,31 @@ class TrendTracker:
     company_seconds: float = 0.0
     elapsed: float = 0.0
     sts: SitToStandDetector | None = None
+    hip_y: float | None = None
+    shoulder_y: float | None = None
+    visibility: str = "none"
 
     def __post_init__(self) -> None:
         self.totals = {posture: 0.0 for posture in POSTURES}
         self.sts = SitToStandDetector()
 
     def update(
-        self, poses: Sequence[Pose], frame_w: int, frame_h: int, min_visibility: float, dt: float
+        self, poses: Sequence[Pose], frame_w: int, frame_h: int, min_visibility: float, dt: float,
+        bent_threshold: float = DEFAULT_BENT_THRESHOLD,
     ) -> str:
         self.elapsed += dt
-        measured = [(pose.score, values) for pose in poses if (
-            values := posture_measurements(pose, frame_w, frame_h, min_visibility)
-        ) is not None]
+        measured = [(pose.score, posture_measurements(
+            pose, frame_w, frame_h, min_visibility, bent_threshold
+        )) for pose in poses]
         best = max(measured, key=lambda item: item[0])[1] if measured else None
-        floor_candidate = best is not None and best[0] > 0.85 and best[1] > 0.85
+        self.hip_y, self.shoulder_y, _, self.visibility = best or (None, None, True, "none")
+        floor_candidate = best is not None and best[0] is not None and best[1] is not None and best[0] >= 0.85 and best[1] >= 0.85
         self.floor_seconds = self.floor_seconds + dt if floor_candidate else 0.0
-        self.posture = classify_posture(poses, frame_w, frame_h, min_visibility, self.floor_seconds)
+        self.posture = classify_posture(
+            poses, frame_w, frame_h, min_visibility, self.floor_seconds, bent_threshold
+        )
         self.totals[self.posture] += dt
-        if len(measured) >= 2:
+        if len(poses) >= 2:
             self.company_seconds += dt
         self.sts.update(best[0] if best else None, best[2] if best else False, self.elapsed)
         return self.posture
@@ -143,6 +161,9 @@ class TrendTracker:
             "floor_s_total": tidy(self.totals["floor"]),
             "absent_s": tidy(self.totals["absent"]),
             "company_s": tidy(self.company_seconds),
+            "hip_y": "na" if self.hip_y is None else tidy(self.hip_y),
+            "sh_y": "na" if self.shoulder_y is None else tidy(self.shoulder_y),
+            "vis": self.visibility,
         }
 
 
@@ -549,7 +570,10 @@ def main(argv: list[str]) -> int:
 
             if args.pose:
                 poses = decode_pose_payload(outputs, frame.shape[1], frame.shape[0], args.top_k)
-                trend.update(poses, frame.shape[1], frame.shape[0], args.min_keypoint_visibility, frame_seconds)
+                trend.update(
+                    poses, frame.shape[1], frame.shape[0], args.min_keypoint_visibility,
+                    frame_seconds, args.fall_lean_threshold,
+                )
                 lean_values = [
                     lean
                     for pose in poses
