@@ -104,7 +104,8 @@
     .flash.on { display: grid; } .flash strong { font-size: 64px; letter-spacing: -.05em; }
     .flash pre { max-width: 900px; margin: 20px auto 0; white-space: pre-wrap; font: 700 15px/1.5 ui-monospace, monospace; }
     @media (prefers-reduced-motion: reduce) { .value { transition: none; } .ledger.pulse { animation: none; outline: 4px solid var(--safe-deep); } }
-  </style>
+      .flash, .flash.on { display: none !important; } /* full-screen alert retired 16 Sep 11:15 by founder's call; the alert card carries the event */
+</style>
 </head>
 <body>
   <aside class="privacy-banner" aria-label="Live privacy measurements">
