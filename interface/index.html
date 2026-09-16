@@ -32,6 +32,13 @@
     .local { display: flex; gap: 7px; align-items: center; color: var(--safe-deep); font-size: 13px; font-weight: 700; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--safe); }
     main { padding: 28px 24px 40px; }
+    .live { display: none; align-items: center; gap: 12px; margin: 0 0 18px; padding: 12px 14px; border-radius: 13px; background: var(--night); color: #c8d8d0; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .live.on { display: flex; flex-wrap: wrap; }
+    .live .pulse-live { width: 9px; height: 9px; border-radius: 50%; background: #9fd8b8; }
+    .live strong { color: #fff; font-weight: 800; }
+    .live .sep { color: #4c6c5d; }
+    .live.event { background: var(--urgent-text); color: #fff; }
+    .live.event .sep { color: #f3c9bf; }
     .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: var(--urgent-text); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 850; }
     .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--urgent); box-shadow: 0 0 0 5px var(--urgent-soft); }
     h1 { margin: 0; max-width: 650px; font-size: clamp(28px, 6vw, 42px); line-height: 1.08; letter-spacing: -.04em; }
@@ -83,6 +90,7 @@
     </header>
     <main>
       <section aria-labelledby="incident-title">
+        <div class="live" id="live" aria-live="polite"><span class="pulse-live"></span><strong>Board is watching</strong><span class="sep">·</span><span id="lv-people">people in view: —</span><span class="sep">·</span><span id="lv-ms">— ms per frame</span><span class="sep">·</span><span id="lv-frames">0 frames</span><span class="sep">·</span><strong id="lv-up">0 uploaded</strong></div>
         <p class="eyebrow"><span class="pulse"></span>Needs your attention</p>
         <h1 id="incident-title"></h1>
         <div class="facts">
@@ -158,6 +166,52 @@
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v).toLocaleString(); };
     set("s-processed", j.frames_processed); set("s-events", j.events_emitted); set("s-uploaded", j.frames_uploaded); set("s-stored", j.frames_stored);
   }).catch(() => {});
+</script>
+<script>
+  // Live mode: live_demo.sh tees the board's per-frame lines and event JSON into live/board.log.
+  // Only analytics travel; no frame ever reaches this page.
+  (function () {
+    const live = document.getElementById("live");
+    let lastEventLine = null, seen = 0;
+    const roomName = r => r.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+    function showEvent(ev) {
+      const t = ev.type === "fall" ? "A possible fall" : ev.type === "stove_unattended" ? "The stove has been left on" : "Someone is up and moving";
+      document.getElementById("incident-title").textContent = `${t} in the ${roomName(ev.room).toLowerCase()}.`;
+      document.getElementById("where").textContent = roomName(ev.room);
+      document.getElementById("when").textContent = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(ev.ts));
+      document.getElementById("context").textContent = `Live from the board just now · confidence ${Math.round(ev.confidence * 100)}%.`;
+      document.getElementById("frame-count").textContent = Number(ev.discarded_frames).toLocaleString("en-US");
+      document.querySelector(".provenance").textContent = "Measured on the Modalix board · live";
+      live.classList.add("event");
+      live.querySelector("strong").textContent = "Alert sent to family";
+      setTimeout(() => { live.classList.remove("event"); live.querySelector("strong").textContent = "Board is watching"; }, 6000);
+    }
+    async function poll() {
+      try {
+        const r = await fetch("live/board.log?t=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) return;
+        const lines = (await r.text()).trim().split("\n").filter(Boolean);
+        if (!lines.length) return;
+        live.classList.add("on");
+        const frames = lines.filter(l => l.startsWith("frame "));
+        const last = frames[frames.length - 1];
+        if (last) {
+          const m = last.match(/frame (\d+)\s+people-in-view=(\d+)\s+confidence=([\d.]+)\s+mla=([\d.]+)ms/);
+          if (m) {
+            document.getElementById("lv-frames").textContent = Number(m[1]).toLocaleString("en-US") + " frames";
+            document.getElementById("lv-people").textContent = "people in view: " + m[2];
+            document.getElementById("lv-ms").textContent = m[4] + " ms per frame";
+          }
+        }
+        const events = lines.filter(l => l.startsWith("{"));
+        if (events.length && events[events.length - 1] !== lastEventLine) {
+          lastEventLine = events[events.length - 1];
+          try { showEvent(JSON.parse(lastEventLine)); } catch (e) {}
+        }
+      } catch (e) {}
+    }
+    setInterval(poll, 500); poll();
+  })();
 </script>
 </body>
 </html>
