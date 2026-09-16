@@ -39,7 +39,7 @@
     .live .sep { color: #4c6c5d; }
     .live.event { background: var(--urgent-text); color: #fff; }
     .live.event .sep { color: #f3c9bf; }
-    .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: var(--urgent-text); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 850; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: var(--urgent-text); text-transform: uppercase; letter-spacing: .12em; font-size: 13px; font-weight: 850; }
     .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--urgent); box-shadow: 0 0 0 5px var(--urgent-soft); }
     h1 { margin: 0; max-width: 650px; font-size: clamp(28px, 6vw, 42px); line-height: 1.08; letter-spacing: -.04em; }
     .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0; }
@@ -62,7 +62,7 @@
     .reset { margin-top: 12px; border: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }
     .ledger { margin-top: 30px; padding: 24px; overflow: hidden; border-radius: 18px; background: var(--night); color: white; position: relative; }
     .ledger:after { content: ""; position: absolute; width: 180px; height: 180px; border-radius: 50%; right: -75px; top: -95px; background: #254638; opacity: .7; }
-    .ledger-label { margin: 0 0 13px; color: #b9d2c6; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .11em; }
+    .ledger-label { margin: 0 0 13px; color: #b9d2c6; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .11em; }
     .number { display: block; font-size: clamp(42px, 12vw, 68px); line-height: 1; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
     .provenance { display: block; margin-top: 7px; color: #9fb9ac; font-size: 13px; }
     .session { max-width: 510px; margin: 14px 0 0; padding-top: 12px; border-top: 1px solid #254638; color: #c8d8d0; font-size: 14px; line-height: 1.5; font-variant-numeric: tabular-nums; }
@@ -71,6 +71,20 @@
     .ledger p { max-width: 510px; margin: 0; color: #c8d8d0; line-height: 1.5; font-size: 14px; }
     .zero { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; padding: 8px 11px; border: 1px solid #4c6c5d; border-radius: 999px; font-size: 13px; font-weight: 750; }
     .privacy-note { margin: 14px 2px 0; color: var(--muted); font-size: 15px; font-weight: 600; text-align: center; }
+    .receipts { display: grid; gap: 12px; margin-top: 30px; }
+    .receipts:empty { display: none; }
+    .receipt { min-width: 0; padding: 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); font-variant-numeric: tabular-nums; }
+    .receipt h2 { margin: 0 0 4px; font-size: 18px; }
+    .receipt-time { margin: 0 0 15px; color: var(--muted); font-size: 14px; }
+    .receipt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .receipt-value { display: block; color: var(--ink); font-size: 16px; font-weight: 800; overflow-wrap: anywhere; }
+    .receipt-label, .receipt-source { display: block; color: var(--muted); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+    .receipt-source { margin-top: 3px; }
+    .ledger-io { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #254638; font-variant-numeric: tabular-nums; }
+    .ledger-io-item { min-width: 0; }
+    .ledger-io-label, .ledger-io-source { display: block; color: #b9d2c6; font-size: 13px; font-weight: 700; }
+    .ledger-io-value { display: block; margin: 4px 0; color: #fff; font-size: 18px; font-weight: 800; overflow-wrap: anywhere; }
+    .ledger-io-source { color: #9fb9ac; font-weight: 600; overflow-wrap: anywhere; }
     @media (max-width: 520px) {
       header { padding: 18px; }
       main { padding: 24px 18px 30px; }
@@ -78,6 +92,7 @@
       .context { grid-column: 1 / -1; }
       .actions { grid-template-columns: 1fr; }
       .ledger { padding: 21px 18px; }
+      .receipt-grid, .ledger-io { grid-template-columns: 1fr; }
     }
     @media (prefers-reduced-motion: reduce) { .action { transition: none; } }
   </style>
@@ -105,6 +120,8 @@
         <div class="response" id="response" role="status" aria-live="polite"></div>
       </section>
 
+      <section class="receipts" id="receipts" aria-label="Fall alert receipts" aria-live="polite"></section>
+
       <section class="ledger" aria-labelledby="ledger-title">
         <p class="ledger-label">Privacy ledger · this incident</p>
         <strong class="number" id="frame-count"></strong>
@@ -113,6 +130,10 @@
         <p>These camera frames were processed inside the home and immediately discarded. None were stored or sent away.</p>
         <div class="zero"><span class="dot"></span>0 frames uploaded</div>
         <p class="session" id="session">Latest measured session on the Modalix board: <strong id="s-processed">500</strong> frames processed · <strong id="s-events">1</strong> event · <strong id="s-uploaded">0</strong> uploaded · <strong id="s-stored">0</strong> stored.</p>
+        <div class="ledger-io" aria-label="Measured ledger traffic">
+          <div class="ledger-io-item"><span class="ledger-io-label">video in</span><strong class="ledger-io-value" id="ledger-video">—</strong><span class="ledger-io-source" id="ledger-video-source">not yet measured</span></div>
+          <div class="ledger-io-item"><span class="ledger-io-label">bytes out</span><strong class="ledger-io-value" id="ledger-out">—</strong><span class="ledger-io-source" id="ledger-out-source">not yet measured</span></div>
+        </div>
       </section>
       <p class="privacy-note">No video to open. No camera feed. Just the information needed to help.</p>
     </main>
@@ -172,14 +193,53 @@
   // Only analytics travel; no frame ever reaches this page.
   (function () {
     const live = document.getElementById("live");
-    let lastEventLine = null, seen = 0;
-    const roomName = r => r.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+    const renderedEvents = new Set();
+    const roomName = r => r.replaceAll("_", " ").replace(/^\w/, c => c.toUpperCase());
+    const localTime = ts => new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(ts));
+    const humanBytes = value => {
+      const n = Number(value);
+      if (n < 1000) return `${n.toLocaleString("en-US")} B`;
+      const units = ["KB", "MB", "GB", "TB"];
+      const power = Math.min(Math.floor(Math.log(n) / Math.log(1000)), units.length);
+      return `${(n / (1000 ** power)).toLocaleString("en-US", { maximumFractionDigits: 1 })} ${units[power - 1]}`;
+    };
+    function addReceipt(rawLine, ev, uploadMeasured) {
+      const bytes = new TextEncoder().encode(rawLine).length;
+      const source = uploadMeasured ? "measured" : "by design";
+      const card = document.createElement("article");
+      card.className = "receipt";
+      const fields = [
+        [Number(ev.discarded_frames).toLocaleString("en-US"), "frames seen and destroyed", "measured"],
+        ["0", "stored", source],
+        ["0", "uploaded", source],
+        [`this alert: ${bytes.toLocaleString("en-US")} bytes`, "alert payload", "measured"]
+      ];
+      const heading = document.createElement("h2");
+      heading.textContent = roomName(ev.room);
+      const time = document.createElement("p");
+      time.className = "receipt-time";
+      time.textContent = localTime(ev.ts);
+      const grid = document.createElement("div");
+      grid.className = "receipt-grid";
+      fields.forEach(([value, label, provenance]) => {
+        const item = document.createElement("div");
+        item.innerHTML = `<strong class="receipt-value"></strong><span class="receipt-label"></span><span class="receipt-source"></span>`;
+        item.children[0].textContent = value;
+        item.children[1].textContent = label;
+        item.children[2].textContent = provenance;
+        grid.appendChild(item);
+      });
+      card.append(heading, time, grid);
+      const receipts = document.getElementById("receipts");
+      receipts.prepend(card);
+      while (receipts.children.length > 5) receipts.lastElementChild.remove();
+    }
     function showEvent(ev) {
       const t = ev.type === "fall" ? "A possible fall" : ev.type === "stove_unattended" ? "The stove has been left on" : "Someone is up and moving";
       document.getElementById("incident-title").textContent = `${t} in the ${roomName(ev.room).toLowerCase()}.`;
       document.getElementById("where").textContent = roomName(ev.room);
-      document.getElementById("when").textContent = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date(ev.ts));
-      document.getElementById("context").textContent = `Live from the board just now · confidence ${Math.round(ev.confidence * 100)}%.`;
+      document.getElementById("when").textContent = localTime(ev.ts);
+      document.getElementById("context").textContent = "Live from the board just now.";
       document.getElementById("frame-count").textContent = Number(ev.discarded_frames).toLocaleString("en-US");
       document.querySelector(".provenance").textContent = "Measured on the Modalix board · live";
       live.classList.add("event");
@@ -190,7 +250,8 @@
       try {
         const r = await fetch("live/board.log?t=" + Date.now(), { cache: "no-store" });
         if (!r.ok) return;
-        const lines = (await r.text()).trim().split("\n").filter(Boolean);
+        const logText = await r.text();
+        const lines = logText.trim().split("\n").filter(Boolean);
         if (!lines.length) return;
         live.classList.add("on");
         const frames = lines.filter(l => l.startsWith("frame "));
@@ -209,11 +270,29 @@
             document.getElementById("lv-ms").textContent = m[4] + " ms per frame";
           }
         }
-        const events = lines.filter(l => l.startsWith("{"));
-        if (events.length && events[events.length - 1] !== lastEventLine) {
-          lastEventLine = events[events.length - 1];
-          try { showEvent(JSON.parse(lastEventLine)); } catch (e) {}
+        const ledgers = lines.filter(l => l.startsWith("ledger "));
+        const ledger = ledgers[ledgers.length - 1];
+        if (ledger) {
+          const lm = ledger.match(/frames=(\d+)\s+pixel_bytes=(\d+)\s+rx_bytes=(\d+)\s+tx_bytes=(\d+)/);
+          if (lm) {
+            document.getElementById("ledger-video").textContent = `${humanBytes(lm[2])} · ${Number(lm[2]).toLocaleString("en-US")} bytes`;
+            document.getElementById("ledger-out").textContent = `${humanBytes(lm[4])} · ${Number(lm[4]).toLocaleString("en-US")} bytes`;
+            document.getElementById("ledger-video-source").textContent = "measured";
+            document.getElementById("ledger-out-source").textContent = "measured";
+          }
         }
+        const uploadMeasured = /(?:^|\s)uploaded=0(?:\s|$)/m.test(logText);
+        lines.forEach((rawLine, lineNumber) => {
+          if (!rawLine.startsWith("{")) return;
+          const eventKey = `${lineNumber}:${rawLine}`;
+          if (renderedEvents.has(eventKey)) return;
+          renderedEvents.add(eventKey);
+          try {
+            const ev = JSON.parse(rawLine);
+            if (ev.type === "fall") addReceipt(rawLine, ev, uploadMeasured);
+            showEvent(ev);
+          } catch (e) {}
+        });
       } catch (e) {}
     }
     setInterval(poll, 500); poll();
