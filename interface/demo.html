@@ -48,6 +48,26 @@
     .gauge-copy strong { display: block; font-size: clamp(52px, 7vw, 88px); line-height: .95; letter-spacing: -.07em; font-variant-numeric: tabular-nums; }
     .gauge-copy span { display: block; margin-top: 10px; color: var(--muted); font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
     .posture { min-height: 24px; margin: -10px 0 0; color: var(--safe-deep); text-align: center; font-size: 15px; font-weight: 800; }
+    .trend { padding: 18px 20px; border: 1px solid var(--line); border-radius: 13px; background: var(--canvas); }
+    .trend-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+    .trend h2 { margin: 0; font-size: clamp(28px, 3vw, 42px); letter-spacing: -.03em; }
+    .trend-source, .provenance { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .trend-primary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .trend-stat { min-width: 0; }
+    .trend-stat > span { display: block; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .trend-stat strong { display: block; margin-top: 4px; font-size: clamp(20px, 2.2vw, 30px); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+    .trend-stat.on-floor strong { color: var(--urgent-text); }
+    .anchor { margin: 13px 0 0; color: var(--ink); font-size: 13px; font-weight: 600; line-height: 1.4; }
+    .anchor .provenance { display: inline; }
+    .time-strip { display: flex; width: 100%; height: 18px; margin-top: 14px; overflow: hidden; border: 1px solid var(--ink); border-radius: 13px; background: var(--paper); }
+    .time-strip span { min-width: 0; }
+    .segment-upright { background: var(--safe); }
+    .segment-sitting { background: var(--muted); }
+    .segment-floor { background: var(--urgent); }
+    .segment-absent { background: var(--line); }
+    .time-key { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 9px; }
+    .time-key span { color: var(--muted); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .time-key b { color: var(--ink); }
     .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .metric { padding: 15px 16px; border: 1px solid var(--line); border-radius: 13px; }
     .metric span { display: block; color: var(--muted); font-size: 13px; font-weight: 650; }
@@ -74,6 +94,7 @@
       .demo { grid-template-columns: 1fr; }
       .camera { min-height: 52vh; }
       .panel { min-height: 48vh; }
+      .trend-primary, .time-key { grid-template-columns: 1fr 1fr; }
     }
     @media (prefers-reduced-motion: reduce) { .value { transition: none; } .flash.on { animation: none; } }
   </style>
@@ -101,6 +122,26 @@
         <div class="gauge-copy"><strong id="lean">0%</strong><span>lean</span></div>
       </div>
       <p class="posture" id="posture">Waiting for board data</p>
+      <section class="trend" aria-labelledby="trend-title">
+        <div class="trend-head"><h2 id="trend-title">Before the fall</h2><span class="trend-source">live trend line</span></div>
+        <div class="trend-primary">
+          <div class="trend-stat"><span>Current posture</span><strong id="trend-posture">—</strong><small class="provenance">measured · board, keypoints; guessed · thresholds</small></div>
+          <div class="trend-stat"><span>Last sit-to-stand</span><strong><span id="sts-last">—</span> s</strong><small class="provenance">measured · board, keypoints; guessed · thresholds</small></div>
+          <div class="trend-stat" id="floor-stat"><span>On floor now</span><strong><span id="floor-now">—</span> s</strong><small class="provenance">measured · board, keypoints; guessed · 3 s fall threshold</small></div>
+        </div>
+        <p class="anchor">5x sit-to-stand &gt; 15 s = fall risk (published; ours is one rep, unvalidated) <span class="provenance">· 15 s guessed comparison threshold</span></p>
+        <div class="time-strip" id="time-strip" aria-label="Session time by posture">
+          <span class="segment-upright" id="strip-upright"></span><span class="segment-sitting" id="strip-sitting"></span><span class="segment-floor" id="strip-floor"></span><span class="segment-absent" id="strip-absent"></span>
+        </div>
+        <div class="time-key">
+          <span><b>Upright</b> <span id="upright-seconds">0</span> s</span>
+          <span><b>Sitting</b> <span id="sitting-seconds">0</span> s</span>
+          <span><b>Floor</b> <span id="floor-seconds">0</span> s</span>
+          <span><b>Absent</b> <span id="absent-seconds">0</span> s</span>
+        </div>
+        <p class="anchor">Posture time · measured · board, keypoints; guessed · thresholds</p>
+        <p class="anchor"><span id="company-seconds">0</span> company s · measured · board, keypoints; guessed · ≥2 people threshold</p>
+      </section>
       <div class="metrics">
         <div class="metric"><span>People in view</span><strong id="people">—</strong></div>
         <div class="metric"><span>Milliseconds per frame</span><strong id="mla">—</strong></div>
@@ -181,6 +222,31 @@
       $("in-out-ratio").textContent = rx === null || tx === null || tx === 0 ? "—" : `1 : ${Math.round(rx / tx).toLocaleString("en-US")}`;
     }
 
+    function parseTrend(line) {
+      const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]]));
+      const seconds = key => Math.max(0, Number(fields[key]) || 0);
+      const displaySeconds = value => value.toLocaleString("en-US", { maximumFractionDigits: 1 });
+      const floorNow = seconds("floor_s");
+      const durations = {
+        upright: seconds("upright_s"),
+        sitting: seconds("sitting_s"),
+        floor: seconds("floor_s_total"),
+        absent: seconds("absent_s")
+      };
+      const total = Object.values(durations).reduce((sum, value) => sum + value, 0);
+
+      $("trend-posture").textContent = fields.posture || "—";
+      $("sts-last").textContent = displaySeconds(seconds("sts_last_s"));
+      $("floor-now").textContent = displaySeconds(floorNow);
+      $("floor-stat").classList.toggle("on-floor", floorNow >= 3);
+      for (const [posture, value] of Object.entries(durations)) {
+        $(`${posture}-seconds`).textContent = displaySeconds(value);
+        $(`strip-${posture}`).style.width = `${total ? value / total * 100 : 0}%`;
+      }
+      $("company-seconds").textContent = displaySeconds(seconds("company_s"));
+      $("time-strip").setAttribute("aria-label", `Session: upright ${displaySeconds(durations.upright)} seconds, sitting ${displaySeconds(durations.sitting)} seconds, floor ${displaySeconds(durations.floor)} seconds, absent ${displaySeconds(durations.absent)} seconds`);
+    }
+
     function showFall(line, event) {
       if (line === state.lastEvent) return;
       state.lastEvent = line;
@@ -203,6 +269,7 @@
         for (const line of lines) {
           if (line.startsWith("frame ")) parseFrame(line);
           else if (line.startsWith("ledger ")) parseLedger(line);
+          else if (line.startsWith("trend ")) parseTrend(line);
           else if (line.startsWith("{")) {
             try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {}
           }
