@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f2e9">
+  <title>Watch — Family alert</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17221d;
+      --muted: #647069;
+      --paper: #fffdf8;
+      --canvas: #f2eee5;
+      --line: #dcd6ca;
+      --urgent: #c84931;
+      --urgent-soft: #fff0eb;
+      --safe: #166747;
+      --safe-soft: #e8f5ed;
+      --night: #13251e;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--canvas); color: var(--ink); }
+    button { font: inherit; }
+    .shell { width: min(100%, 760px); margin: auto; min-height: 100svh; background: var(--paper); }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px 16px; border-bottom: 1px solid var(--line); }
+    .brand { font-size: 20px; font-weight: 800; letter-spacing: -.03em; }
+    .local { display: flex; gap: 7px; align-items: center; color: var(--safe); font-size: 13px; font-weight: 700; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--safe); }
+    main { padding: 28px 24px 40px; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; color: var(--urgent); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 850; }
+    .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--urgent); box-shadow: 0 0 0 5px var(--urgent-soft); }
+    h1 { margin: 0; max-width: 650px; font-size: clamp(28px, 6vw, 42px); line-height: 1.08; letter-spacing: -.04em; }
+    .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0; }
+    .fact { padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    .fact span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 12px; }
+    .fact strong { font-size: 15px; }
+    .context { margin: 0 0 22px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .action { min-height: 58px; border: 0; border-radius: 13px; cursor: pointer; font-weight: 800; transition: transform .12s, filter .12s; }
+    .action:hover { filter: brightness(.96); }
+    .action:active { transform: scale(.98); }
+    .good { color: white; background: var(--safe); }
+    .ems { color: white; background: var(--urgent); }
+    .response { display: none; padding: 18px; border-radius: 14px; margin-top: 14px; }
+    .response.visible { display: block; }
+    .response.safe { background: var(--safe-soft); color: #0d5136; }
+    .response.escalated { background: var(--urgent-soft); color: #8b2e20; }
+    .response strong { display: block; margin-bottom: 5px; }
+    .response p { margin: 0; line-height: 1.45; }
+    .reset { margin-top: 12px; border: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }
+    .ledger { margin-top: 30px; padding: 24px; overflow: hidden; border-radius: 18px; background: var(--night); color: white; position: relative; }
+    .ledger:after { content: ""; position: absolute; width: 180px; height: 180px; border-radius: 50%; right: -75px; top: -95px; background: #254638; opacity: .7; }
+    .ledger-label { margin: 0 0 13px; color: #b9d2c6; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .11em; }
+    .number { display: block; font-size: clamp(42px, 12vw, 68px); line-height: 1; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
+    .ledger h2 { margin: 9px 0 8px; font-size: 21px; letter-spacing: -.02em; }
+    .ledger p { max-width: 510px; margin: 0; color: #c8d8d0; line-height: 1.5; font-size: 14px; }
+    .zero { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; padding: 8px 11px; border: 1px solid #4c6c5d; border-radius: 999px; font-size: 13px; font-weight: 750; }
+    .privacy-note { margin: 12px 2px 0; color: var(--muted); font-size: 12px; text-align: center; }
+    @media (max-width: 520px) {
+      header { padding: 18px; }
+      main { padding: 24px 18px 30px; }
+      .facts { grid-template-columns: 1fr 1fr; }
+      .fact:last-child { grid-column: 1 / -1; }
+      .actions { grid-template-columns: 1fr; }
+      .ledger { padding: 21px 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .action { transition: none; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">watch</div>
+      <div class="local"><span class="dot"></span>Private at home</div>
+    </header>
+    <main>
+      <section aria-labelledby="incident-title">
+        <p class="eyebrow"><span class="pulse"></span>Needs your attention</p>
+        <h1 id="incident-title"></h1>
+        <div class="facts">
+          <div class="fact"><span>Where</span><strong id="where"></strong></div>
+          <div class="fact"><span>When</span><strong id="when"></strong></div>
+          <div class="fact"><span>How sure</span><strong id="certainty">Not provided</strong></div>
+        </div>
+        <p class="context" id="context"></p>
+        <div class="actions" id="actions">
+          <button class="action good" data-response="good">We’re good</button>
+          <button class="action ems" data-response="ems">Call EMS</button>
+        </div>
+        <div class="response" id="response" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="ledger" aria-labelledby="ledger-title">
+        <p class="ledger-label">Privacy ledger · this incident</p>
+        <strong class="number" id="frame-count"></strong>
+        <h2 id="ledger-title">moments watched, then destroyed</h2>
+        <p>These camera frames were processed inside the home and immediately discarded. None were stored or sent away.</p>
+        <div class="zero"><span class="dot"></span>0 frames uploaded</div>
+      </section>
+      <p class="privacy-note">No video to open. No camera feed. Just the information needed to help.</p>
+    </main>
+  </div>
+
+  <script>
+    const incidents = [
+      {"incident_id":"inc-0001","type":"wander","room":"front_door","opened_ts":"2026-09-15T11:02:14Z","last_ts":"2026-09-15T11:03:01Z","severity":"notify","event_count":2,"frames_never_stored":19260,"state":"open","summary":"Movement toward the front door late morning."},
+      {"incident_id":"inc-0002","type":"fall","room":"bathroom","opened_ts":"2026-09-15T11:47:33Z","last_ts":"2026-09-15T11:47:36Z","severity":"urgent","event_count":2,"frames_never_stored":47952,"state":"open","summary":"Possible fall in the bathroom. No movement since."},
+      {"incident_id":"inc-0003","type":"stove_unattended","room":"kitchen","opened_ts":"2026-09-15T18:20:05Z","last_ts":"2026-09-15T18:50:05Z","severity":"urgent","event_count":2,"frames_never_stored":264300,"state":"escalated","summary":"Stove has been on and unattended for thirty minutes."},
+      {"incident_id":"inc-0004","type":"wander","room":"front_door","opened_ts":"2026-09-16T04:11:52Z","last_ts":"2026-09-16T04:14:02Z","severity":"urgent","event_count":4,"frames_never_stored":333540,"state":"open","summary":"Up and moving at 4am, reached the front door, then a possible fall in the bedroom."}
+    ];
+
+    const incident = incidents.find(item => item.incident_id === "inc-0004");
+    const $ = selector => document.querySelector(selector);
+    const title = incident.summary.replace(/\.$/, "");
+    const room = incident.room.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+    const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(new Date(incident.opened_ts));
+
+    $("#incident-title").textContent = title + ".";
+    $("#where").textContent = room;
+    $("#when").textContent = time;
+    $("#context").textContent = `${incident.event_count} signals over 2 minutes were grouped into this one alert.`;
+    $("#frame-count").textContent = incident.frames_never_stored.toLocaleString("en-US");
+
+    function respond(choice) {
+      const at = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(new Date());
+      const box = $("#response");
+      const isGood = choice === "good";
+      box.className = `response visible ${isGood ? "safe" : "escalated"}`;
+      box.innerHTML = isGood
+        ? `<strong>Marked “We’re good” at ${at}</strong><p>This alert is acknowledged. Your family can see that someone responded.</p><button class="reset">Change response</button>`
+        : `<strong>EMS response chosen at ${at}</strong><p>Call emergency services now. This alert is marked for escalation; Watch does not place the call.</p><button class="reset">Change response</button>`;
+      $("#actions").hidden = true;
+      box.querySelector(".reset").addEventListener("click", reset);
+    }
+
+    function reset() {
+      $("#response").className = "response";
+      $("#response").textContent = "";
+      $("#actions").hidden = false;
+    }
+
+    document.querySelectorAll("[data-response]").forEach(button => {
+      button.addEventListener("click", () => respond(button.dataset.response));
+    });
+  </script>
+</body>
+</html>
