@@ -1,0 +1,41 @@
+{
+  "fixture": true,
+  "period": { "start": "2026-08-18", "end": "2026-09-16", "days": 30 },
+  "ledger": {
+    "frames_processed": 7776000,
+    "frames_destroyed": 7776000,
+    "frames_uploaded": 0
+  },
+  "days": [
+    { "date": "2026-08-18", "sit_to_stand_s": 9.0, "floor_min": 1, "company_min": 126, "fall": false },
+    { "date": "2026-08-19", "sit_to_stand_s": 9.2, "floor_min": 0, "company_min": 98, "fall": false },
+    { "date": "2026-08-20", "sit_to_stand_s": 9.1, "floor_min": 2, "company_min": 143, "fall": false },
+    { "date": "2026-08-21", "sit_to_stand_s": 9.4, "floor_min": 0, "company_min": 115, "fall": false },
+    { "date": "2026-08-22", "sit_to_stand_s": 9.3, "floor_min": 1, "company_min": 184, "fall": false },
+    { "date": "2026-08-23", "sit_to_stand_s": 9.6, "floor_min": 0, "company_min": 202, "fall": false },
+    { "date": "2026-08-24", "sit_to_stand_s": 9.8, "floor_min": 1, "company_min": 91, "fall": false },
+    { "date": "2026-08-25", "sit_to_stand_s": 9.7, "floor_min": 0, "company_min": 108, "fall": false },
+    { "date": "2026-08-26", "sit_to_stand_s": 10.0, "floor_min": 2, "company_min": 137, "fall": false },
+    { "date": "2026-08-27", "sit_to_stand_s": 10.2, "floor_min": 0, "company_min": 76, "fall": false },
+    { "date": "2026-08-28", "sit_to_stand_s": 10.1, "floor_min": 1, "company_min": 119, "fall": false },
+    { "date": "2026-08-29", "sit_to_stand_s": 10.5, "floor_min": 0, "company_min": 221, "fall": false },
+    { "date": "2026-08-30", "sit_to_stand_s": 10.4, "floor_min": 1, "company_min": 193, "fall": false },
+    { "date": "2026-08-31", "sit_to_stand_s": 10.7, "floor_min": 0, "company_min": 82, "fall": false },
+    { "date": "2026-09-01", "sit_to_stand_s": 10.9, "floor_min": 2, "company_min": 104, "fall": false },
+    { "date": "2026-09-02", "sit_to_stand_s": 10.8, "floor_min": 0, "company_min": 132, "fall": false },
+    { "date": "2026-09-03", "sit_to_stand_s": 11.1, "floor_min": 1, "company_min": 95, "fall": false },
+    { "date": "2026-09-04", "sit_to_stand_s": 11.3, "floor_min": 0, "company_min": 117, "fall": false },
+    { "date": "2026-09-05", "sit_to_stand_s": 11.5, "floor_min": 1, "company_min": 209, "fall": false },
+    { "date": "2026-09-06", "sit_to_stand_s": 11.4, "floor_min": 0, "company_min": 176, "fall": false },
+    { "date": "2026-09-07", "sit_to_stand_s": 11.8, "floor_min": 2, "company_min": 88, "fall": false },
+    { "date": "2026-09-08", "sit_to_stand_s": 12.0, "floor_min": 0, "company_min": 121, "fall": false },
+    { "date": "2026-09-09", "sit_to_stand_s": 12.2, "floor_min": 8, "company_min": 64, "fall": true },
+    { "date": "2026-09-10", "sit_to_stand_s": 12.1, "floor_min": 1, "company_min": 109, "fall": false },
+    { "date": "2026-09-11", "sit_to_stand_s": 12.5, "floor_min": 0, "company_min": 146, "fall": false },
+    { "date": "2026-09-12", "sit_to_stand_s": 12.8, "floor_min": 1, "company_min": 214, "fall": false },
+    { "date": "2026-09-13", "sit_to_stand_s": 13.1, "floor_min": 0, "company_min": 187, "fall": false },
+    { "date": "2026-09-14", "sit_to_stand_s": 13.4, "floor_min": 2, "company_min": 93, "fall": false },
+    { "date": "2026-09-15", "sit_to_stand_s": 13.7, "floor_min": 1, "company_min": 112, "fall": false },
+    { "date": "2026-09-16", "sit_to_stand_s": 14.0, "floor_min": 0, "company_min": 128, "fall": false }
+  ]
+}

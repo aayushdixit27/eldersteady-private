@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2eee5">
+  <title>Watch — 30-day family view</title>
+  <style>
+    :root { color-scheme: light; --ink:#17221d; --muted:#414c46; --paper:#fffdf8; --canvas:#f2eee5; --line:#dcd6ca; --urgent:#c84931; --urgent-text:#8b2e20; --safe:#166747; --safe-deep:#0d5136; --safe-soft:#e8f5ed; --night:#13251e; font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--canvas); color:var(--ink); }
+    .shell { width:min(100%,760px); min-height:100svh; margin:auto; background:var(--paper); }
+    header { display:flex; align-items:center; justify-content:space-between; padding:18px; border-bottom:1px solid var(--line); }
+    .brand { font-size:20px; font-weight:800; letter-spacing:-.03em; }
+    .local { display:flex; gap:7px; align-items:center; color:var(--safe-deep); font-size:13px; font-weight:700; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--safe); }
+    .fixture { position:sticky; z-index:2; top:0; margin:0; padding:12px 18px; background:#fff0eb; color:var(--urgent-text); border-bottom:1px solid #e2c1b8; font-size:13px; font-weight:800; line-height:1.45; }
+    main { padding:24px 18px 34px; }
+    .eyebrow { margin:0 0 9px; color:var(--safe-deep); text-transform:uppercase; letter-spacing:.11em; font-size:13px; font-weight:800; }
+    h1 { margin:0; font-size:clamp(30px,9vw,42px); line-height:1.06; letter-spacing:-.04em; }
+    .intro { margin:12px 0 22px; color:var(--muted); font-size:15px; line-height:1.5; }
+    .today { padding:18px; border:2px solid var(--safe-deep); border-radius:13px; background:var(--safe-soft); }
+    .today-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+    .today h2 { margin:0; font-size:21px; }
+    .measured { color:var(--safe-deep); font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; }
+    .today-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:15px; }
+    .today-grid span { display:block; color:var(--muted); font-size:13px; font-weight:650; line-height:1.25; }
+    .today-grid strong { display:block; margin-top:5px; font-size:22px; font-variant-numeric:tabular-nums; }
+    .source { margin:13px 0 0; color:var(--muted); font-size:13px; line-height:1.4; }
+    .charts { margin-top:24px; }
+    .chart { margin-top:12px; padding:17px 14px 12px; border:1px solid var(--line); border-radius:13px; background:#fff; }
+    .chart h2 { margin:0; font-size:17px; }
+    .chart p { margin:4px 0 10px; color:var(--muted); font-size:13px; line-height:1.4; }
+    .scroll { overflow-x:auto; padding-bottom:4px; }
+    svg { display:block; width:720px; height:150px; overflow:visible; font-family:inherit; }
+    .axis { stroke:#b8b1a5; stroke-width:1; }
+    .grid { stroke:#e4dfd5; stroke-width:1; }
+    .bar-floor { fill:#8b2e20; }
+    .bar-company { fill:#0d5136; }
+    .trend-line { fill:none; stroke:#0d5136; stroke-width:3; stroke-linejoin:round; stroke-linecap:round; }
+    .point { fill:#fff; stroke:#0d5136; stroke-width:2; }
+    .fall { fill:#8b2e20; stroke:#fff; stroke-width:2; }
+    .today-mark { stroke:#8b2e20; stroke-width:1.5; stroke-dasharray:4 4; }
+    svg text { fill:#414c46; font-size:13px; font-weight:650; }
+    .legend { display:flex; flex-wrap:wrap; gap:12px; color:var(--muted); font-size:13px; font-weight:650; }
+    .key { display:inline-flex; align-items:center; gap:6px; }
+    .swatch { width:13px; height:4px; background:var(--safe-deep); }
+    .swatch.fall-key { height:9px; border-radius:50%; background:var(--urgent-text); }
+    .ledger { margin-top:26px; padding:21px 18px; border-radius:18px; background:var(--night); color:#fff; }
+    .ledger h2 { margin:0 0 16px; font-size:21px; }
+    .ledger-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px 10px; }
+    .ledger-item:first-child { grid-column:1/-1; }
+    .ledger-item span { display:block; color:#b9d2c6; font-size:13px; font-weight:700; }
+    .ledger-item strong { display:block; margin-top:4px; font-size:clamp(25px,8vw,38px); letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+    .ledger p { margin:17px 0 0; padding-top:14px; border-top:1px solid #4c6c5d; color:#c8d8d0; font-size:13px; line-height:1.5; }
+    @media (min-width:560px) { header { padding:22px 24px 16px; } .fixture { padding-left:24px; padding-right:24px; } main { padding:28px 24px 40px; } .chart { padding:19px 18px 14px; } svg { width:100%; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header><div class="brand">watch</div><div class="local"><span class="dot"></span>Private at home</div></header>
+    <p class="fixture">FIXTURE DATA — a 30-day series we made up to show the product; today's numbers are real and come from live/board.log</p>
+    <main>
+      <p class="eyebrow">Family view</p>
+      <h1>The last 30 days at home</h1>
+      <p class="intro">A simple view of getting up, time on the floor, and time with company. The history is illustrative; today updates from the board.</p>
+
+      <section class="today" aria-labelledby="today-title">
+        <div class="today-head"><h2 id="today-title">Today</h2><span class="measured">Measured</span></div>
+        <div class="today-grid">
+          <div><span>Sit to stand</span><strong id="today-sts">—</strong></div>
+          <div><span>On floor</span><strong id="today-floor">—</strong></div>
+          <div><span>Company</span><strong id="today-company">—</strong></div>
+        </div>
+        <p class="source" id="today-source" role="status">Waiting for the latest measured trend line.</p>
+      </section>
+
+      <section class="charts" aria-label="Thirty-day charts">
+        <article class="chart"><h2>Sit-to-stand time</h2><p>Seconds from sitting to upright. A higher line means getting up took longer.</p><div class="scroll"><svg id="sts-chart" role="img" aria-label="Sit-to-stand seconds over 30 days"></svg></div><div class="legend"><span class="key"><span class="swatch"></span>Daily seconds</span><span class="key"><span class="swatch fall-key"></span>Fall day</span></div></article>
+        <article class="chart"><h2>Minutes on the floor</h2><p>Daily total. The marked fall day is part of the made-up series.</p><div class="scroll"><svg id="floor-chart" role="img" aria-label="Minutes on the floor over 30 days"></svg></div></article>
+        <article class="chart"><h2>Minutes with company</h2><p>Time when the board measured two or more people together.</p><div class="scroll"><svg id="company-chart" role="img" aria-label="Minutes with company over 30 days"></svg></div></article>
+      </section>
+
+      <section class="ledger" aria-labelledby="ledger-title">
+        <h2 id="ledger-title">30-day privacy ledger</h2>
+        <div class="ledger-grid">
+          <div class="ledger-item"><span>Frames processed at home</span><strong id="processed">—</strong></div>
+          <div class="ledger-item"><span>Frames destroyed</span><strong id="destroyed">—</strong></div>
+          <div class="ledger-item"><span>Frames uploaded</span><strong id="uploaded">—</strong></div>
+        </div>
+        <p>Fixture totals for this illustrative period. Frames are processed inside the home and destroyed; none are uploaded.</p>
+      </section>
+    </main>
+  </div>
+  <script>
+    const NS = "http://www.w3.org/2000/svg";
+    let series = [];
+    const node = (name, attrs = {}) => { const el = document.createElementNS(NS, name); Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v)); return el; };
+    const addText = (svg, x, y, value, anchor = "start") => { const t=node("text",{x,y,"text-anchor":anchor}); t.textContent=value; svg.append(t); };
+    function baseChart(svg, max, suffix) {
+      svg.replaceChildren(); svg.setAttribute("viewBox","0 0 720 150");
+      [0,.5,1].forEach(p => { const y=122-p*100; svg.append(node("line",{x1:42,y1:y,x2:704,y2:y,class:p?"grid":"axis"})); addText(svg,36,y+4,Math.round(max*p)+suffix,"end"); });
+      [0,14,29].forEach(i => addText(svg,51+i*(644/29),145,new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",timeZone:"UTC"}).format(new Date(series[i].date+"T00:00:00Z")),i===0?"start":i===29?"end":"middle"));
+      svg.append(node("line",{x1:695,y1:18,x2:695,y2:126,class:"today-mark"}));
+    }
+    function renderLine() {
+      const svg=document.getElementById("sts-chart"), max=16; baseChart(svg,max,"s");
+      const points=series.map((d,i) => `${51+i*(644/29)},${122-(d.sit_to_stand_s/max)*100}`).join(" ");
+      svg.append(node("polyline",{points,class:"trend-line"}));
+      series.forEach((d,i) => svg.append(node("circle",{cx:51+i*(644/29),cy:122-(d.sit_to_stand_s/max)*100,r:d.fall?6:2.8,class:d.fall?"fall":"point"})));
+    }
+    function renderBars(id, key, max, klass, suffix) {
+      const svg=document.getElementById(id); baseChart(svg,max,suffix);
+      series.forEach((d,i) => { const h=Math.max(0,(d[key]/max)*100); svg.append(node("rect",{x:45+i*(644/29),y:122-h,width:12,height:h,class:klass,rx:2})); });
+    }
+    function render() { renderLine(); renderBars("floor-chart","floor_min",10,"bar-floor","m"); renderBars("company-chart","company_min",240,"bar-company","m"); }
+    function parseTrend(line) { const out={}; line.trim().split(/\s+/).slice(1).forEach(part => { const at=part.indexOf("="); if(at>0) out[part.slice(0,at)]=part.slice(at+1); }); return out; }
+    async function pollTrend() {
+      try {
+        const response=await fetch("live/board.log?t="+Date.now(),{cache:"no-store"}); if(!response.ok) throw new Error();
+        const lines=(await response.text()).split("\n").filter(line => line.startsWith("trend ")); if(!lines.length) throw new Error();
+        const trend=parseTrend(lines.at(-1));
+        const sts=Number(trend.sts_last_s), floor=Number(trend.floor_s_total)/60, company=Number(trend.company_s)/60;
+        if (![sts,floor,company].every(Number.isFinite)) throw new Error();
+        document.getElementById("today-sts").textContent=sts ? `${sts.toFixed(1)} s` : "No rise yet";
+        document.getElementById("today-floor").textContent=`${floor.toFixed(1)} min`;
+        document.getElementById("today-company").textContent=`${company.toFixed(1)} min`;
+        document.getElementById("today-source").textContent=`Latest board measurement · posture ${trend.posture} · ${Number(trend.sts_n).toLocaleString("en-US")} sit-to-stand${Number(trend.sts_n)===1?"":"s"} this session.`;
+        const last=series.at(-1); last.sit_to_stand_s=sts; last.floor_min=floor; last.company_min=company; render();
+      } catch (error) { document.getElementById("today-source").textContent="No measured trend line is available yet. Historical charts remain fixture data."; }
+    }
+    fetch("fixtures/thirty-days.json").then(r => { if(!r.ok) throw new Error(); return r.json(); }).then(data => {
+      series=data.days;
+      document.getElementById("processed").textContent=data.ledger.frames_processed.toLocaleString("en-US");
+      document.getElementById("destroyed").textContent=data.ledger.frames_destroyed.toLocaleString("en-US");
+      document.getElementById("uploaded").textContent=data.ledger.frames_uploaded.toLocaleString("en-US");
+      render(); pollTrend(); setInterval(pollTrend,2000);
+    }).catch(() => { document.querySelector(".charts").textContent="The fixture series could not be loaded."; });
+  </script>
+</body>
+</html>
