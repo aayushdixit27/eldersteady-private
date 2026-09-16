@@ -126,7 +126,7 @@
   <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>ALERT SENT TO SUE</strong><pre id="flash-event">Text details appear here.</pre></div></div>
   <script>
     const $ = id => document.getElementById(id);
-    const state = { camera: false, hasLog: false, lastLogAt: 0, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, cleared: false };
+    const state = { seenEvents: new Set(), eventsPrimed: false, camera: false, hasLog: false, lastLogAt: 0, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, cleared: false };
     const safeBanner = "Last check: no video sent.";
 
     function formatSeconds(value) { return value > 0 ? `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })} s` : "none yet"; }
@@ -198,10 +198,10 @@
       for (const [posture, value] of Object.entries(durations)) { $(`${posture}-seconds`).textContent = formatSeconds(value); $(`strip-${posture}`).style.width = `${total ? value / total * 100 : 0}%`; } $("company-seconds").textContent = seconds("company_s") > 0 ? formatSeconds(seconds("company_s")) : "None yet"; $("time-strip").setAttribute("aria-label", total ? `Posture time: standing ${formatSeconds(durations.upright)}, sitting ${formatSeconds(durations.sitting)}, floor ${formatSeconds(durations.floor)}, away ${formatSeconds(durations.absent)}` : "Posture time not measured");
     }
     function showFall(line, event) {
-      if (line === state.lastEvent) return; state.lastEvent = line; state.alert = event; state.cleared = false; state.alertAt = Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("flash-event").textContent = text; $("banner-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
+      if (state.seenEvents.has(line)) return; const firstLoad = !state.eventsPrimed; state.seenEvents.add(line); state.lastEvent = line; if (firstLoad) { state.alert = event; state.cleared = false; state.alertAt = 0; $("banner-event").textContent = alertMessage(event); return; } state.alert = event; state.cleared = false; state.alertAt = Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("flash-event").textContent = text; $("banner-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
     }
     async function poll() {
-      try { const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) { chooseState(); return; } const lines = (await response.text()).split(/\r?\n/).filter(Boolean); if (lines.length) { state.hasLog = true; state.lastLogAt = Date.now(); } for (const line of lines) { if (line.startsWith("frame ")) parseFrame(line); else if (line.startsWith("ledger ")) parseLedger(line); else if (line.startsWith("trend ")) parseTrend(line); else if (line.startsWith("{")) { try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {} } } chooseState(); } catch (_) { chooseState(); }
+      try { const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) { chooseState(); return; } const lines = (await response.text()).split(/\r?\n/).filter(Boolean); if (lines.length) { state.hasLog = true; state.lastLogAt = Date.now(); } for (const line of lines) { if (line.startsWith("frame ")) parseFrame(line); else if (line.startsWith("ledger ")) parseLedger(line); else if (line.startsWith("trend ")) parseTrend(line); else if (line.startsWith("{")) { try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {} } } chooseState(); } catch (_) { state.eventsPrimed = true; chooseState(); }
     }
     $("camera-start").addEventListener("click", startCamera); $("sent-link").addEventListener("click", () => { const ledger = $("ledger"); ledger.classList.remove("pulse"); void ledger.offsetWidth; ledger.classList.add("pulse"); }); startCamera(); poll(); window.setInterval(poll, 250); window.setInterval(chooseState, 1000);
   </script>
