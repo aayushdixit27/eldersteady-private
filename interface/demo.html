@@ -23,9 +23,13 @@
     }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink); }
-    .demo { display: grid; grid-template-columns: 3fr 2fr; min-height: 100vh; }
-    .camera { position: relative; min-height: 100vh; overflow: hidden; background: #17221d; }
-    video { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; }
+    .privacy-banner { width: 100%; padding: 10px clamp(20px, 3vw, 46px) 12px; background: var(--safe-deep); color: white; }
+    .privacy-banner strong { display: block; font-size: clamp(40px, 7vw, 96px); line-height: .92; letter-spacing: -.05em; }
+    .privacy-banner .privacy-counts { display: block; margin-top: 7px; color: white; font-size: clamp(24px, 2vw, 30px); font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+    .privacy-banner small { display: block; margin-top: 5px; color: white; font-size: 13px; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
+    .demo { display: grid; grid-template-columns: 3fr 2fr; align-items: start; min-height: calc(100vh - 170px); }
+    .camera { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink); }
+    video { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: contain; }
     .camera-shade { position: absolute; inset: auto 0 0; padding: 22px 26px 25px; background: rgba(19,37,30,.92); color: white; }
     .camera-shade strong { display: block; font-size: clamp(20px, 2.3vw, 31px); letter-spacing: -.03em; }
     .camera-shade span { display: block; margin-top: 6px; color: #c8d8d0; font-size: 14px; font-weight: 650; }
@@ -92,7 +96,6 @@
     @keyframes alert-in { from { opacity: 0; } to { opacity: 1; } }
     @media (max-width: 800px) {
       .demo { grid-template-columns: 1fr; }
-      .camera { min-height: 52vh; }
       .panel { min-height: 48vh; }
       .trend-primary, .time-key { grid-template-columns: 1fr 1fr; }
     }
@@ -100,6 +103,11 @@
   </style>
 </head>
 <body>
+  <aside class="privacy-banner" aria-label="Live privacy measurements">
+    <strong>Nothing leaves this room.</strong>
+    <span class="privacy-counts"><span id="privacy-frames">0</span> pictures looked at · <span id="privacy-destroyed">0</span> destroyed · 0 saved · 0 sent anywhere</span>
+    <small>Measured on the box in the room. Bytes out on the wire: <span id="privacy-bytes-out">—</span> (that is the alert, not video).</small>
+  </aside>
   <main class="demo">
     <section class="camera" aria-label="Local camera view">
       <video id="camera" autoplay muted playsinline></video>
@@ -201,6 +209,8 @@
       }
       $("frames").textContent = state.lastFrame.toLocaleString("en-US");
       $("destroyed").textContent = state.lastFrame.toLocaleString("en-US");
+      $("privacy-frames").textContent = state.lastFrame.toLocaleString("en-US");
+      $("privacy-destroyed").textContent = state.lastFrame.toLocaleString("en-US");
     }
 
     function formatBytes(value) {
@@ -218,6 +228,7 @@
       const pixels = number("pixel_bytes");
       $("video-in").textContent = formatBytes(rx);
       $("bytes-out").textContent = formatBytes(tx);
+      $("privacy-bytes-out").textContent = formatBytes(tx);
       $("pixels-decoded").textContent = pixels === null ? "—" : pixels.toLocaleString("en-US");
       $("in-out-ratio").textContent = rx === null || tx === null || tx === 0 ? "—" : `1 : ${Math.round(rx / tx).toLocaleString("en-US")}`;
     }
