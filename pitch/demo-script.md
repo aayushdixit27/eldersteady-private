@@ -1,30 +1,42 @@
-# 90-second live demo
+# Live demo — three beats, about 2 minutes
 
-The operator opens `pitch/backup/index.html` before walking on stage. If the real system is available, the same beats use its output. If not, say “fixture replay” every time the backup is shown.
+Before presenting: open the family alert page and a large terminal running `perception/live_demo.sh`. Confirm pose mode, the camera preview, the lean gauge, and serial access. Keep the fixture backup closed unless the live path fails.
 
-| Time | Action | Exact spoken words |
-|---|---|---|
-| 0:00–0:12 | Show title. | “Aging parents should not have to choose between being safe and being watched. Watch tells the family when help may be needed, while every image stays in the room.” |
-| 0:12–0:28 | Start fixture replay; show four observations joining one incident. | “At 4:11, movement begins in the bedroom, passes the kitchen, reaches the front door, and ends with a low-confidence fall. Four model observations become one urgent story—not four alarms.” |
-| 0:28–0:42 | Reveal family card. | “The family sees what matters: night wandering, the route, the time, and what to do next. The parent installs no app, wears nothing, and is never streamed to a call centre.” |
-| 0:42–1:05 | Reveal ledger; let counter move. | **“This fixture incident totals 333,540 frames processed and destroyed, zero stored, zero uploaded. That is fixture arithmetic, not a hardware measurement. Watch makes privacy countable, incident by incident.”** |
-| 1:05–1:18 | Show the dated board-local evidence; otherwise keep backup label visible. | “The hardware test is separate and measured: the Modalix app ran from board-local storage with `/workspace` unmounted, emitted an event accounting for one discarded frame, and exited zero. The fixture backup proves only the story.” |
-| 1:18–1:30 | Show response plan. | “After yes: install locally, stage three checks, choose family escalation, calibrate for two weeks, and review the ledger at day 30. Care without surveillance.” |
+## Beat 1 — camera, gauge, fall flip (0:00–0:55)
 
-## The four judge questions
+**Show:** Stand upright in the live Mac camera. Point to the terminal: frame count, pose/lean, and 8–9 ms MLA time. Lean far enough to cross the gauge; hold for eight frames. Show the fall banner and family page turning red.
 
-**Who is the user?**  
-The primary buyer is an adult child coordinating care for an aging parent who wants to stay home but rejects wearables, cloud cameras, or call-centre monitoring. The parent is the protected person and must consent; they are not given another interface to operate.
+**Say:**
 
-**Why is AI necessary rather than simpler technology?**  
-Motion sensors can say that something moved. This product must distinguish an ordinary kitchen trip from a multi-room night-wandering story, recognize a fall or unattended stove, and merge repeated observations without exporting video. Scene-level interpretation is the AI job; deterministic temporal logic and exact integer accounting handle grouping and the privacy ledger.
+“This is live video from this Mac, sent over UDP to the Modalix beside us. YOLO26 pose is running on the MLA at eight to nine milliseconds per frame. These keypoints produce the lean gauge you see moving now.”
 
-**What makes this different?**  
-Not family-first alerting alone and not another detector. The differentiator is a locally interpreted event with a falsifiable privacy ledger: exact frames processed and destroyed, zero video available to watch later. It changes the agreement between parent and family.
+“Lean is measured. The policy around it is not yet validated: for this demo, fifty-five percent for eight consecutive frames emits a possible-fall event. There it is—and the family screen turns red. This is a prototype trigger, not a diagnosis.”
 
-**What did we trade to ship on time?**  
-One camera path, three event types, family first, no accounts, audio, faces, diagnosis, 911, multi-home support, training, or fine-tuning. We used an adversarial hand-written fixture to build and grade the story independently of the model. Anything not demonstrated remains named, not implied.
+## Beat 2 — pull the Mac, keep the board (0:55–1:25)
 
-## Limits
+**Show:** Put the serial console full-screen. Disconnect the Mac link. Show NFS unavailable and the board-local application/model continuing or launching from board-local storage. Do not imply that the Mac camera stream continues after its source is unplugged.
 
-The backup is simulated from the fixed fixture. Do not call it live inference. All six fixed eval items pass, but items 1–5 are fixture tests and item 6 is the separate measured board-local run. Do not claim field accuracy, buyer validation, or alert delivery. The counter animation is exact fixture arithmetic, not proof that hardware destroyed those frames.
+**Say:**
+
+“Now the proof that separates Watch from another fall-detection demo. I’m unplugging the Mac—the development workspace and its NFS mount disappear with it. Over serial, the application still runs from board-local storage. In production the camera is local to the unit; this test proves the intelligence does not depend on a cloud or development mount.”
+
+## Beat 3 — alert and privacy ledger (1:25–2:00)
+
+**Show:** Reconnect if needed and return to the red family alert. Point to the family action, then the session ledger: `frames_processed`, `frames_in_events`, `frames_unattributed`, `frames_uploaded: 0`, `frames_stored: 0`.
+
+**Say:**
+
+“The family gets a possible-fall alert first. Watch does not call a monitoring centre or 911. And this ledger makes the privacy claim inspectable: every processed frame is either in an event or unattributed; zero were uploaded and zero were stored.”
+
+“Another team may detect a fall. We prove nothing left the room. That is care without surveillance.”
+
+## If asked
+
+- **Is the fall detector validated?** “No. Lean is calculated from live pose keypoints; the 55% threshold and eight-frame window are unvalidated demo parameters. Calibration and field validation are roadmap.”
+- **What about wandering?** “An earlier demo called movement ‘wander’; that was a heuristic, not validated behavior understanding, so we do not lead with it.”
+- **Why family first?** “The family knows the person and context. We intentionally do not automate 911.”
+- **What did the mentor say?** “Dave from SiMa said fall detection was one of the first things he thought about in senior centers, called it a selling feature, and warned us: ‘don’t try to make the product.’ We followed that advice by proving one honest path.”
+
+## Failure rule
+
+If live inference fails, say so once. Open `pitch/backup/index.html`, call it a fixture replay, and use it only to explain the family interaction. Never present it as hardware evidence. The board-local/NFS proof and measured session ledger remain separate evidence.
