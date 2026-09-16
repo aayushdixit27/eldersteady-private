@@ -1,4 +1,4 @@
-# Watch
+# ElderSteady Private
 
 California will not let a facility put a camera in her room; at home the same question is yours — this is a fall alert that answers it in bytes.
 
@@ -33,7 +33,7 @@ open http://127.0.0.1:7311/interface/demo.html
 | Decoded pixel bytes | frames × `1280` × `720` × `3` | computed | [`demo.html`](interface/demo.html) ledger calculation |
 | Fall trigger | `55%` lean for `8` frames | guessed | [`DEMO.md`](perception/DEMO.md) and [`live_demo.sh`](perception/live_demo.sh) |
 | Before-fall trend | `445` `trend` lines in a 10-minute run: `sitting_s` `24.6`, `absent_s` `420.9`, `company_s` `0.1`, `sts_n` `0`, `floor_s_total` `0` — the v1 classifier saw no upright or floor posture at desk distance | measured (values), guessed (thresholds) | [`2026-09-16-0833-quiet-mode-with-trend.txt`](evidence/captures/2026-09-16-0833-quiet-mode-with-trend.txt), commit `effbd3b`. Computed on the MLA from keypoints; only numbers leave, via the `trend` stdout line and session ledger `trend` key. Producer: `perception/watch_events.py`, commit `1ccc396`; panel: [`demo.html`](interface/demo.html), commit `f15fd04` |
-| Posture and company thresholds | sitting: hips below `0.65` with upright torso; floor: hips and shoulders below `0.85` for at least `2 s`; company: at least `2` people | guessed | v1 rules in [`watch_events.py`](perception/watch_events.py); the published `5×` sit-to-stand over `15 s` comparison is an anchor, while Watch measures one rep and is unvalidated |
+| Posture and company thresholds | sitting: hips below `0.65` with upright torso; floor: hips and shoulders below `0.85` for at least `2 s`; company: at least `2` people | guessed | v1 rules in [`watch_events.py`](perception/watch_events.py); the published `5×` sit-to-stand over `15 s` comparison is an anchor, while ElderSteady Private measures one rep and is unvalidated |
 | 30-day view | interface/trend.html (fixture, landing) | fixture | Not board evidence and not described as measured |
 | Evidence layer | `6/6` eval | fixture | [`pitch/eval-report.md`](pitch/eval-report.md) |
 | Second real fall | `2026-09-16T15:06:29Z`; confidence `0.935`; `100` frames discarded | measured | [`2026-09-16-0815-second-fall-with-ledger.txt`](evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt) |
@@ -43,9 +43,9 @@ the counter proves the board leaked nothing; in the demo the camera is the Mac.
 
 ## Why on-device is the product, not a setting
 
-The ledger exists because inference runs on the MLA. A cloud camera cannot produce this proof: its bytes out are the video. Watch instead accounts for decoded pixels, board-NIC receive/transmit deltas, emitted events, and frames discarded at the application boundary.
+The ledger exists because inference runs on the MLA. A cloud camera's bytes out are the video. ElderSteady Private accounts for decoded pixels, board-NIC receive/transmit deltas, emitted events, and frames discarded at the application boundary.
 
-A fall alert is table stakes; every camera vendor and the other team on this track has one. Watch's product is the numbers before the fall. The other fall detector cannot show the week before: last sit-to-stand seconds and session count, floor-lie seconds now and total, upright/sitting/floor seconds, and seconds with at least two people in view. They are computed on the MLA from keypoints, only numbers leave, and they ride the same ledger and bytes-out counter. The thresholds are guessed, and interface/trend.html is a 30-day fixture landing from another lane.
+A fall alert is table stakes; every camera vendor and the other team on this track has one. ElderSteady Private adds the numbers before the fall: last sit-to-stand seconds and session count, floor-lie seconds now and total, upright/sitting/floor seconds, and seconds with at least two people in view. They are computed on the MLA from keypoints and ride the same ledger and bytes-out counter; only numbers leave. The thresholds are guessed, and interface/trend.html is a 30-day fixture landing from another lane.
 
 The judge can read the board counter over serial before and after a run:
 
