@@ -10,9 +10,10 @@ import socket
 import struct
 import sys
 import time
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from math import atan2, degrees
+from math import atan2, degrees, sqrt
 from pathlib import Path
 from typing import Iterable, Sequence
 
@@ -26,9 +27,13 @@ COCO_LEFT_SHOULDER = 5
 COCO_RIGHT_SHOULDER = 6
 COCO_LEFT_HIP = 11
 COCO_RIGHT_HIP = 12
+COCO_LEFT_KNEE = 13
+COCO_RIGHT_KNEE = 14
+COCO_LEFT_ANKLE = 15
+COCO_RIGHT_ANKLE = 16
 DEFAULT_BENT_THRESHOLD = 60.0
 NIC = "end0"
-POSTURES = ("upright", "bent", "sitting", "floor", "absent")
+POSTURES = ("upright", "bent", "sitting", "floor", "close", "absent")
 # Calibrated 16 Sep for this camera at 2 m; other setups need recalibration.
 # Stand sh_y 0.04-0.34; chair sh_y 0.50-0.55; floor knees-to-chest
 # sh_y 0.73-0.78 with bbox_ar 1.46-1.66.
@@ -61,6 +66,8 @@ class Pose:
     keypoints: Sequence[dict[str, float]]
     bbox_w: float | None = None
     bbox_h: float | None = None
+    bbox_x: float | None = None
+    bbox_y: float | None = None
 
     @property
     def bbox_aspect(self) -> float | None:
@@ -200,23 +207,110 @@ class TrendTracker:
     pending_posture: str | None = None
     pending_seconds: float = 0.0
     floor_miss_seconds: float = 0.0
+    view: str = "none"
+    motion_samples: deque | None = None
+    frame_w: int = 0
 
     def __post_init__(self) -> None:
         self.totals = {posture: 0.0 for posture in POSTURES}
         self.sts = SitToStandDetector()
+        self.motion_samples = deque()
+
+    @staticmethod
+    def coverage_view(pose: Pose | None, min_visibility: float) -> str:
+        if pose is None:
+            return "none"
+        points = pose.keypoints
+        lower_visible = any(
+            points[index]["visibility"] >= min_visibility
+            for index in (COCO_LEFT_HIP, COCO_RIGHT_HIP, COCO_LEFT_KNEE, COCO_RIGHT_KNEE)
+        )
+        if lower_visible:
+            return "full"
+        shoulders_visible = all(
+            points[index]["visibility"] >= min_visibility
+            for index in (COCO_LEFT_SHOULDER, COCO_RIGHT_SHOULDER)
+        )
+        return "close" if shoulders_visible else "none"
+
+    def _record_motion(self, pose: Pose | None, min_visibility: float) -> None:
+        sample = None
+        if pose is not None and self.view == "full":
+            points = pose.keypoints
+            ls, rs = points[COCO_LEFT_SHOULDER], points[COCO_RIGHT_SHOULDER]
+            la, ra = points[COCO_LEFT_ANKLE], points[COCO_RIGHT_ANKLE]
+            shoulders = midpoint(ls, rs)[0] if (
+                ls["visibility"] >= min_visibility and rs["visibility"] >= min_visibility
+            ) else None
+            ankle_diff = la["x"] - ra["x"] if (
+                la["visibility"] >= min_visibility and ra["visibility"] >= min_visibility
+            ) else None
+            centre = None
+            if pose.bbox_x is not None and pose.bbox_w is not None:
+                centre = pose.bbox_x + pose.bbox_w / 2.0
+            sample = (self.elapsed, ankle_diff, centre, shoulders, pose.bbox_w, self.posture)
+        self.motion_samples.append(sample or (self.elapsed, None, None, None, None, self.posture))
+        while self.motion_samples and self.elapsed - self.motion_samples[0][0] > 10.0:
+            self.motion_samples.popleft()
+
+    def cadence_spm(self) -> float | str:
+        samples = [s for s in self.motion_samples if s[1] is not None and s[2] is not None]
+        if self.view != "full" or len(samples) < 2 or samples[-1][0] - samples[0][0] < 2.0:
+            return "na"
+        centres = [s[2] for s in samples]
+        if max(centres) - min(centres) < 0.05 * self.frame_w:
+            return "na"
+        signs = [1 if s[1] > 0 else -1 if s[1] < 0 else 0 for s in samples]
+        signs = [sign for sign in signs if sign]
+        crossings = sum(a != b for a, b in zip(signs, signs[1:]))
+        return round(crossings * 6, 3)
+
+    def sway(self) -> float | str:
+        samples = [
+            s for s in self.motion_samples
+            if self.elapsed - s[0] <= 5.0 and s[3] is not None and s[4] and s[5] == "upright"
+        ]
+        if self.view != "full" or self.posture != "upright" or len(samples) < 2:
+            return "na"
+        shoulder_x = [s[3] for s in samples]
+        mean_x = sum(shoulder_x) / len(shoulder_x)
+        bbox_width = sum(s[4] for s in samples) / len(samples)
+        return round(
+            sqrt(sum((value - mean_x) ** 2 for value in shoulder_x) / len(shoulder_x))
+            / bbox_width,
+            3,
+        )
 
     def update(
         self, poses: Sequence[Pose], frame_w: int, frame_h: int, min_visibility: float, dt: float,
         bent_threshold: float = DEFAULT_BENT_THRESHOLD,
     ) -> str:
         self.elapsed += dt
+        self.frame_w = frame_w
+        best_pose = max(poses, key=lambda pose: pose.score) if poses else None
+        self.bbox_aspect = best_pose.bbox_aspect if best_pose else None
+        self.view = self.coverage_view(best_pose, min_visibility)
+        if self.view == "close":
+            ls = best_pose.keypoints[COCO_LEFT_SHOULDER]
+            rs = best_pose.keypoints[COCO_RIGHT_SHOULDER]
+            self.hip_y = None
+            self.shoulder_y = midpoint(ls, rs)[1] / frame_h
+            self.visibility = "shoulders"
+            self.posture = "close"
+            self.floor_seconds = 0.0
+            self.floor_miss_seconds = 0.0
+            self.pending_posture = None
+            self.pending_seconds = 0.0
+            self.totals[self.posture] += dt
+            if len(poses) >= 2:
+                self.company_seconds += dt
+            self._record_motion(best_pose, min_visibility)
+            return self.posture
         measured = [(pose.score, posture_measurements(
             pose, frame_w, frame_h, min_visibility, bent_threshold
         )) for pose in poses]
-        best_pose = max(poses, key=lambda pose: pose.score) if poses else None
         best = max(measured, key=lambda item: item[0])[1] if measured else None
         self.hip_y, self.shoulder_y, _, self.visibility = best or (None, None, True, "none")
-        self.bbox_aspect = best_pose.bbox_aspect if best_pose else None
         floor_candidate = (
             self.bbox_aspect is not None
             and (
@@ -263,6 +357,7 @@ class TrendTracker:
             best[0] if best else None, best[2] if best else False, self.elapsed,
             candidate == "sitting", candidate == "upright",
         )
+        self._record_motion(best_pose, min_visibility)
         return self.posture
 
     def snapshot(self) -> dict[str, str | float | int]:
@@ -281,6 +376,9 @@ class TrendTracker:
             "sh_y": "na" if self.shoulder_y is None else tidy(self.shoulder_y),
             "bbox_ar": "na" if self.bbox_aspect is None else tidy(self.bbox_aspect),
             "vis": self.visibility,
+            "view": self.view,
+            "cadence_spm": self.cadence_spm(),
+            "sway": self.sway(),
         }
 
 
@@ -517,6 +615,8 @@ def decode_pose_payload(outputs, frame_w: int, frame_h: int, max_poses: int) -> 
                     score=float(box[4]),
                     bbox_w=float(box[2]),
                     bbox_h=float(box[3]),
+                    bbox_x=float(box[0]),
+                    bbox_y=float(box[1]),
                     keypoints=[
                         {"x": float(x), "y": float(y), "visibility": float(v)}
                         for x, y, v in points
@@ -699,10 +799,10 @@ def main(argv: list[str]) -> int:
                     poses, frame.shape[1], frame.shape[0], args.min_keypoint_visibility,
                     frame_seconds, args.fall_lean_threshold,
                 )
-                lean_values = [
-                    lean
-                    for pose in poses
-                    if (lean := torso_lean_percent(pose, args.min_keypoint_visibility)) is not None
+                lean_values = [] if trend.view != "full" else [
+                    lean for pose in poses
+                    if TrendTracker.coverage_view(pose, args.min_keypoint_visibility) == "full"
+                    and (lean := torso_lean_percent(pose, args.min_keypoint_visibility)) is not None
                 ]
                 best_lean = max(lean_values, default=0.0)
                 best_score = max((pose.score for pose in poses), default=0.0)
@@ -726,9 +826,9 @@ def main(argv: list[str]) -> int:
                         )
                     )
                 previous_posture = posture
-                fall_reason = "floor" if trend.floor_seconds >= 3.0 else (
+                fall_reason = None if trend.view != "full" else ("floor" if trend.floor_seconds >= 3.0 else (
                     "lean" if bent_streak >= args.fall_consecutive_frames else None
-                )
+                ))
                 if fall_reason is not None and fall_cooldown.ready(trend.elapsed):
                     event = {
                         "type": "fall",

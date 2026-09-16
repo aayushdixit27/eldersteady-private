@@ -20,7 +20,8 @@ from watch_events import (
 def synthetic_pose(
     hip_y: float, shoulder_y: float, shoulder_x: float = 50.0,
     *, hips_visible: bool = True, nose_x: float = 50.0, nose_y: float = 10.0,
-    bbox_aspect: float | None = None,
+    bbox_aspect: float | None = None, bbox_x: float = 0.0,
+    ankle_x: tuple[float, float] | None = None,
 ) -> Pose:
     points = [{"x": 0.0, "y": 0.0, "visibility": 0.0} for _ in range(17)]
     points[0] = {"x": nose_x, "y": nose_y, "visibility": 1.0}
@@ -29,10 +30,14 @@ def synthetic_pose(
     hip_visibility = 1.0 if hips_visible else 0.0
     points[11] = {"x": 45.0, "y": hip_y, "visibility": hip_visibility}
     points[12] = {"x": 55.0, "y": hip_y, "visibility": hip_visibility}
+    if ankle_x is not None:
+        points[15] = {"x": ankle_x[0], "y": 90.0, "visibility": 1.0}
+        points[16] = {"x": ankle_x[1], "y": 90.0, "visibility": 1.0}
     return Pose(
         score=0.9, keypoints=points,
         bbox_w=None if bbox_aspect is None else bbox_aspect * 100,
         bbox_h=None if bbox_aspect is None else 100,
+        bbox_x=bbox_x,
     )
 
 
@@ -65,9 +70,11 @@ def main() -> None:
     assert classify_posture([synthetic_pose(66, 52, bbox_aspect=1.2)], 100, 100, 0.3) == "sitting"
     shoulder_floor = TrendTracker()
     shoulder_pose = synthetic_pose(0, 75, hips_visible=False, bbox_aspect=1.5)
-    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) != "floor"
-    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) != "floor"
-    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) == "floor"
+    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) == "close"
+    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) == "close"
+    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 0.5) == "close"
+    assert shoulder_floor.snapshot()["floor_s"] == 0.0
+    assert shoulder_floor.snapshot()["view"] == "close"
     assert shoulder_floor.snapshot()["vis"] == "shoulders"
     assert shoulder_floor.snapshot()["bbox_ar"] == 1.5
     seated_tracker = TrendTracker()
@@ -85,10 +92,29 @@ def main() -> None:
     assert close_standing.snapshot()["posture"] == "upright"
 
     floor_flicker = TrendTracker()
-    floor_flicker.update([shoulder_pose], 100, 100, 0.3, 1.0)
+    floor_pose = synthetic_pose(75, 75, bbox_aspect=1.5)
+    floor_flicker.update([floor_pose], 100, 100, 0.3, 1.0)
     floor_flicker.update([standing_pose], 100, 100, 0.3, 0.1)
     assert floor_flicker.snapshot()["floor_s"] == 1.0
-    assert floor_flicker.update([shoulder_pose], 100, 100, 0.3, 0.5) == "floor"
+    assert floor_flicker.update([floor_pose], 100, 100, 0.3, 0.5) == "floor"
+
+    walking = TrendTracker()
+    # 17 alternating signs in ten seconds gives 100-ish steps/minute.
+    for index in range(18):
+        left_first = index % 2 == 0
+        walking.update([synthetic_pose(
+            55, 20, shoulder_x=50 + index * 0.05, bbox_aspect=0.5,
+            bbox_x=index * 0.4, ankle_x=(40, 60) if left_first else (60, 40),
+        )], 100, 100, 0.3, 10 / 17)
+    assert 96 <= walking.snapshot()["cadence_spm"] <= 102
+
+    still = TrendTracker()
+    for index in range(20):
+        still.update([synthetic_pose(
+            55, 20, shoulder_x=50 + (0.1 if index % 2 else -0.1),
+            bbox_aspect=0.5, bbox_x=20,
+        )], 100, 100, 0.3, 0.25)
+    assert still.snapshot()["sway"] < 0.01
 
     cooldown = FallEventCooldown()
     assert cooldown.ready(0.0)
