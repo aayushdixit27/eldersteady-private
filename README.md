@@ -2,7 +2,7 @@
 
 California will not let a facility put a camera in her room; at home the same question is yours — this is a fall alert that answers it in bytes.
 
-![Family page flipping red](interface/screenshots/red-flip.png)
+Family-page red-flip screenshot: pending from lane 1.
 
 ### Run it in 3 commands
 
@@ -14,6 +14,7 @@ open http://127.0.0.1:7311/interface/demo.html
 
 ## What it does
 
+- Knows the numbers before the fall: sit-to-stand time and count, floor-lie now and total, daily rhythm, and company time — computed on the MLA from keypoints; only numbers leave.
 - Detects a fall on the MLA in the room.
 - Tells the family, not 911.
 - Proves in bytes that no frame left: the counter compares video received with every byte transmitted by the board.
@@ -24,11 +25,14 @@ open http://127.0.0.1:7311/interface/demo.html
 |---|---|---|---|
 | First real fall | `2026-09-16T15:03:01Z`; lean `63%`; streak `58` frames; confidence `0.916`; `157` frames discarded | measured | [`2026-09-16-0803-first-real-fall.txt`](evidence/captures/2026-09-16-0803-first-real-fall.txt) |
 | MLA inference | `8.1–8.3 ms/frame` | measured | [same first-fall capture](evidence/captures/2026-09-16-0803-first-real-fall.txt) |
-| Quiet-mode ledger | `150` frames → `3.25 MB` video in, `10.0 KB` out on `end0`; `1 : 324` | measured | This morning with `--print-every` quiet mode; capture file not yet committed |
+| Quiet-mode ledger | `150` frames → `3.25 MB` video in, `10.0 KB` out on `end0`; `1 : 324` | measured | read live on the board this morning with `--print-every` quiet mode (`PRINT_EVERY=5`, commit `62a2b44`); the committed captures are pre-quiet-mode |
 | Pre-quiet-mode ledger | `3450` frames → `34 MB` in, `739 KB` out; `1 : 46` | measured | [`2026-09-16-0815-second-fall-with-ledger.txt`](evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt), commit `6d0d4e6` |
 | Why the pre-quiet ratio was lower | `tx_bytes` counts all protocols on `end0`, including the SSH session carrying per-frame diagnostic lines; quiet mode (`PRINT_EVERY=5`) removed diagnostics from the wire, not events | explanation interpretation | [`live_demo.sh`](perception/live_demo.sh) and the pre-quiet capture above |
 | Decoded pixel bytes | frames × `1280` × `720` × `3` | computed | [`demo.html`](interface/demo.html) ledger calculation |
 | Fall trigger | `55%` lean for `8` frames | guessed | [`DEMO.md`](perception/DEMO.md) and [`live_demo.sh`](perception/live_demo.sh) |
+| Before-fall trend | `posture`, `floor_s`, `sts_last_s`, `sts_n`, `upright_s`, `sitting_s`, `floor_s_total`, `absent_s`, `company_s` | measured live when running; no capture committed | Computed on the MLA from keypoints; only numbers leave, via the `trend` stdout line and session ledger `trend` key. Producer: `perception/watch_events.py`, commit `1ccc396`; panel: [`demo.html`](interface/demo.html), commit `f15fd04` |
+| Posture and company thresholds | sitting: hips below `0.65` with upright torso; floor: hips and shoulders below `0.85` for at least `2 s`; company: at least `2` people | guessed | v1 rules in [`watch_events.py`](perception/watch_events.py); the published `5×` sit-to-stand over `15 s` comparison is an anchor, while Watch measures one rep and is unvalidated |
+| 30-day view | interface/trend.html (fixture, landing) | fixture | Not board evidence and not described as measured |
 | Evidence layer | `6/6` eval | fixture | [`pitch/eval-report.md`](pitch/eval-report.md) |
 | Second real fall | `2026-09-16T15:06:29Z`; confidence `0.935`; `100` frames discarded | measured | [`2026-09-16-0815-second-fall-with-ledger.txt`](evidence/captures/2026-09-16-0815-second-fall-with-ledger.txt) |
 
@@ -37,6 +41,8 @@ the counter proves the board leaked nothing; in the demo the camera is the Mac.
 ## Why on-device is the product, not a setting
 
 The ledger exists because inference runs on the MLA. A cloud camera cannot produce this proof: its bytes out are the video. Watch instead accounts for decoded pixels, board-NIC receive/transmit deltas, emitted events, and frames discarded at the application boundary.
+
+A fall alert is table stakes; every camera vendor and the other team on this track has one. Watch's product is the numbers before the fall. The other fall detector cannot show the week before: last sit-to-stand seconds and session count, floor-lie seconds now and total, upright/sitting/floor seconds, and seconds with at least two people in view. They are computed on the MLA from keypoints, only numbers leave, and they ride the same ledger and bytes-out counter. The thresholds are guessed, and interface/trend.html is a 30-day fixture landing from another lane.
 
 The judge can read the board counter over serial before and after a run:
 
@@ -85,6 +91,8 @@ Mac camera
        -> fall-event JSON
        -> session ledger + `ledger` stdout line
             (pixel_bytes, end0 rx/tx)
+       -> session ledger `trend` key + `trend` stdout line
+            (posture, floor-lie, sit-to-stand, rhythm, company)
   -> interface/index.html  (family)
   -> interface/demo.html   (demo)
 ```
@@ -98,6 +106,7 @@ The board uses YOLO26-m INT8 detection and pose archives from the SiMa model zoo
 - Calibration is an install step—“show it a fall”—parked at idea-loop `8.3` (fixture reference), unvalidated.
 - A facility sale is waiver-gated. CDSS PIN 15-RM-01 says cameras in resident rooms require a Licensing waiver; it provides no analytics-only exemption.
 - The `55%` threshold is guessed and unvalidated.
+- Trend values are measured live on the board from keypoints when it runs; no `trend` line capture is committed. The code is on main in `perception/watch_events.py` (commit `1ccc396`) and [`demo.html`](interface/demo.html) renders it (commit `f15fd04`). Computed on the MLA, only numbers leave; thresholds are guessed, and interface/trend.html is a 30-day fixture landing from another lane.
 
 Demo narration and fallbacks: [`demo script`](pitch/demo-script.md), [`video script`](pitch/video-script.md), and [`fixture-only backup`](pitch/backup/index.html).
 
