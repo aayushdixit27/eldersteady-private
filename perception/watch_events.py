@@ -33,6 +33,7 @@ COCO_LEFT_ANKLE = 15
 COCO_RIGHT_ANKLE = 16
 DEFAULT_BENT_THRESHOLD = 60.0
 NIC = "end0"
+# Frame-line posture vocabulary: upright, bent, sitting, lying, floor, close, absent.
 POSTURES = ("upright", "bent", "sitting", "lying", "floor", "close", "absent")
 FURNITURE_CLASSES = {56: "chair", 57: "couch", 59: "bed"}
 # Calibrated 16 Sep for this camera at 2 m; other setups need recalibration.
@@ -396,7 +397,8 @@ class TrendTracker:
         if detections is not None:
             self.det_enabled = True
             self.detections = detections
-        self.det_ms = det_ms
+        if det_ms is not None:
+            self.det_ms = det_ms
         ambiguous = subject_is_ambiguous(poses)
         if self.subject is None:
             self.subject = "unclear" if ambiguous else "clear"
@@ -463,7 +465,10 @@ class TrendTracker:
                 )
             )
         )
-        if floor_candidate:
+        if sitting_fact:
+            self.floor_seconds = 0.0
+            self.floor_miss_seconds = 0.0
+        elif floor_candidate:
             self.floor_seconds += dt
             self.floor_miss_seconds = 0.0
         elif self.floor_seconds > 0.0:
@@ -554,16 +559,13 @@ def format_pose_frame_line(
     valid_lean: int, best: float, bent_streak: int, infer_ms: float, view: str,
     det_ms: float | None = None,
 ) -> str:
-    timing = (
-        f"mla={infer_ms:.1f}+{det_ms:.1f}ms" if det_ms is not None
-        else f"infer_ms={infer_ms:.1f}"
-    )
+    det_timing = f" det_ms={det_ms:.1f}" if det_ms is not None else ""
     return (
         "frame={} processed={} posture={} lean={:.0f}% poses={} valid_lean={} "
-        "best={:.3f} bent_streak={} {} view={}"
+        "best={:.3f} bent_streak={} infer_ms={:.1f} view={}{}"
     ).format(
         frame_index, processed, posture, lean, poses, valid_lean, best,
-        bent_streak, timing, view,
+        bent_streak, infer_ms, view, det_timing,
     )
 
 
@@ -1051,7 +1053,7 @@ def main(argv: list[str]) -> int:
                         det_ms,
                     ))
                 previous_posture = posture
-                fall_reason = None if trend.view != "full" or posture == "lying" else ("floor" if trend.floor_seconds >= 3.0 else (
+                fall_reason = None if trend.view != "full" or posture in ("sitting", "lying") else ("floor" if trend.floor_seconds >= 3.0 else (
                     "lean" if bent_streak >= args.fall_consecutive_frames else None
                 ))
                 if fall_reason is not None and fall_cooldown.ready(trend.elapsed):

@@ -71,7 +71,7 @@ def main() -> None:
     )
     assert format_pose_frame_line(
         10, 5, "sitting", 4, 1, 1, 0.9, 0, 8.25, "full", 6.75
-    ).endswith("bent_streak=0 mla=8.2+6.8ms view=full")
+    ).endswith("bent_streak=0 infer_ms=8.2 view=full det_ms=6.8")
     with patch.dict("watch_events.os.environ", {}, clear=True):
         assert pose_box_geometry((10, 20, 110, 220)) == (10, 20, 110, 220)
     with patch.dict("watch_events.os.environ", {"WATCH_BOX_XYXY": "1"}, clear=True):
@@ -96,6 +96,9 @@ def main() -> None:
     ) == "sitting"
     assert chair_tracker.snapshot()["objects"] == "chair:1"
     assert chair_tracker.snapshot()["det_ms"] == 4.2
+    chair_tracker.update([chair_pose], 100, 100, 0.3, 0.1)
+    assert chair_tracker.snapshot()["det_ms"] == 4.2
+    assert chair_tracker.snapshot()["floor_s"] == 0.0
 
     bed_tracker = TrendTracker()
     wide_pose = synthetic_pose(75, 75, bbox_size=(90, 45), bbox_x=5, bbox_y=50)

@@ -99,6 +99,7 @@ That run exited 0 and emitted:
 The plain `ledger frames=… pixel_bytes=… rx_bytes=… tx_bytes=… nic=end0` line reports decoded pixels and NIC byte deltas since app start.
 It is a stdout measurement line, not a `watch.event` contract event.
 `live_demo.sh` defaults `PRINT_EVERY` to 5; set it to tune routine per-frame diagnostic frequency without hiding posture changes or fall build-up.
+Frame-line posture values are `upright`, `bent`, `sitting`, `lying`, `floor`, `close`, and `absent`.
 The final trend line ends with posture diagnostics: `hip_y` and `sh_y` are
 normalised frame heights (or `na`), and `vis` is `hips`, `shoulders`, or `none`.
 This keeps `end0` bytes-out focused on the product claim—events and ledger evidence—instead of SSH diagnostic chatter.
