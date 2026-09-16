@@ -243,6 +243,8 @@ def torso_lean_percent(pose: Pose, min_visibility: float) -> float | None:
         keypoints[COCO_LEFT_HIP],
         keypoints[COCO_RIGHT_HIP],
     )
+    if os.environ.get("WATCH_DEBUG_KP"):
+        print("KP " + " ".join(f"{n}=({int(k['x'])},{int(k['y'])},v{k['visibility']:.2f})" for n, k in zip(("LS","RS","LH","RH"), required)), file=sys.stderr)
     if any(point["visibility"] < min_visibility for point in required):
         return None
 
