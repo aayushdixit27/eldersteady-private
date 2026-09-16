@@ -16,6 +16,7 @@ from watch_events import (
 def synthetic_pose(
     hip_y: float, shoulder_y: float, shoulder_x: float = 50.0,
     *, hips_visible: bool = True, nose_x: float = 50.0, nose_y: float = 10.0,
+    bbox_aspect: float | None = None,
 ) -> Pose:
     points = [{"x": 0.0, "y": 0.0, "visibility": 0.0} for _ in range(17)]
     points[0] = {"x": nose_x, "y": nose_y, "visibility": 1.0}
@@ -24,7 +25,11 @@ def synthetic_pose(
     hip_visibility = 1.0 if hips_visible else 0.0
     points[11] = {"x": 45.0, "y": hip_y, "visibility": hip_visibility}
     points[12] = {"x": 55.0, "y": hip_y, "visibility": hip_visibility}
-    return Pose(score=0.9, keypoints=points)
+    return Pose(
+        score=0.9, keypoints=points,
+        bbox_w=None if bbox_aspect is None else bbox_aspect * 100,
+        bbox_h=None if bbox_aspect is None else 100,
+    )
 
 
 def main() -> None:
@@ -49,20 +54,28 @@ def main() -> None:
     assert classify_posture([synthetic_pose(50, 10)], 100, 100, 0.3) == "upright"
     assert classify_posture([synthetic_pose(80, 50)], 100, 100, 0.3) == "sitting"
     floor_tracker = TrendTracker()
-    floor_pose = synthetic_pose(92, 86)
+    floor_pose = synthetic_pose(50, 30, bbox_aspect=1.5)
     assert floor_tracker.update([floor_pose], 100, 100, 0.3, 1.0) != "floor"
     assert floor_tracker.update([floor_pose], 100, 100, 0.3, 1.0) == "floor"
     assert floor_tracker.snapshot()["vis"] == "hips"
+    assert floor_tracker.snapshot()["bbox_ar"] == 1.5
+    shoulder_floor = TrendTracker()
+    shoulder_pose = synthetic_pose(0, 80, hips_visible=False)
+    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 1.0) != "floor"
+    assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 1.0) == "floor"
 
     detector = SitToStandDetector()
-    for pose, now in (
-        (synthetic_pose(75, 50), 2.0),
-        (synthetic_pose(72, 47), 3.0),
-        (synthetic_pose(55, 30), 5.5),
-    ):
+    for pose, now in ((synthetic_pose(75, 50), 0.0), (synthetic_pose(75, 50), 2.0),
+                      (synthetic_pose(55, 30), 3.0)):
         hip_y, _, upright, _ = posture_measurements(pose, 100, 100, 0.3)
         detector.update(hip_y, upright, now)
-    assert detector.count == 1 and detector.last_duration == 3.5
+    assert detector.count == 1 and detector.last_duration == 1.0
+    flap = SitToStandDetector()
+    for index in range(20):
+        pose = synthetic_pose(75 if index % 2 == 0 else 55, 50 if index % 2 == 0 else 30)
+        hip_y, _, upright, _ = posture_measurements(pose, 100, 100, 0.3)
+        flap.update(hip_y, upright, index * 0.033)
+    assert flap.count == 0
     for pose, now in ((synthetic_pose(75, 50), 10.0), (synthetic_pose(55, 30), 21.0)):
         hip_y, _, upright, _ = posture_measurements(pose, 100, 100, 0.3)
         detector.update(hip_y, upright, now)
