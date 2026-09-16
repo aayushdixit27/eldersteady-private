@@ -44,7 +44,7 @@ cat /sys/class/net/end0/statistics/tx_bytes
 
 “A fall alert is table stakes. ElderSteady Private adds the numbers before the fall: last sit-to-stand seconds and session count, floor-lie now and total, upright, sitting, and floor seconds, and company seconds with at least two people. They are computed on the MLA from keypoints and ride the same ledger as the `trend` stdout line and the `trend` key in `session-ledger.json`; only numbers leave.”
 
-“The trend code is on main in `perception/watch_events.py`, commit `1ccc396`; `demo.html` renders this panel, commit `f15fd04`. The committed quiet-mode capture, `evidence/captures/2026-09-16-0833-quiet-mode-with-trend.txt`, holds 445 measured trend lines — sitting and absent only, zero sit-to-stands, zero floor seconds, because the v1 posture rules are guessed. Thresholds are guessed, and interface/trend.html is a 30-day fixture landing from another lane. The other fall detector cannot show the week before.”
+“Posture test 4 is one controlled test with one person, not validation. With real xyxy boxes it read stand, chair, sit-to-stand, floor, and fall correctly; its last trend line measured 53.8 seconds upright, 6.4 sitting, 1.9 floor, one sit-to-stand, and 89.8 company. Tests 1–3 missed chair or floor states. The bands remain GUESSED.”
 
 “the counter proves the board leaked nothing; in the demo the camera is the Mac.”
 
@@ -60,10 +60,12 @@ cat /sys/class/net/end0/statistics/tx_bytes
 
 - **Is the fall detector validated?** “No. Lean is calculated from live pose keypoints; the 55% threshold and eight-frame window are GUESS demo parameters. Calibration and field validation are roadmap.”
 - **Are the trend numbers validated?** “No. The committed capture has 445 measured trend lines from keypoints on the MLA; only numbers leave. The v1 thresholds are GUESSED: sitting means hips below 0.65 with an upright torso; floor means hips and shoulders below 0.85 for at least 2 seconds; company means at least two people. The published 5× sit-to-stand over 15 seconds is an anchor; ours is one rep and unvalidated. The 30-day view is a FIXTURE.”
+- **Which person is measured?** “The subject is the nearest person by largest bounding box, IMPLEMENTED and MEASURED LIVE; others count as company, and near-equal box sizes make the subject unclear.”
 - **What is the 15.2 KB?** “It is MEASURED `end0` transmit traffic across all protocols at the 60-frame snapshot, before quiet mode. Quiet mode measured 11.1 KB out at frame 150 (1 : 303) and 1.26 MB over 13,350 frames (1 : 98) — the long run is worse because posture-change lines print while the classifier flaps; a fix is in flight. It includes the SSH session carrying per-frame diagnostics. Quiet mode was separately MEASURED live this morning at 10.0 KB out for 150 frames.”
 - **Why is the camera a Mac?** “This prototype uses the Mac as its camera and sends that stream to Modalix. The counter proves the board leaked nothing; in the demo the camera is the Mac.”
 - **Why family first?** “The family knows the person and context. We intentionally do not automate 911.”
-- **What about wandering?** “An earlier demo called movement ‘wander’; that was a heuristic, not validated behavior understanding, so we do not lead with it.”
+- **How does night wander work?** “The laptop builds a per-minute day record and uses GUESSED rules: three consecutive night minutes standing or alternating standing and absent, with a 30-minute cooldown and night set to 23:00–06:00; today’s clock-shifted demo event is labelled DEMO_CLOCK.”
+- **Does it listen after a fall?** “For a configured 60 seconds, an offline Vosk listener IMPLEMENTED on the laptop microphone prints heard phrases and records nothing; it is not on the board.”
 - **What did Dave say?** “Dave from SiMa said fall detection was one of the first things he thought about in senior centers, called it a selling feature, and warned us: ‘don’t try to make the product.’ We proved one honest path.”
 
 ## Failure rule

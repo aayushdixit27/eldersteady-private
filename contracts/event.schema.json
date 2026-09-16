@@ -4,11 +4,21 @@
   "description": "One incident event emitted by perception. One JSON object per line (JSONL). This is the ONLY interface between the perception lane and everything downstream. Architect-owned: no lane edits this file.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["type", "room", "ts", "confidence", "discarded_frames"],
+  "required": [
+    "type",
+    "room",
+    "ts",
+    "confidence",
+    "discarded_frames"
+  ],
   "properties": {
     "type": {
       "type": "string",
-      "enum": ["fall", "wander", "stove_unattended"],
+      "enum": [
+        "fall",
+        "wander",
+        "stove_unattended"
+      ],
       "description": "The three incident classes the evidence supports. Nothing else is in scope for round 1."
     },
     "room": {
@@ -33,8 +43,15 @@
     },
     "reason": {
       "type": "string",
-      "enum": ["floor", "lean"],
+      "enum": [
+        "floor",
+        "lean"
+      ],
       "description": "Optional perception reason for the event, currently 'floor' or 'lean' for falls."
+    },
+    "demo_clock": {
+      "type": "boolean",
+      "description": "true when the event was produced under a shifted demo clock (WATCH_CLOCK_OFFSET_MIN); never set in production"
     }
   }
 }

@@ -17,7 +17,8 @@ def validate(event: object) -> list[str]:
     if not isinstance(event, dict):
         return ["event is not an object"]
     expected = {"type", "room", "ts", "confidence", "discarded_frames"}
-    extra = set(event) - expected
+    optional = {"reason", "demo_clock"}
+    extra = set(event) - expected - optional
     missing = expected - set(event)
     if extra:
         errors.append(f"unexpected keys: {sorted(extra)}")
