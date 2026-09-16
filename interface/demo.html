@@ -161,7 +161,7 @@
         leaning: ["Leaning", safeBanner, `Lean is climbing — ${state.lean}% of the way to an alert.`],
         "on-floor": ["On the floor", safeBanner, `Counting: ${state.floorNow.toLocaleString("en-US", { maximumFractionDigits: 1 })} of 3 seconds before we text Sue.`],
         "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", "Text sent. Waiting for Sue to reply 1 or 2."],
-        "alert-cleared": ["Up again", safeBanner, "Alert cleared. Watching."]
+        "alert-cleared": ["Standing again", safeBanner, "Alert cleared. Watching."]
       }[name];
       $("posture").textContent = copy[0]; $("trend-posture").textContent = name === "close" ? "Shoulders only" : copy[0]; $("next-action").textContent = copy[2];
       $("banner-check").textContent = copy[1];
