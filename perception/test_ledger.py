@@ -119,6 +119,30 @@ def main() -> None:
     assert shoulder_floor.snapshot()["view"] == "close"
     assert shoulder_floor.snapshot()["vis"] == "shoulders"
     assert shoulder_floor.snapshot()["bbox_ar"] == 1.5
+
+    close_shoulders = TrendTracker()
+    close_pose = synthetic_pose(0, 20, hips_visible=False, bbox_size=(75, 80))
+    assert close_shoulders.update([close_pose], 100, 100, 0.3, 0.5) == "close"
+    assert close_shoulders.snapshot()["subject_area"] == 0.6
+
+    far_seated = TrendTracker()
+    far_seated_pose = synthetic_pose(
+        0, 20, hips_visible=False, bbox_size=(33.166247903554, 30.151134457777)
+    )
+    assert far_seated.update([far_seated_pose], 100, 100, 0.3, 0.5) == "sitting"
+    assert far_seated.snapshot()["view"] == "full"
+    assert far_seated.snapshot()["subject_area"] == 0.1
+    assert far_seated.snapshot()["bbox_ar"] == 1.1
+
+    far_upright = TrendTracker()
+    far_upright_pose = synthetic_pose(
+        0, 20, hips_visible=False, bbox_size=(23.452078799117, 42.640143271123)
+    )
+    assert far_upright.update([far_upright_pose], 100, 100, 0.3, 0.5) == "upright"
+    assert far_upright.snapshot()["view"] == "full"
+    assert far_upright.snapshot()["subject_area"] == 0.1
+    assert far_upright.snapshot()["bbox_ar"] == 0.55
+
     seated_tracker = TrendTracker()
     seated_pose = synthetic_pose(66, 20, bbox_aspect=0.95)
     for _ in range(2):

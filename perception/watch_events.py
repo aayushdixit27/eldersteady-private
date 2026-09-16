@@ -319,7 +319,9 @@ class TrendTracker:
         self.motion_samples = deque()
 
     @staticmethod
-    def coverage_view(pose: Pose | None, min_visibility: float) -> str:
+    def coverage_view(
+        pose: Pose | None, min_visibility: float, subject_area: float | None
+    ) -> str:
         if pose is None:
             return "none"
         points = pose.keypoints
@@ -327,13 +329,9 @@ class TrendTracker:
             points[index]["visibility"] >= min_visibility
             for index in (COCO_LEFT_HIP, COCO_RIGHT_HIP, COCO_LEFT_KNEE, COCO_RIGHT_KNEE)
         )
-        if lower_visible:
-            return "full"
-        shoulders_visible = all(
-            points[index]["visibility"] >= min_visibility
-            for index in (COCO_LEFT_SHOULDER, COCO_RIGHT_SHOULDER)
-        )
-        return "close" if shoulders_visible else "none"
+        if subject_area is not None and subject_area >= 0.25 and not lower_visible:
+            return "close"
+        return "full"
 
     def _record_motion(self, pose: Pose | None, min_visibility: float) -> None:
         sample = None
@@ -429,7 +427,7 @@ class TrendTracker:
             subject.bbox_area / (frame_w * frame_h)
             if subject is not None and frame_w > 0 and frame_h > 0 else None
         )
-        self.view = self.coverage_view(subject, min_visibility)
+        self.view = self.coverage_view(subject, min_visibility, self.subject_area)
         if self.view == "close":
             ls = subject.keypoints[COCO_LEFT_SHOULDER]
             rs = subject.keypoints[COCO_RIGHT_SHOULDER]
