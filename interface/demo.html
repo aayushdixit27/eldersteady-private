@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fffdf8">
+  <title>watch — live room demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17221d;
+      --muted: #414c46;
+      --paper: #fffdf8;
+      --canvas: #f2eee5;
+      --line: #dcd6ca;
+      --safe: #166747;
+      --safe-deep: #0d5136;
+      --safe-soft: #e8f5ed;
+      --urgent: #c84931;
+      --urgent-text: #8b2e20;
+      --urgent-soft: #fff0eb;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink); }
+    .demo { display: grid; grid-template-columns: 3fr 2fr; min-height: 100vh; }
+    .camera { position: relative; min-height: 100vh; overflow: hidden; background: #17221d; }
+    video { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: cover; }
+    .camera-shade { position: absolute; inset: auto 0 0; padding: 22px 26px 25px; background: rgba(19,37,30,.92); color: white; }
+    .camera-shade strong { display: block; font-size: clamp(20px, 2.3vw, 31px); letter-spacing: -.03em; }
+    .camera-shade span { display: block; margin-top: 6px; color: #c8d8d0; font-size: 14px; font-weight: 650; }
+    .camera-error { position: absolute; inset: 0; display: grid; place-content: center; padding: 40px; text-align: center; color: white; }
+    .camera-error strong { font-size: 23px; }
+    .camera-error p { max-width: 460px; color: #c8d8d0; line-height: 1.5; }
+    .camera-error button { min-height: 56px; padding: 0 22px; border: 0; border-radius: 13px; background: var(--safe-deep); color: white; font: inherit; font-weight: 800; cursor: pointer; }
+    .panel { display: flex; flex-direction: column; gap: 22px; padding: clamp(24px, 3vw, 48px); background: var(--paper); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .brand { font-size: 22px; font-weight: 850; letter-spacing: -.04em; }
+    .local { display: flex; align-items: center; gap: 8px; color: var(--safe-deep); font-size: 13px; font-weight: 800; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--safe); }
+    .gauge { display: grid; place-items: center; position: relative; width: min(34vh, 310px); aspect-ratio: 1; margin: 0 auto; }
+    .gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .track, .value { fill: none; stroke-width: 13; }
+    .track { stroke: var(--line); }
+    .value { stroke: var(--safe); stroke-linecap: round; stroke-dasharray: 276.46; stroke-dashoffset: 276.46; transition: stroke-dashoffset .35s ease, stroke .2s ease; }
+    .gauge-copy { position: absolute; text-align: center; }
+    .gauge-copy strong { display: block; font-size: clamp(52px, 7vw, 88px); line-height: .95; letter-spacing: -.07em; font-variant-numeric: tabular-nums; }
+    .gauge-copy span { display: block; margin-top: 10px; color: var(--muted); font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .posture { min-height: 24px; margin: -10px 0 0; color: var(--safe-deep); text-align: center; font-size: 15px; font-weight: 800; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .metric { padding: 15px 16px; border: 1px solid var(--line); border-radius: 13px; }
+    .metric span { display: block; color: var(--muted); font-size: 13px; font-weight: 650; }
+    .metric strong { display: block; margin-top: 4px; font-size: clamp(22px, 2.5vw, 34px); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+    .ledger { margin-top: auto; padding: 19px 20px; border-radius: 13px; background: var(--safe-soft); color: var(--safe-deep); }
+    .ledger strong { display: block; font-size: clamp(18px, 2vw, 26px); font-variant-numeric: tabular-nums; }
+    .ledger span { display: block; margin-top: 7px; font-size: 14px; font-weight: 750; }
+    .ledger strong span { display: inline; margin: 0; font-size: inherit; }
+    .privacy { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .banner { display: none; padding: 18px 20px; border-radius: 13px; background: var(--urgent-text); color: white; }
+    .banner.on { display: block; }
+    .banner strong { display: block; font-size: 21px; }
+    .banner span { display: block; margin-top: 6px; font-size: 14px; line-height: 1.4; }
+    .flash { position: fixed; z-index: 10; inset: 0; display: none; place-content: center; padding: 40px; background: var(--urgent-text); color: white; text-align: center; }
+    .flash.on { display: grid; animation: alert-in .18s ease-out; }
+    .flash strong { font-size: clamp(40px, 7vw, 92px); line-height: 1; letter-spacing: -.05em; }
+    .flash pre { max-width: 900px; margin: 24px auto 0; white-space: pre-wrap; font: 700 15px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    @keyframes alert-in { from { opacity: 0; } to { opacity: 1; } }
+    @media (max-width: 800px) {
+      .demo { grid-template-columns: 1fr; }
+      .camera { min-height: 52vh; }
+      .panel { min-height: 48vh; }
+    }
+    @media (prefers-reduced-motion: reduce) { .value { transition: none; } .flash.on { animation: none; } }
+  </style>
+</head>
+<body>
+  <main class="demo">
+    <section class="camera" aria-label="Local camera view">
+      <video id="camera" autoplay muted playsinline></video>
+      <div class="camera-error" id="camera-error" hidden>
+        <strong>Camera is waiting</strong>
+        <p id="camera-message">Allow camera access to begin the local view.</p>
+        <button id="camera-start" type="button">Start camera</button>
+      </div>
+      <div class="camera-shade">
+        <strong>what the board sees — never leaves this room</strong>
+        <span>Mac camera · shown locally · no recording</span>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Live board measurements">
+      <header><div class="brand">watch</div><div class="local"><span class="dot"></span>Board live</div></header>
+      <div class="banner" id="banner" role="alert"><strong>ALERT SENT TO FAMILY</strong><span id="banner-event"></span></div>
+      <div class="gauge" aria-label="Lean percentage">
+        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"></circle><circle class="value" id="gauge-ring" cx="50" cy="50" r="44"></circle></svg>
+        <div class="gauge-copy"><strong id="lean">0%</strong><span>lean</span></div>
+      </div>
+      <p class="posture" id="posture">Waiting for board data</p>
+      <div class="metrics">
+        <div class="metric"><span>People in view</span><strong id="people">—</strong></div>
+        <div class="metric"><span>Milliseconds per frame</span><strong id="mla">—</strong></div>
+      </div>
+      <div class="ledger"><strong><span id="frames">0</span> frames processed · <span id="destroyed">0</span> destroyed</strong><span>uploaded 0 · stored 0</span></div>
+      <p class="privacy">Every count comes from analytics in <code>live/board.log</code>. Camera pixels remain on this Mac; the page uploads and stores nothing.</p>
+    </section>
+  </main>
+  <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>ALERT SENT TO FAMILY</strong><pre id="flash-event"></pre></div></div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const state = { lastEvent: "", lastFrame: 0, lean: 0 };
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+        $("camera").srcObject = stream;
+        $("camera-error").hidden = true;
+      } catch (error) {
+        $("camera-message").textContent = error.name === "NotAllowedError" ? "Camera permission was declined. Allow it, then try again." : "The Mac camera is unavailable. Try again when it is connected.";
+        $("camera-error").hidden = false;
+      }
+    }
+
+    function setLean(value) {
+      const lean = Math.max(0, Math.min(100, Number(value) || 0));
+      state.lean = lean;
+      $("lean").textContent = `${lean}%`;
+      $("gauge-ring").style.strokeDashoffset = 276.46 * (1 - lean / 100);
+    }
+
+    function parseFrame(line) {
+      const frame = line.match(/^frame\s+(\d+)/);
+      const people = line.match(/people-in-view=(\d+)/);
+      const mla = line.match(/mla=([\d.]+)ms/);
+      const lean = line.match(/lean=(\d+)%/);
+      const posture = line.match(/posture=([^\s]+)(?:\s|$)/);
+      if (frame) state.lastFrame = Math.max(state.lastFrame, Number(frame[1]));
+      if (people) $("people").textContent = people[1];
+      if (mla) $("mla").textContent = `${mla[1]} ms`;
+      if (lean) setLean(lean[1]);
+      if (line.includes("torso not fully in view")) {
+        setLean(0);
+        $("posture").textContent = "Torso not fully in view — step back";
+      } else if (posture) {
+        $("posture").textContent = posture[1] === "---" ? "Waiting for a full torso" : `Posture: ${posture[1]}`;
+      } else if (people && Number(people[1]) > 1) {
+        setLean(0);
+        $("posture").textContent = "Multiple people in view";
+      }
+      $("frames").textContent = state.lastFrame.toLocaleString("en-US");
+      $("destroyed").textContent = state.lastFrame.toLocaleString("en-US");
+    }
+
+    function showFall(line, event) {
+      if (line === state.lastEvent) return;
+      state.lastEvent = line;
+      const text = `${event.type} · ${event.room} · ${event.ts} · confidence ${event.confidence} · ${Number(event.discarded_frames).toLocaleString("en-US")} frames discarded`;
+      $("flash-event").textContent = text;
+      $("banner-event").textContent = text;
+      $("flash").classList.add("on");
+      $("gauge-ring").style.stroke = "var(--urgent)";
+      window.setTimeout(() => {
+        $("flash").classList.remove("on");
+        $("banner").classList.add("on");
+      }, 2200);
+    }
+
+    async function poll() {
+      try {
+        const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) return;
+        const lines = (await response.text()).split(/\r?\n/).filter(Boolean);
+        for (const line of lines) {
+          if (line.startsWith("frame ")) parseFrame(line);
+          else if (line.startsWith("{")) {
+            try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
+
+    $("camera-start").addEventListener("click", startCamera);
+    startCamera();
+    poll();
+    window.setInterval(poll, 250);
+  </script>
+</body>
+</html>
