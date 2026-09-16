@@ -1,3 +1,4 @@
+<!-- Reference class: a bedside patient monitor at a nurse's station — one glance tells the state, big numbers, one alarm colour, nothing decorative. Not a SaaS dashboard. -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,290 +9,197 @@
   <style>
     :root {
       color-scheme: light;
-      --ink: #17221d;
-      --muted: #414c46;
-      --paper: #fffdf8;
-      --canvas: #f2eee5;
-      --line: #dcd6ca;
-      --safe: #166747;
-      --safe-deep: #0d5136;
-      --safe-soft: #e8f5ed;
-      --urgent: #c84931;
-      --urgent-text: #8b2e20;
-      --urgent-soft: #fff0eb;
+      --ink: #17221d; --muted: #414c46; --paper: #fffdf8; --canvas: #f2eee5;
+      --line: #dcd6ca; --safe: #166747; --safe-deep: #0d5136; --safe-soft: #e8f5ed;
+      --urgent: #c84931; --urgent-text: #8b2e20; --night: #13251e;
       font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink); }
-    .privacy-banner { width: 100%; padding: 10px clamp(20px, 3vw, 46px) 12px; background: var(--safe-deep); color: white; }
-    .privacy-banner strong { display: block; font-size: clamp(40px, 7vw, 96px); line-height: .92; letter-spacing: -.05em; }
-    .privacy-banner .privacy-counts { display: block; margin-top: 7px; color: white; font-size: clamp(24px, 2vw, 30px); font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
-    .privacy-banner small { display: block; margin-top: 5px; color: white; font-size: 13px; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
-    .demo { display: grid; grid-template-columns: 3fr 2fr; align-items: start; min-height: calc(100vh - 170px); }
-    .camera { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--ink); }
-    video { width: 100%; height: 100%; position: absolute; inset: 0; object-fit: contain; }
-    .camera-shade { position: absolute; inset: auto 0 0; padding: 22px 26px 25px; background: rgba(19,37,30,.92); color: white; }
-    .camera-shade strong { display: block; font-size: clamp(20px, 2.3vw, 31px); letter-spacing: -.03em; }
-    .camera-shade span { display: block; margin-top: 6px; color: #c8d8d0; font-size: 14px; font-weight: 650; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    body { background: var(--paper); color: var(--ink); font-size: 14px; font-variant-numeric: tabular-nums; }
+    button { font: inherit; }
+    .privacy-banner { height: 22vh; min-height: 170px; padding: 16px 3.2vw 13px; background: var(--safe-deep); color: white; display: grid; align-content: center; }
+    .privacy-banner h1 { margin: 0; font-size: clamp(42px, 4.2vw, 64px); line-height: .92; letter-spacing: -.045em; }
+    .banner-check { margin: 9px 0 0; font-size: 18px; font-weight: 750; line-height: 1.2; }
+    .banner-check button { min-height: 32px; padding: 0; border: 0; border-bottom: 2px solid white; background: transparent; color: white; font-weight: 800; cursor: pointer; }
+    .banner-family { margin: 5px 0 0; font-size: 20px; font-weight: 750; }
+    .privacy-counts { margin: 7px 0 0; font-size: 13px; font-weight: 650; }
+    .demo { height: 78vh; min-height: 0; display: grid; grid-template-columns: 60% 40%; }
+    .left { min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) 121px; border-right: 1px solid var(--line); }
+    .camera-box { position: relative; min-height: 0; overflow: hidden; background: var(--paper); }
+    video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--paper); }
+    .camera-shade { position: absolute; left: 20px; bottom: 14px; color: white; background: var(--night); padding: 8px 11px; font-size: 13px; font-weight: 650; }
     .camera-error[hidden] { display: none; }
-    .camera-error { position: absolute; inset: 0; display: grid; place-content: center; padding: 40px; text-align: center; color: white; }
-    .camera-error strong { font-size: 23px; }
-    .camera-error p { max-width: 460px; color: #c8d8d0; line-height: 1.5; }
-    .camera-error button { min-height: 56px; padding: 0 22px; border: 0; border-radius: 13px; background: var(--safe-deep); color: white; font: inherit; font-weight: 800; cursor: pointer; }
-    .panel { display: flex; flex-direction: column; gap: 22px; padding: clamp(24px, 3vw, 48px); background: var(--paper); }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-    .brand { font-size: 22px; font-weight: 850; letter-spacing: -.04em; }
-    .local { display: flex; align-items: center; gap: 8px; color: var(--safe-deep); font-size: 13px; font-weight: 800; }
-    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--safe); }
-    .gauge { display: grid; place-items: center; position: relative; width: min(34vh, 310px); aspect-ratio: 1; margin: 0 auto; }
-    .gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-    .track, .value { fill: none; stroke-width: 13; }
-    .track { stroke: var(--line); }
-    .value { stroke: var(--safe); stroke-linecap: round; stroke-dasharray: 276.46; stroke-dashoffset: 276.46; transition: stroke-dashoffset .35s ease, stroke .2s ease; }
-    .gauge-copy { position: absolute; text-align: center; }
-    .gauge-copy strong { display: block; font-size: clamp(52px, 7vw, 88px); line-height: .95; letter-spacing: -.07em; font-variant-numeric: tabular-nums; }
-    .gauge-copy span { display: block; margin-top: 10px; color: var(--muted); font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-    .posture { min-height: 24px; margin: -10px 0 0; color: var(--safe-deep); text-align: center; font-size: 15px; font-weight: 800; }
-    .trend { padding: 18px 20px; border: 1px solid var(--line); border-radius: 13px; background: var(--canvas); }
-    .trend-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-    .trend h2 { margin: 0; font-size: clamp(28px, 3vw, 42px); letter-spacing: -.03em; }
-    .trend-source, .provenance { color: var(--muted); font-size: 13px; font-weight: 600; }
-    .trend-primary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .camera-error { position: absolute; inset: 0; display: grid; place-content: center; gap: 10px; padding: 30px; text-align: center; background: var(--paper); }
+    .camera-error strong { font-size: 24px; }
+    .camera-error p { margin: 0; color: var(--muted); font-size: 14px; }
+    .camera-error button { justify-self: center; min-height: 56px; padding: 0 22px; border: 0; border-radius: 13px; background: var(--safe-deep); color: white; font-weight: 800; cursor: pointer; }
+    .trend { min-width: 0; padding: 10px 20px 9px; border-top: 1px solid var(--line); }
+    .trend h2 { margin: 0 0 7px; font-size: 14px; letter-spacing: .02em; }
+    .trend-row { display: grid; grid-template-columns: 1.2fr 1fr .8fr 2.1fr .85fr; align-items: end; gap: 14px; }
     .trend-stat { min-width: 0; }
-    .trend-stat > span { display: block; color: var(--muted); font-size: 13px; font-weight: 600; }
-    .trend-stat strong { display: block; margin-top: 4px; font-size: clamp(20px, 2.2vw, 30px); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
-    .trend-stat.on-floor strong { color: var(--urgent-text); }
-    .anchor { margin: 13px 0 0; color: var(--ink); font-size: 13px; font-weight: 600; line-height: 1.4; }
-    .anchor .provenance { display: inline; }
-    .time-strip { display: flex; width: 100%; height: 18px; margin-top: 14px; overflow: hidden; border: 1px solid var(--ink); border-radius: 13px; background: var(--paper); }
+    .label { display: block; color: var(--muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .trend-stat strong { display: block; margin-top: 3px; font-size: 20px; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trend-stat.on-floor strong { color: var(--urgent-text); font-size: 40px; }
+    .time-strip { display: flex; width: 100%; height: 14px; margin: 7px 0 5px; border: 1px solid var(--ink); overflow: hidden; }
     .time-strip span { min-width: 0; }
-    .segment-upright { background: var(--safe); }
-    .segment-sitting { background: var(--muted); }
-    .segment-floor { background: var(--urgent); }
-    .segment-absent { background: var(--line); }
-    .time-key { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 9px; }
-    .time-key span { color: var(--muted); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .segment-upright { background: var(--safe); } .segment-sitting { background: var(--muted); }
+    .segment-floor { background: var(--urgent); } .segment-absent { background: var(--line); }
+    .time-key { display: flex; flex-wrap: wrap; gap: 2px 10px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .time-key b { color: var(--ink); }
-    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .metric { padding: 15px 16px; border: 1px solid var(--line); border-radius: 13px; }
-    .metric span { display: block; color: var(--muted); font-size: 13px; font-weight: 650; }
-    .metric strong { display: block; margin-top: 4px; font-size: clamp(22px, 2.5vw, 34px); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
-    .ledger { margin-top: auto; padding: 19px 20px; border-radius: 13px; background: var(--safe-soft); color: var(--safe-deep); }
-    .ledger strong { display: block; font-size: clamp(18px, 2vw, 26px); font-variant-numeric: tabular-nums; }
-    .ledger span { display: block; margin-top: 7px; font-size: 14px; font-weight: 750; }
-    .ledger strong span { display: inline; margin: 0; font-size: inherit; }
-    .ledger-metrics { margin-top: 14px; }
-    .ledger-metrics .metric { border-color: var(--safe-deep); }
-    .ledger-metrics .metric span { color: var(--safe-deep); }
-    .ledger-metrics .metric small { display: block; margin-top: 5px; color: var(--safe-deep); font-size: 13px; font-weight: 650; line-height: 1.35; }
-    .privacy { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
-    .banner { display: none; padding: 18px 20px; border-radius: 13px; background: var(--urgent-text); color: white; }
+    .panel { min-width: 0; padding: 14px 26px 12px; display: grid; grid-template-rows: 30px auto auto auto auto auto; align-content: space-between; gap: 8px; }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    .brand { font-size: 20px; font-weight: 850; letter-spacing: -.035em; }
+    .local { display: flex; align-items: center; gap: 7px; color: var(--safe-deep); font-size: 13px; font-weight: 800; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--safe); }
+    .status { border-top: 1px solid var(--line); padding-top: 8px; }
+    .status-line { display: flex; align-items: center; gap: 22px; }
+    .gauge { position: relative; flex: 0 0 116px; width: 116px; height: 116px; }
+    .gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .track, .value { fill: none; stroke-width: 10; } .track { stroke: var(--line); }
+    .value { stroke: var(--safe); stroke-linecap: round; stroke-dasharray: 276.46; stroke-dashoffset: 276.46; transition: stroke-dashoffset .25s ease; }
+    .gauge-copy { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+    .gauge-copy strong { font-size: 42px; line-height: .9; letter-spacing: -.06em; }
+    .gauge-copy span { margin-top: 5px; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .state-copy { min-width: 0; }
+    .posture { margin: 0; color: var(--safe-deep); font-size: 32px; font-weight: 850; line-height: 1; letter-spacing: -.035em; }
+    .next-action { margin: 8px 0 0; color: var(--ink); font-size: 14px; font-weight: 650; line-height: 1.35; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .metric { min-width: 0; border-top: 1px solid var(--line); padding-top: 7px; }
+    .metric strong { display: block; margin-top: 2px; font-size: 27px; line-height: 1; letter-spacing: -.035em; }
+    .ledger { padding: 8px 0; border-top: 2px solid var(--safe-deep); border-bottom: 1px solid var(--line); outline: 0 solid var(--safe-deep); }
+    .ledger h2 { margin: 0 0 5px; font-size: 13px; }
+    .ledger-main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .ledger-main strong { display: block; font-size: clamp(40px, 3.5vw, 54px); line-height: .92; letter-spacing: -.055em; }
+    .ledger-note { margin: 5px 0 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .ledger.pulse { animation: ledger-pulse 1.5s ease; }
+    @keyframes ledger-pulse { 0%, 100% { outline-width: 0; } 20%, 70% { outline-width: 4px; outline-offset: 4px; } }
+    .io { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+    .io .metric strong { font-size: 23px; }
+    .io small { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .pixels { margin: 6px 0 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .banner { display: none; padding: 10px 12px; background: var(--urgent-text); color: white; }
     .banner.on { display: block; }
-    .banner strong { display: block; font-size: 21px; }
-    .banner span { display: block; margin-top: 6px; font-size: 14px; line-height: 1.4; }
+    .banner strong, .banner span { display: block; } .banner strong { font-size: 20px; } .banner span { margin-top: 4px; font-size: 14px; }
     .flash { position: fixed; z-index: 10; inset: 0; display: none; place-content: center; padding: 40px; background: var(--urgent-text); color: white; text-align: center; }
-    .flash.on { display: grid; animation: alert-in .18s ease-out; }
-    .flash strong { font-size: clamp(40px, 7vw, 92px); line-height: 1; letter-spacing: -.05em; }
-    .flash pre { max-width: 900px; margin: 24px auto 0; white-space: pre-wrap; font: 700 15px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
-    @keyframes alert-in { from { opacity: 0; } to { opacity: 1; } }
-    @media (max-width: 800px) {
-      .demo { grid-template-columns: 1fr; }
-      .panel { min-height: 48vh; }
-      .trend-primary, .time-key { grid-template-columns: 1fr 1fr; }
-    }
-    @media (prefers-reduced-motion: reduce) { .value { transition: none; } .flash.on { animation: none; } }
+    .flash.on { display: grid; } .flash strong { font-size: 64px; letter-spacing: -.05em; }
+    .flash pre { max-width: 900px; margin: 20px auto 0; white-space: pre-wrap; font: 700 15px/1.5 ui-monospace, monospace; }
+    @media (prefers-reduced-motion: reduce) { .value { transition: none; } .ledger.pulse { animation: none; outline: 4px solid var(--safe-deep); } }
   </style>
 </head>
 <body>
   <aside class="privacy-banner" aria-label="Live privacy measurements">
-    <strong>Nothing leaves this room.</strong>
-    <span class="privacy-counts"><span id="privacy-frames">0</span> pictures looked at · <span id="privacy-destroyed">0</span> destroyed · 0 saved · 0 sent anywhere</span>
-    <small>Measured on the box in the room. Bytes out on the wire: <span id="privacy-bytes-out">—</span> (that is the alert, not video).</small>
+    <h1>No video leaves this room.</h1>
+    <p class="banner-check"><span id="banner-check">Last check: not started. Waiting for the board.</span> <button id="sent-link" type="button" hidden>See what was sent.</button></p>
+    <!-- Sue is the demo contact name. -->
+    <p class="banner-family">We text Sue if we spot a problem.</p>
+    <p class="privacy-counts">This check: <span id="privacy-frames">no</span> pictures seen and <span id="privacy-destroyed">none</span> destroyed · 0 saved · words sent: <span id="privacy-bytes-out">not yet measured</span></p>
   </aside>
   <main class="demo">
-    <section class="camera" aria-label="Local camera view">
-      <video id="camera" autoplay muted playsinline></video>
-      <div class="camera-error" id="camera-error" hidden>
-        <strong>Camera is waiting</strong>
-        <p id="camera-message">Allow camera access to begin the local view.</p>
-        <button id="camera-start" type="button">Start camera</button>
+    <section class="left" aria-label="Local camera and posture history">
+      <div class="camera-box">
+        <video id="camera" autoplay muted playsinline></video>
+        <div class="camera-error" id="camera-error" hidden><strong>Camera is off</strong><p id="camera-message">Allow the camera in Chrome, then press Start camera.</p><button id="camera-start" type="button">Start camera</button></div>
+        <div class="camera-shade">Local camera · no recording</div>
       </div>
-      <div class="camera-shade">
-        <strong>what the board sees — never leaves this room</strong>
-        <span>Mac camera · shown locally · no recording</span>
-      </div>
+      <section class="trend" aria-labelledby="trend-title">
+        <h2 id="trend-title">Before the fall</h2>
+        <div class="trend-row">
+          <div class="trend-stat"><span class="label">Posture</span><strong id="trend-posture">Waiting for the board</strong></div>
+          <div class="trend-stat"><span class="label">Last sit-to-stand</span><strong id="sts-last">Not measured</strong></div>
+          <div class="trend-stat" id="floor-stat"><span class="label">On floor</span><strong id="floor-now">Not on floor</strong></div>
+          <div class="trend-stat"><span class="label">Posture time</span><div class="time-strip" id="time-strip" aria-label="Posture time not measured"><span class="segment-upright" id="strip-upright"></span><span class="segment-sitting" id="strip-sitting"></span><span class="segment-floor" id="strip-floor"></span><span class="segment-absent" id="strip-absent"></span></div><div class="time-key"><span><b>Up</b> <span id="upright-seconds">none yet</span></span><span><b>Sit</b> <span id="sitting-seconds">none yet</span></span><span><b>Floor</b> <span id="floor-seconds">none yet</span></span><span><b>Away</b> <span id="absent-seconds">none yet</span></span></div></div>
+          <div class="trend-stat"><span class="label">Company</span><strong id="company-seconds">None yet</strong></div>
+        </div>
+      </section>
     </section>
-
     <section class="panel" aria-label="Live board measurements">
       <header><div class="brand">ElderSteady Private</div><div class="local"><span class="dot"></span>Board live</div></header>
-      <div class="banner" id="banner" role="alert"><strong>ALERT SENT TO FAMILY</strong><span id="banner-event"></span></div>
-      <div class="gauge" aria-label="Lean percentage">
-        <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"></circle><circle class="value" id="gauge-ring" cx="50" cy="50" r="44"></circle></svg>
-        <div class="gauge-copy"><strong id="lean">0%</strong><span>lean</span></div>
-      </div>
-      <p class="posture" id="posture">Waiting for board data</p>
-      <section class="trend" aria-labelledby="trend-title">
-        <div class="trend-head"><h2 id="trend-title">Before the fall</h2><span class="trend-source">live trend line</span></div>
-        <div class="trend-primary">
-          <div class="trend-stat"><span>Current posture</span><strong id="trend-posture">—</strong><small class="provenance">measured · board, keypoints; guessed · thresholds</small></div>
-          <div class="trend-stat"><span>Last sit-to-stand</span><strong><span id="sts-last">—</span> s</strong><small class="provenance">measured · board, keypoints; guessed · thresholds</small></div>
-          <div class="trend-stat" id="floor-stat"><span>On floor now</span><strong><span id="floor-now">—</span> s</strong><small class="provenance">measured · board, keypoints; guessed · 3 s fall threshold</small></div>
-        </div>
-        <p class="anchor">5x sit-to-stand &gt; 15 s = fall risk (published; ours is one rep, unvalidated) <span class="provenance">· 15 s guessed comparison threshold</span></p>
-        <div class="time-strip" id="time-strip" aria-label="Session time by posture">
-          <span class="segment-upright" id="strip-upright"></span><span class="segment-sitting" id="strip-sitting"></span><span class="segment-floor" id="strip-floor"></span><span class="segment-absent" id="strip-absent"></span>
-        </div>
-        <div class="time-key">
-          <span><b>Upright</b> <span id="upright-seconds">0</span> s</span>
-          <span><b>Sitting</b> <span id="sitting-seconds">0</span> s</span>
-          <span><b>Floor</b> <span id="floor-seconds">0</span> s</span>
-          <span><b>Absent</b> <span id="absent-seconds">0</span> s</span>
-        </div>
-        <p class="anchor">Posture time · measured · board, keypoints; guessed · thresholds</p>
-        <p class="anchor"><span id="company-seconds">0</span> company s · measured · board, keypoints; guessed · ≥2 people threshold</p>
-      </section>
-      <div class="metrics">
-        <div class="metric"><span>People in view</span><strong id="people">—</strong></div>
-        <div class="metric"><span>Milliseconds per frame</span><strong id="mla">—</strong></div>
-      </div>
-      <div class="ledger"><strong><span id="frames">0</span> frames processed · <span id="destroyed">0</span> destroyed</strong><span>uploaded 0 · stored 0</span></div>
-      <div class="metrics ledger-metrics" aria-label="NIC and pixel ledger">
-        <div class="metric"><span>Video in</span><strong id="video-in">—</strong><small>measured · end0, all protocols</small></div>
-        <div class="metric"><span>Bytes out</span><strong id="bytes-out">—</strong><small>measured · end0, all protocols, incl. this session</small></div>
-        <div class="metric"><span>Pixels decoded</span><strong id="pixels-decoded">—</strong><small>computed · frames × W × H × 3</small></div>
-        <div class="metric"><span>In : out</span><strong id="in-out-ratio">—</strong><small>measured NIC byte ratio</small></div>
-      </div>
-      <p class="privacy">Every count comes from analytics in <code>live/board.log</code>. Camera pixels remain on this Mac; the page uploads and stores nothing.</p>
+      <div class="banner" id="banner" role="alert"><strong>ALERT SENT TO SUE</strong><span id="banner-event">Text details appear here.</span></div>
+      <section class="status" aria-label="Current room state"><div class="status-line"><div class="gauge" aria-label="Lean percentage"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="44"></circle><circle class="value" id="gauge-ring" cx="50" cy="50" r="44"></circle></svg><div class="gauge-copy"><strong id="lean">Not measured</strong><span>lean</span></div></div><div class="state-copy"><p class="posture" id="posture">Waiting for the board</p><p class="next-action" id="next-action">Plug in the board and run live_demo.sh.</p></div></div></section>
+      <div class="metrics"><div class="metric"><span class="label">People in view</span><strong id="people">Not measured</strong></div><div class="metric"><span class="label">Milliseconds per picture</span><strong id="mla">Not measured</strong></div></div>
+      <section class="ledger" id="ledger" aria-label="Processing ledger"><h2>Processing ledger</h2><div class="ledger-main"><div><span class="label">Pictures processed</span><strong id="frames">None yet</strong></div><div><span class="label">Pictures destroyed</span><strong id="destroyed">None yet</strong></div></div><p class="ledger-note">Saved: none · video sent: none</p></section>
+      <section><div class="io" aria-label="Network and pixel measurements"><div class="metric"><span class="label">Video in</span><strong id="video-in">Not measured</strong><small>measured · end0</small></div><div class="metric"><span class="label">Bytes out</span><strong id="bytes-out">Not measured</strong><small>measured · end0</small></div><div class="metric"><span class="label">In : out ratio</span><strong id="in-out-ratio">Not measured</strong><small>NIC byte ratio</small></div></div><p class="pixels">Pixels decoded: <span id="pixels-decoded">not measured</span></p></section>
     </section>
   </main>
-  <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>ALERT SENT TO FAMILY</strong><pre id="flash-event"></pre></div></div>
-
+  <div class="flash" id="flash" role="alert" aria-live="assertive"><div><strong>ALERT SENT TO SUE</strong><pre id="flash-event">Text details appear here.</pre></div></div>
   <script>
     const $ = id => document.getElementById(id);
-    const state = { lastEvent: "", lastFrame: 0, lean: 0 };
+    const state = { camera: false, hasLog: false, lastLogAt: 0, lastEvent: "", lastFrame: 0, lean: 0, priorLean: 0, framePosture: "", trendPosture: "", people: null, floorNow: 0, alert: null, alertAt: 0, eventFrame: 0, cleared: false };
+    const safeBanner = "Last check: no video sent.";
+
+    function formatSeconds(value) { return value > 0 ? `${value.toLocaleString("en-US", { maximumFractionDigits: 1 })} s` : "none yet"; }
+    function eventTime(event) { const date = new Date(event.ts); return Number.isNaN(date.getTime()) ? "an unknown time" : date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+    function alertMessage(event) { const room = String(event.room || "living_room").replaceAll("_", " "); return `Sue got: 'Possible fall in the ${room} at ${eventTime(event)}. No video. Reply 1 if you have it, 2 to call for help.'`; }
+
+    function setState(name) {
+      const copy = {
+        "no-camera": ["Camera off", "Last check: no video sent. Camera is off on this Mac.", "Allow the camera in Chrome, then press Start camera."],
+        "waiting-board": ["Waiting for the board", "Last check: not started. Waiting for the board.", "Plug in the board and run live_demo.sh."],
+        "empty-room": ["Nobody in the room", safeBanner, "Watching. Step into view to begin."],
+        standing: ["Standing", safeBanner, "Watching."], sitting: ["Sitting", safeBanner, "Watching."],
+        leaning: ["Leaning", safeBanner, `Lean is climbing — ${state.lean}% of the way to an alert.`],
+        "on-floor": ["On the floor", safeBanner, `Counting: ${state.floorNow.toLocaleString("en-US", { maximumFractionDigits: 1 })} of 3 seconds before we text Sue.`],
+        "alert-sent": ["Fell", "Last check: no video sent. One text sent to Sue.", state.alert ? alertMessage(state.alert) : "Sue has been told."],
+        "alert-cleared": ["Up again", safeBanner, "Alert cleared. Watching."]
+      }[name];
+      $("posture").textContent = copy[0]; $("trend-posture").textContent = copy[0]; $("next-action").textContent = copy[2];
+      $("banner-check").textContent = copy[1];
+      const showLink = ["empty-room", "standing", "sitting", "leaning", "on-floor", "alert-sent", "alert-cleared"].includes(name);
+      $("sent-link").hidden = !showLink;
+      $("banner").classList.toggle("on", name === "alert-sent");
+      $("gauge-ring").style.stroke = name === "alert-sent" || name === "on-floor" ? "var(--urgent)" : "var(--safe)";
+    }
+
+    function chooseState() {
+      const now = Date.now();
+      if (state.alert && now - state.alertAt >= 20000) { state.alert = null; state.cleared = true; return setState("alert-cleared"); }
+      if (state.alert) return setState("alert-sent");
+      if (state.floorNow > 0 && state.floorNow < 3 || state.trendPosture === "floor") return setState("on-floor");
+      if (state.framePosture === "bent" || state.lean >= 40 && state.lean > state.priorLean) return setState("leaning");
+      if (state.trendPosture === "sitting") return setState("sitting");
+      if (state.cleared) return setState("alert-cleared");
+      if (state.framePosture === "upright" || state.trendPosture === "upright") return setState("standing");
+      if (state.people === 0 || state.trendPosture === "absent") return setState("empty-room");
+      if (!state.hasLog || now - state.lastLogAt >= 5000) return setState(state.camera ? "waiting-board" : "no-camera");
+      return setState(state.camera ? "waiting-board" : "no-camera");
+    }
 
     async function startCamera() {
       try {
+        if (!navigator.mediaDevices?.getUserMedia) throw new Error("Unavailable");
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { exact: 1280 }, height: { exact: 720 }, frameRate: { ideal: 30 } }, audio: false });
-        $("camera").srcObject = stream;
-        $("camera-error").hidden = true;
+        $("camera").srcObject = stream; $("camera-error").hidden = true; state.camera = true; chooseState();
       } catch (error) {
-        $("camera-message").textContent = error.name === "NotAllowedError" ? "Camera permission was declined. Allow it, then try again." : "The Mac camera is unavailable. Try again when it is connected.";
-        $("camera-error").hidden = false;
+        state.camera = false; $("camera-message").textContent = error.name === "NotAllowedError" ? "Allow the camera in Chrome, then press Start camera." : "The Mac camera is unavailable. Connect it, then press Start camera."; $("camera-error").hidden = false; chooseState();
       }
     }
 
-    function setLean(value) {
-      const lean = Math.max(0, Math.min(100, Number(value) || 0));
-      state.lean = lean;
-      $("lean").textContent = `${lean}%`;
-      $("gauge-ring").style.strokeDashoffset = 276.46 * (1 - lean / 100);
-    }
-
+    function setLean(value, isNewFrame = true) { if (isNewFrame) state.priorLean = state.lean; state.lean = Math.max(0, Math.min(100, Number(value) || 0)); $("lean").textContent = `${state.lean}%`; $("gauge-ring").style.strokeDashoffset = 276.46 * (1 - state.lean / 100); }
     function parseFrame(line) {
-      const frame = line.match(/^frame\s+(\d+)/);
-      const people = line.match(/people-in-view=(\d+)/) || line.match(/poses=(\d+)/);
-      const mla = line.match(/mla=([\d.]+)ms/);
-      const lean = line.match(/lean=(\d+)%/);
-      const posture = line.match(/posture=([^\s]+)(?:\s|$)/);
-      if (frame) state.lastFrame = Math.max(state.lastFrame, Number(frame[1]));
-      if (people) $("people").textContent = people[1];
-      if (mla) $("mla").textContent = `${mla[1]} ms`;
-      if (lean) setLean(lean[1]);
-      if (line.includes("torso not fully in view")) {
-        setLean(0);
-        $("posture").textContent = "Torso not fully in view — step back";
-      } else if (posture) {
-        $("posture").textContent = posture[1] === "---" ? "Waiting for a full torso" : `Posture: ${posture[1]}`;
-      } else if (people && Number(people[1]) > 1) {
-        setLean(0);
-        $("posture").textContent = "Multiple people in view";
-      }
-      $("frames").textContent = state.lastFrame.toLocaleString("en-US");
-      $("destroyed").textContent = state.lastFrame.toLocaleString("en-US");
-      $("privacy-frames").textContent = state.lastFrame.toLocaleString("en-US");
-      $("privacy-destroyed").textContent = state.lastFrame.toLocaleString("en-US");
+      const frame = line.match(/^frame\s+(\d+)/), people = line.match(/people-in-view=(\d+)/), mla = line.match(/mla=([\d.]+)ms/), lean = line.match(/lean=(\d+)%/), posture = line.match(/posture=([^\s]+)(?:\s|$)/);
+      const frameNumber = frame ? Number(frame[1]) : state.lastFrame, isNewFrame = frameNumber > state.lastFrame;
+      if (state.alert && frameNumber > state.eventFrame && posture?.[1] === "upright") { state.alert = null; state.cleared = true; setState("alert-cleared"); }
+      state.lastFrame = Math.max(state.lastFrame, frameNumber); if (people) { state.people = Number(people[1]); $("people").textContent = people[1]; } if (mla) $("mla").textContent = `${mla[1]} ms`; if (lean) setLean(lean[1], isNewFrame); state.framePosture = posture?.[1] === "---" ? "" : posture?.[1] || state.framePosture;
+      const count = state.lastFrame.toLocaleString("en-US"); $("frames").textContent = count; $("destroyed").textContent = count; $("privacy-frames").textContent = count; $("privacy-destroyed").textContent = count;
     }
-
-    function formatBytes(value) {
-      if (value === null) return "—";
-      if (value >= 1e9) return `${(value / 1e9).toLocaleString("en-US", { maximumFractionDigits: 1 })} GB`;
-      if (value >= 1e6) return `${(value / 1e6).toLocaleString("en-US", { maximumFractionDigits: 1 })} MB`;
-      return `${value.toLocaleString("en-US")} B`;
-    }
-
+    function formatBytes(value, banner = false) { if (value === null) return banner ? "not yet measured" : "Not measured"; if (banner) return `${value.toLocaleString("en-US")} bytes`; if (value >= 1e9) return `${(value / 1e9).toLocaleString("en-US", { maximumFractionDigits: 1 })} GB`; if (value >= 1e6) return `${(value / 1e6).toLocaleString("en-US", { maximumFractionDigits: 1 })} MB`; return `${value.toLocaleString("en-US")} B`; }
     function parseLedger(line) {
-      const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]]));
-      const number = key => fields[key] === "na" || fields[key] === undefined ? null : Number(fields[key]);
-      const rx = number("rx_bytes");
-      const tx = number("tx_bytes");
-      const pixels = number("pixel_bytes");
-      $("video-in").textContent = formatBytes(rx);
-      $("bytes-out").textContent = formatBytes(tx);
-      $("privacy-bytes-out").textContent = formatBytes(tx);
-      $("pixels-decoded").textContent = pixels === null ? "—" : pixels.toLocaleString("en-US");
-      $("in-out-ratio").textContent = rx === null || tx === null || tx === 0 ? "—" : `1 : ${Math.round(rx / tx).toLocaleString("en-US")}`;
+      const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]])); const number = key => fields[key] === "na" || fields[key] === undefined ? null : Number(fields[key]);
+      const rx = number("rx_bytes"), tx = number("tx_bytes"), pixels = number("pixel_bytes"); $("video-in").textContent = formatBytes(rx); $("bytes-out").textContent = formatBytes(tx); $("privacy-bytes-out").textContent = formatBytes(tx, true); $("pixels-decoded").textContent = pixels === null ? "not measured" : pixels.toLocaleString("en-US"); $("in-out-ratio").textContent = rx === null || tx === null || tx === 0 ? "Not measured" : `1 : ${Math.round(rx / tx).toLocaleString("en-US")}`;
     }
-
     function parseTrend(line) {
-      const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]]));
-      const seconds = key => Math.max(0, Number(fields[key]) || 0);
-      const displaySeconds = value => value.toLocaleString("en-US", { maximumFractionDigits: 1 });
-      const floorNow = seconds("floor_s");
-      const durations = {
-        upright: seconds("upright_s"),
-        sitting: seconds("sitting_s"),
-        floor: seconds("floor_s_total"),
-        absent: seconds("absent_s")
-      };
-      const total = Object.values(durations).reduce((sum, value) => sum + value, 0);
-
-      $("trend-posture").textContent = fields.posture || "—";
-      $("sts-last").textContent = displaySeconds(seconds("sts_last_s"));
-      $("floor-now").textContent = displaySeconds(floorNow);
-      $("floor-stat").classList.toggle("on-floor", floorNow >= 3);
-      for (const [posture, value] of Object.entries(durations)) {
-        $(`${posture}-seconds`).textContent = displaySeconds(value);
-        $(`strip-${posture}`).style.width = `${total ? value / total * 100 : 0}%`;
-      }
-      $("company-seconds").textContent = displaySeconds(seconds("company_s"));
-      $("time-strip").setAttribute("aria-label", `Session: upright ${displaySeconds(durations.upright)} seconds, sitting ${displaySeconds(durations.sitting)} seconds, floor ${displaySeconds(durations.floor)} seconds, absent ${displaySeconds(durations.absent)} seconds`);
+      const fields = Object.fromEntries([...line.matchAll(/(\w+)=([^\s]+)/g)].map(match => [match[1], match[2]])); const seconds = key => Math.max(0, Number(fields[key]) || 0); const durations = { upright: seconds("upright_s"), sitting: seconds("sitting_s"), floor: seconds("floor_s_total"), absent: seconds("absent_s") }; const total = Object.values(durations).reduce((sum, value) => sum + value, 0);
+      state.trendPosture = fields.posture || state.trendPosture; state.floorNow = seconds("floor_s"); $("sts-last").textContent = seconds("sts_last_s") > 0 ? formatSeconds(seconds("sts_last_s")) : "Not measured"; $("floor-now").textContent = state.floorNow > 0 ? formatSeconds(state.floorNow) : "Not on floor"; $("floor-stat").classList.toggle("on-floor", state.floorNow > 0);
+      for (const [posture, value] of Object.entries(durations)) { $(`${posture}-seconds`).textContent = formatSeconds(value); $(`strip-${posture}`).style.width = `${total ? value / total * 100 : 0}%`; } $("company-seconds").textContent = seconds("company_s") > 0 ? formatSeconds(seconds("company_s")) : "None yet"; $("time-strip").setAttribute("aria-label", total ? `Posture time: standing ${formatSeconds(durations.upright)}, sitting ${formatSeconds(durations.sitting)}, floor ${formatSeconds(durations.floor)}, away ${formatSeconds(durations.absent)}` : "Posture time not measured");
     }
-
     function showFall(line, event) {
-      if (line === state.lastEvent) return;
-      state.lastEvent = line;
-      const text = `${event.type} · ${event.room} · ${event.ts} · confidence ${event.confidence} · ${Number(event.discarded_frames).toLocaleString("en-US")} frames discarded`;
-      $("flash-event").textContent = text;
-      $("banner-event").textContent = text;
-      $("flash").classList.add("on");
-      $("gauge-ring").style.stroke = "var(--urgent)";
-      window.setTimeout(() => {
-        $("flash").classList.remove("on");
-        $("banner").classList.add("on");
-      }, 2200);
+      if (line === state.lastEvent) return; state.lastEvent = line; state.alert = event; state.cleared = false; state.alertAt = Date.now(); state.eventFrame = state.lastFrame; const text = alertMessage(event); $("flash-event").textContent = text; $("banner-event").textContent = text; $("flash").classList.add("on"); window.setTimeout(() => $("flash").classList.remove("on"), 2200);
     }
-
     async function poll() {
-      try {
-        const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" });
-        if (!response.ok) return;
-        const lines = (await response.text()).split(/\r?\n/).filter(Boolean);
-        for (const line of lines) {
-          if (line.startsWith("frame ")) parseFrame(line);
-          else if (line.startsWith("ledger ")) parseLedger(line);
-          else if (line.startsWith("trend ")) parseTrend(line);
-          else if (line.startsWith("{")) {
-            try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {}
-          }
-        }
-      } catch (_) {}
+      try { const response = await fetch(`live/board.log?t=${Date.now()}`, { cache: "no-store" }); if (!response.ok) { chooseState(); return; } const lines = (await response.text()).split(/\r?\n/).filter(Boolean); if (lines.length) { state.hasLog = true; state.lastLogAt = Date.now(); } for (const line of lines) { if (line.startsWith("frame ")) parseFrame(line); else if (line.startsWith("ledger ")) parseLedger(line); else if (line.startsWith("trend ")) parseTrend(line); else if (line.startsWith("{")) { try { const event = JSON.parse(line); if (event.type === "fall") showFall(line, event); } catch (_) {} } } chooseState(); } catch (_) { chooseState(); }
     }
-
-    $("camera-start").addEventListener("click", startCamera);
-    startCamera();
-    poll();
-    window.setInterval(poll, 250);
+    $("camera-start").addEventListener("click", startCamera); $("sent-link").addEventListener("click", () => { const ledger = $("ledger"); ledger.classList.remove("pulse"); void ledger.offsetWidth; ledger.classList.add("pulse"); }); startCamera(); poll(); window.setInterval(poll, 250); window.setInterval(chooseState, 1000);
   </script>
 </body>
 </html>
