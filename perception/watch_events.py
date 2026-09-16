@@ -18,6 +18,7 @@ from typing import Iterable
 
 DEFAULT_MODEL = Path("/workspace/models/yolo26m-det-int8-b1.tar.gz")
 DEFAULT_VIDEO = Path("/workspace/assets/videos/video01.mp4")
+SESSION_LEDGER = Path(__file__).with_name("session-ledger.json")
 EVENT_STDOUT = None
 
 
@@ -48,6 +49,29 @@ def emit_event(event: dict) -> None:
         print(json.dumps(event, separators=(",", ":")), flush=True)
         return
     print(json.dumps(event, separators=(",", ":")), file=EVENT_STDOUT, flush=True)
+
+
+def write_session_ledger(
+    path: Path,
+    frames_processed: int,
+    frames_in_events: int,
+    events_emitted: int,
+    frames_stored: int = 0,
+    frames_uploaded: int = 0,
+) -> dict:
+    frames_unattributed = frames_processed - frames_in_events
+    ledger = {
+        "frames_processed": frames_processed,
+        "frames_in_events": frames_in_events,
+        "frames_unattributed": frames_unattributed,
+        "events_emitted": events_emitted,
+        "frames_stored": frames_stored,
+        "frames_uploaded": frames_uploaded,
+    }
+    if frames_processed != frames_in_events + frames_unattributed:
+        raise AssertionError("session ledger frame counts do not add up")
+    path.write_text(json.dumps(ledger, separators=(",", ":")) + "\n", encoding="utf-8")
+    return ledger
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -193,6 +217,8 @@ def main(argv: list[str]) -> int:
 
     processed = 0
     frames_since_event = 0
+    frames_in_events = 0
+    events_emitted = 0
     frames_with_detections = 0
     event_emitted = False
     frame_index = 0
@@ -244,9 +270,17 @@ def main(argv: list[str]) -> int:
                 }
                 emit_event(event)
                 event_emitted = True
+                frames_in_events += frames_since_event
+                events_emitted += 1
                 frames_since_event = 0
 
-        log(f"done processed={processed} event_emitted={event_emitted}")
+        ledger = write_session_ledger(
+            SESSION_LEDGER,
+            frames_processed=processed,
+            frames_in_events=frames_in_events,
+            events_emitted=events_emitted,
+        )
+        log(f"done processed={processed} event_emitted={event_emitted} ledger={SESSION_LEDGER} {ledger}")
         return 0 if event_emitted else 3
     finally:
         cap.release()
