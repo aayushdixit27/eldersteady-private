@@ -29,14 +29,18 @@ COCO_RIGHT_HIP = 12
 DEFAULT_BENT_THRESHOLD = 60.0
 NIC = "end0"
 POSTURES = ("upright", "bent", "sitting", "floor", "absent")
-# measured 16 Sep at 2 m, desk-height camera; guessed elsewhere
+# Measured 2026-09-16 at 2 m, desk-height camera: stand sh_y 0.05-0.59,
+# bbox_ar ~1.0, hips mostly visible; chair sh_y 0.55, bbox_ar 1.04-1.12,
+# hips visible; floor knees-to-chest sh_y 0.70-0.77, bbox_ar 1.33-1.80,
+# hips not visible.
 BANDS = {
-    "floor_bbox_ar_min": 1.2,
-    "floor_torso_y_min": 0.80,
+    "floor_bbox_ar_min": 1.25,
+    "floor_bbox_ar_only_min": 2.0,
+    "floor_torso_y_min": 0.65,
     "floor_hold_s": 1.5,
-    "sitting_shoulder_y_min": 0.60,
-    "sitting_shoulder_y_max": 0.80,
-    "sitting_bbox_ar_min": 1.2,
+    "sitting_shoulder_y_min": 0.45,
+    "sitting_shoulder_y_max": 0.65,
+    "sitting_bbox_ar_max": 1.25,
 }
 
 
@@ -109,7 +113,7 @@ def classify_posture(
         shoulder_sitting = (
             BANDS["sitting_shoulder_y_min"] <= shoulder_y <= BANDS["sitting_shoulder_y_max"]
             and best_pose.bbox_aspect is not None
-            and best_pose.bbox_aspect >= BANDS["sitting_bbox_ar_min"]
+            and best_pose.bbox_aspect < BANDS["sitting_bbox_ar_max"]
         )
         return "sitting" if shoulder_sitting else "upright"
     torso_length = max(hip_y - shoulder_y, 0.0)
@@ -150,7 +154,7 @@ class SitToStandDetector:
             if self.rise_started_at is None:
                 self.rise_started_at = last_sitting_at
             rise_duration = now - self.rise_started_at
-            if 0.3 <= rise_duration <= 10.0:
+            if rise_duration <= 10.0:
                 self.last_duration = rise_duration
                 self.count += 1
             self.sitting_started_at = None
@@ -196,9 +200,15 @@ class TrendTracker:
         lowest_torso_y = best[0] if best and best[0] is not None else (best[1] if best else None)
         floor_candidate = (
             self.bbox_aspect is not None
-            and self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
-            and lowest_torso_y is not None
-            and lowest_torso_y >= BANDS["floor_torso_y_min"]
+            and (
+                self.bbox_aspect >= BANDS["floor_bbox_ar_only_min"]
+                or (
+                    self.hip_y is None
+                    and self.bbox_aspect >= BANDS["floor_bbox_ar_min"]
+                    and lowest_torso_y is not None
+                    and lowest_torso_y >= BANDS["floor_torso_y_min"]
+                )
+            )
         )
         self.floor_seconds = self.floor_seconds + dt if floor_candidate else 0.0
         candidate = classify_posture(

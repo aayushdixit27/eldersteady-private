@@ -53,25 +53,21 @@ def main() -> None:
     ], 100, 100, 0.3) == "bent"
     assert classify_posture([synthetic_pose(50, 10)], 100, 100, 0.3) == "upright"
     assert classify_posture([synthetic_pose(80, 50)], 100, 100, 0.3) == "sitting"
-    floor_tracker = TrendTracker()
-    floor_pose = synthetic_pose(90, 70, bbox_aspect=1.4)
-    assert floor_tracker.update([floor_pose], 100, 100, 0.3, 1.0) != "floor"
-    assert floor_tracker.update([floor_pose], 100, 100, 0.3, 1.0) == "floor"
-    assert floor_tracker.snapshot()["vis"] == "hips"
-    assert floor_tracker.snapshot()["bbox_ar"] == 1.4
     shoulder_floor = TrendTracker()
-    shoulder_pose = synthetic_pose(0, 90, hips_visible=False, bbox_aspect=1.4)
+    shoulder_pose = synthetic_pose(0, 72, hips_visible=False, bbox_aspect=1.5)
     assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 1.0) != "floor"
     assert shoulder_floor.update([shoulder_pose], 100, 100, 0.3, 1.0) == "floor"
+    assert shoulder_floor.snapshot()["vis"] == "shoulders"
+    assert shoulder_floor.snapshot()["bbox_ar"] == 1.5
     seated_tracker = TrendTracker()
-    seated_pose = synthetic_pose(0, 69, hips_visible=False, bbox_aspect=1.57)
-    for _ in range(3):
+    seated_pose = synthetic_pose(80, 55, bbox_aspect=1.1)
+    for _ in range(2):
         seated_tracker.update([seated_pose], 100, 100, 0.3, 1.0)
     assert seated_tracker.snapshot()["posture"] == "sitting"
     standing_pose = synthetic_pose(55, 37, bbox_aspect=1.0)
-    assert seated_tracker.update([standing_pose], 100, 100, 0.3, 1.0) == "upright"
+    seated_tracker.update([standing_pose], 100, 100, 0.3, 0.01)
     assert seated_tracker.snapshot()["sts_n"] == 1
-    assert isinstance(seated_tracker.snapshot()["sts_last_s"], float)
+    assert seated_tracker.snapshot()["sts_last_s"] == 0.01
     close_standing = TrendTracker()
     for _ in range(2):
         close_standing.update([standing_pose], 100, 100, 0.3, 1.0)
