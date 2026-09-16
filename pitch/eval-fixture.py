@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fixture inventory for the fixed eval; does not implement or grade product logic."""
+"""Inventory the fixed fixture; product grading is recorded in eval-report.md."""
 import json
 from pathlib import Path
 
@@ -16,5 +16,4 @@ for name, members in groups.items():
     print(f"{name}: events={len(members)} discarded_frames={sum(e['discarded_frames'] for e in members)}")
 low = [e for e in events if e["confidence"] < 0.5]
 print("low_confidence:", ", ".join(f"{e['ts']}={e['confidence']}" for e in low))
-print("implementation: evidence/ ABSENT; no product output generated")
-
+print("provenance: all values above are fixture-derived, not hardware measurements")
