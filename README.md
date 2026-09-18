@@ -91,6 +91,8 @@ The demo camera is the Mac; in the product, the box would own the camera.
 
 ## THE RESULT — Measured, guessed, fixture, and roadmap stay separate
 
+**Silver Bundle, SiMa track, AI Infra Summit Hackathon (announced 18 Sep 2026): $1,600 — Modalix DevKit + webcam.** Details in [docs/WIN-2026-09-18.md](docs/WIN-2026-09-18.md).
+
 ### Measured today
 
 - Real on-camera falls: bend/lean at `2026-09-16T15:03:01Z` (`63%`, streak `58` frames, confidence `0.916`, `157` discarded), floor at `2026-09-16T17:12:49Z` (confidence `0.916`, `611` discarded), a second fall at `2026-09-16T15:06:29Z` (confidence `0.935`, `100` discarded), and a quiet-mode lean fall at `2026-09-16T15:24:58Z` (confidence `0.935`, `2183` discarded). Evidence: [`evidence/captures/`](evidence/captures/).
