@@ -2,8 +2,6 @@
 
 California will not let a facility put a camera in her room; at home the same question is yours — this is a fall alert that answers it in bytes.
 
-![ElderSteady Private after a fall](interface/screenshots/demo-after-fall.png)
-
 ### Run it in 3 commands
 
 ```sh
